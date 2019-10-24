@@ -11,9 +11,9 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"alibaba.com/alibaba-inc/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnv":       schema_pkg_apis_env_v1alpha1_VirtualEnv(ref),
-		"alibaba.com/alibaba-inc/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvSpec":   schema_pkg_apis_env_v1alpha1_VirtualEnvSpec(ref),
-		"alibaba.com/alibaba-inc/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvStatus": schema_pkg_apis_env_v1alpha1_VirtualEnvStatus(ref),
+		"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnv":       schema_pkg_apis_env_v1alpha1_VirtualEnv(ref),
+		"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvSpec":   schema_pkg_apis_env_v1alpha1_VirtualEnvSpec(ref),
+		"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvStatus": schema_pkg_apis_env_v1alpha1_VirtualEnvStatus(ref),
 	}
 }
 
@@ -45,19 +45,19 @@ func schema_pkg_apis_env_v1alpha1_VirtualEnv(ref common.ReferenceCallback) commo
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("alibaba.com/alibaba-inc/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvSpec"),
+							Ref: ref("alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("alibaba.com/alibaba-inc/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvStatus"),
+							Ref: ref("alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"alibaba.com/alibaba-inc/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvSpec", "alibaba.com/alibaba-inc/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvSpec", "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 

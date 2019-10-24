@@ -11,8 +11,8 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 
-	"alibaba.com/alibaba-inc/virtual-env-operator/pkg/apis"
-	"alibaba.com/alibaba-inc/virtual-env-operator/pkg/controller"
+	"alibaba.com/virtual-env-operator/pkg/apis"
+	"alibaba.com/virtual-env-operator/pkg/controller"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"

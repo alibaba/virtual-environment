@@ -1,4 +1,4 @@
-module alibaba.com/alibaba-inc/virtual-env-operator
+module alibaba.com/virtual-env-operator
 
 require (
 	github.com/go-openapi/spec v0.17.2

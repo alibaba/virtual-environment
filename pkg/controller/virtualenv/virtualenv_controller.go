@@ -3,7 +3,7 @@ package virtualenv
 import (
 	"context"
 
-	envv1alpha1 "alibaba.com/alibaba-inc/virtual-env-operator/pkg/apis/env/v1alpha1"
+	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"alibaba.com/alibaba-inc/virtual-env-operator/pkg/controller/virtualenv"
+	"alibaba.com/virtual-env-operator/pkg/controller/virtualenv"
 )
 
 func init() {

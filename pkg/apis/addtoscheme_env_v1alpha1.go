@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"alibaba.com/alibaba-inc/virtual-env-operator/pkg/apis/env/v1alpha1"
+	"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1"
 )
 
 func init() {
