@@ -10,25 +10,19 @@ import (
 // VirtualEnvSpec defines the desired state of VirtualEnv
 // +k8s:openapi-gen=true
 type VirtualEnvSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
-
 	// Header to keep env name in trace
-	Header string `json:"header,omitempty"`
+	Header string `json:"veHeader,omitempty"`
 	// Environment variable to mark env name of deployment
-	EvMark string `json:"evmark,omitempty"`
+	Label string `json:"veLabel,omitempty"`
+	// Symbol to split virtual env levels
+	// +kubebuilder:validation:MaxLength=1
+	// +kubebuilder:validation:MinLength=1
+	Splitter string `json:"veSplitter,omitempty"`
 }
 
 // VirtualEnvStatus defines the observed state of VirtualEnv
 // +k8s:openapi-gen=true
 type VirtualEnvStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
-
-	// Available env names
-	EnvNames []string `json:"envs"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
