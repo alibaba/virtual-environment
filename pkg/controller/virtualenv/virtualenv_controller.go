@@ -1,10 +1,10 @@
 package virtualenv
 
 import (
-	"context"
-
 	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
+	"alibaba.com/virtual-env-operator/pkg/status"
+	"context"
+	networkingv1alpha3 "github.com/knative/pkg/apis/istio/v1alpha3"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -20,11 +20,6 @@ import (
 )
 
 var log = logf.Log.WithName("controller_virtualenv")
-
-/**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
- */
 
 // Add creates a new VirtualEnv Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -51,9 +46,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner VirtualEnv
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+	// Watch for changes to secondary resource VirtualService & DestinationRule, requeue their owner to VirtualEnv
+	err = c.Watch(&source.Kind{Type: &networkingv1alpha3.VirtualService{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &envv1alpha1.VirtualEnv{},
+	})
+	if err != nil {
+		return err
+	}
+	err = c.Watch(&source.Kind{Type: &networkingv1alpha3.DestinationRule{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &envv1alpha1.VirtualEnv{},
 	})
@@ -77,77 +78,125 @@ type ReconcileVirtualEnv struct {
 
 // Reconcile reads that state of the cluster for a VirtualEnv object and makes changes based on the state read
 // and what is in the VirtualEnv.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	reqLogger := log.WithValues("Namespace", request.Namespace, "Name", request.Name)
 	reqLogger.Info("Reconciling VirtualEnv")
 
 	// Fetch the VirtualEnv instance
-	instance := &envv1alpha1.VirtualEnv{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	virtualEnv := &envv1alpha1.VirtualEnv{}
+	err := r.client.Get(context.TODO(), request.NamespacedName, virtualEnv)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
+			reqLogger.Info("VirtualEnv resource deleted")
 			return reconcile.Result{}, nil
 		}
-		// Error reading the object - requeue the request.
+		reqLogger.Error(err, "Failed to get VirtualEnv")
 		return reconcile.Result{}, err
 	}
 
-	// Define a new Pod object
-	pod := newPodForCR(instance)
+	reqLogger.Info("Spec " + virtualEnv.Spec.VeLabel + virtualEnv.Spec.VeSplitter + virtualEnv.Spec.VeHeader)
 
-	// Set VirtualEnv instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
-		return reconcile.Result{}, err
+	if status.VirtualEnvIns != request.Name {
+		if status.VirtualEnvIns != "" {
+			reqLogger.Info("New VirtualEnv resource detected, deleting " + status.VirtualEnvIns)
+			deleteVirtualEnv(request.Namespace, status.VirtualEnvIns)
+		}
+		status.VirtualEnvIns = request.Name
 	}
+	reqLogger.Info("Responding VirtualEnv")
 
-	// Check if this Pod already exists
-	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err = r.client.Create(context.TODO(), pod)
+	for srv, selector := range status.AvailableServices {
+		virtualSrv := &networkingv1alpha3.VirtualService{}
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: srv, Namespace: request.Namespace}, virtualSrv)
 		if err != nil {
-			return reconcile.Result{}, err
+			// VirtualService not exist, create one
+			if errors.IsNotFound(err) {
+				virtualSrv = r.virtualService(virtualEnv, srv, request.Namespace, selector)
+				reqLogger.Info("Creating VirtualService " + virtualSrv.Name)
+				err = r.client.Create(context.TODO(), virtualSrv)
+				if err != nil {
+					reqLogger.Error(err, "Failed to create VirtualService "+virtualSrv.Name)
+					return reconcile.Result{}, err
+				}
+			} else {
+				reqLogger.Error(err, "Failed to get VirtualService")
+				return reconcile.Result{}, err
+			}
+		} else {
+			// VirtualService already exist, TODO: check and update
 		}
 
-		// Pod created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
+		destRule := &networkingv1alpha3.DestinationRule{}
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: srv, Namespace: request.Namespace}, destRule)
+		if err != nil {
+			// DestinationRule not exist, create one
+			if errors.IsNotFound(err) {
+				destRule = r.destinationRule(virtualEnv, srv, request.Namespace, selector)
+				reqLogger.Info("Creating DestinationRule " + destRule.Name)
+				err = r.client.Create(context.TODO(), destRule)
+				if err != nil {
+					reqLogger.Error(err, "Failed to create DestinationRule "+destRule.Name)
+					return reconcile.Result{}, err
+				}
+			} else {
+				reqLogger.Error(err, "Failed to get DestinationRule")
+				return reconcile.Result{}, err
+			}
+		} else {
+			// DestinationRule already exist, TODO: check and update
+		}
 	}
 
-	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 	return reconcile.Result{}, nil
 }
 
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *envv1alpha1.VirtualEnv) *corev1.Pod {
-	labels := map[string]string{
-		"app": cr.Name,
-	}
-	return &corev1.Pod{
+func (r *ReconcileVirtualEnv) virtualService(e *envv1alpha1.VirtualEnv, name string, namespace string,
+	selector map[string]string) *networkingv1alpha3.VirtualService {
+	virtualSrv := &networkingv1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
-			Namespace: cr.Namespace,
-			Labels:    labels,
+			Name:      name,
+			Namespace: namespace,
 		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
-				},
-			},
+		Spec: networkingv1alpha3.VirtualServiceSpec{
+			Hosts: []string{name},
+			HTTP: []networkingv1alpha3.HTTPRoute{{
+				Route: []networkingv1alpha3.HTTPRouteDestination{{
+					Destination: networkingv1alpha3.Destination{
+						Host:   name,
+						Subset: "default",
+					},
+				}},
+			}},
 		},
 	}
+	// Set VirtualEnv instance as the owner and controller
+	controllerutil.SetControllerReference(e, virtualSrv, r.scheme)
+	return virtualSrv
+}
+
+func (r *ReconcileVirtualEnv) destinationRule(e *envv1alpha1.VirtualEnv, name string, namespace string,
+	selector map[string]string) *networkingv1alpha3.DestinationRule {
+	destRule := &networkingv1alpha3.DestinationRule{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: networkingv1alpha3.DestinationRuleSpec{
+			Host: name,
+			Subsets: []networkingv1alpha3.Subset{{
+				Name:   "default",
+				Labels: map[string]string{e.Spec.VeLabel: "default"},
+			}},
+		},
+	}
+	// Set VirtualEnv instance as the owner and controller
+	controllerutil.SetControllerReference(e, destRule, r.scheme)
+	return destRule
+}
+
+func deleteVirtualEnv(namespace string, virtualEnv string) {
+	//TODO: delete virtual env instance
 }

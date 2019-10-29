@@ -11,13 +11,15 @@ import (
 // +k8s:openapi-gen=true
 type VirtualEnvSpec struct {
 	// Header to keep env name in trace
-	Header string `json:"veHeader,omitempty"`
+	// +kubebuilder:validation:MinLength=1
+	VeHeader string `json:"veHeader,omitempty"`
 	// Environment variable to mark env name of deployment
-	Label string `json:"veLabel,omitempty"`
+	// +kubebuilder:validation:MinLength=1
+	VeLabel string `json:"veLabel,omitempty"`
 	// Symbol to split virtual env levels
 	// +kubebuilder:validation:MaxLength=1
 	// +kubebuilder:validation:MinLength=1
-	Splitter string `json:"veSplitter,omitempty"`
+	VeSplitter string `json:"veSplitter,omitempty"`
 }
 
 // VirtualEnvStatus defines the observed state of VirtualEnv

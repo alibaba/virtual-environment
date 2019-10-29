@@ -14,6 +14,7 @@ import (
 	"alibaba.com/virtual-env-operator/pkg/apis"
 	"alibaba.com/virtual-env-operator/pkg/controller"
 
+	networkingv1alpha3 "github.com/knative/pkg/apis/istio/v1alpha3"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
@@ -101,15 +102,21 @@ func main() {
 
 	log.Info("Registering Components.")
 
+	// Setup Scheme for istio networking resource
+	if err := networkingv1alpha3.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "failed to init istio networking scheme")
+		os.Exit(1)
+	}
+
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		log.Error(err, "")
+		log.Error(err, "failed to init k8s scheme")
 		os.Exit(1)
 	}
 
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
-		log.Error(err, "")
+		log.Error(err, "failed to setup virtual test environment controller")
 		os.Exit(1)
 	}
 

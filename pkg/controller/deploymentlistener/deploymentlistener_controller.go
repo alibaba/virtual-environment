@@ -62,19 +62,20 @@ type ReconcileDeploymentListener struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileDeploymentListener) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling DeploymentListener")
+	reqLogger := log.WithValues("Namespace", request.Namespace, "Name", request.Name)
 
 	deployment := &appsv1.Deployment{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, deployment)
 	if err != nil {
 		if errors.IsNotFound(err) {
+			reqLogger.Info("Removing Deployment")
 			delete(status.AvailableDeployments, request.Name)
 			return reconcile.Result{}, nil
 		}
 		return reconcile.Result{}, err
 	}
 
+	reqLogger.Info("Adding Deployment")
 	status.AvailableDeployments[request.Name] = deployment.Labels
 
 	return reconcile.Result{}, nil

@@ -62,19 +62,26 @@ type ReconcileServiceListener struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling ServiceListener")
+	reqLogger := log.WithValues("Namespace", request.Namespace, "Name", request.Name)
+
+	if request.Name == "kubernetes" {
+		// Ignore kubernetes service
+		return reconcile.Result{}, nil
+	}
 
 	service := &corev1.Service{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, service)
 	if err != nil {
 		if errors.IsNotFound(err) {
+			reqLogger.Info("Removing Service")
 			delete(status.AvailableServices, request.Name)
+			// TODO: delete related virtual service and destination rule
 			return reconcile.Result{}, nil
 		}
 		return reconcile.Result{}, err
 	}
 
+	reqLogger.Info("Adding Service")
 	status.AvailableServices[request.Name] = service.Spec.Selector
 
 	return reconcile.Result{}, nil
