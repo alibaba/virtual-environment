@@ -69,6 +69,8 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 		return reconcile.Result{}, nil
 	}
 
+	status.Lock.RLock()
+
 	service := &corev1.Service{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, service)
 	if err != nil {
@@ -76,13 +78,16 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 			reqLogger.Info("Removing Service")
 			delete(status.AvailableServices, request.Name)
 			// TODO: delete related virtual service and destination rule
+			status.Lock.RUnlock()
 			return reconcile.Result{}, nil
 		}
+		status.Lock.RUnlock()
 		return reconcile.Result{}, err
 	}
 
 	reqLogger.Info("Adding Service")
 	status.AvailableServices[request.Name] = service.Spec.Selector
 
+	status.Lock.RUnlock()
 	return reconcile.Result{}, nil
 }

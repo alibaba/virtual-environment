@@ -1,5 +1,10 @@
 package status
 
+import "sync"
+
+// mutex to avoid controllers conflict
+var Lock = sync.RWMutex{}
+
 // virtual env instance name
 var VirtualEnvIns string = ""
 

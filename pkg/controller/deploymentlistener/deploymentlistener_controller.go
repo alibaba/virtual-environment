@@ -64,19 +64,24 @@ type ReconcileDeploymentListener struct {
 func (r *ReconcileDeploymentListener) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Namespace", request.Namespace, "Name", request.Name)
 
+	status.Lock.RLock()
+
 	deployment := &appsv1.Deployment{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, deployment)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			reqLogger.Info("Removing Deployment")
 			delete(status.AvailableDeployments, request.Name)
+			status.Lock.RUnlock()
 			return reconcile.Result{}, nil
 		}
+		status.Lock.RUnlock()
 		return reconcile.Result{}, err
 	}
 
 	reqLogger.Info("Adding Deployment")
 	status.AvailableDeployments[request.Name] = deployment.Labels
 
+	status.Lock.RUnlock()
 	return reconcile.Result{}, nil
 }

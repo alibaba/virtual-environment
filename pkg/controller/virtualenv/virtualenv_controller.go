@@ -85,25 +85,33 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 	reqLogger := log.WithValues("Namespace", request.Namespace, "Name", request.Name)
 	reqLogger.Info("Reconciling VirtualEnv")
 
+	status.Lock.Lock()
+
 	// Fetch the VirtualEnv instance
 	virtualEnv := &envv1alpha1.VirtualEnv{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, virtualEnv)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			reqLogger.Info("VirtualEnv resource deleted")
+			reqLogger.Info("VirtualEnv resource missing")
+			if status.VirtualEnvIns == request.Name {
+				reqLogger.Info("VirtualEnv deleted")
+				status.VirtualEnvIns = ""
+			}
+			status.Lock.Unlock()
 			return reconcile.Result{}, nil
 		}
 		reqLogger.Error(err, "Failed to get VirtualEnv")
+		status.Lock.Unlock()
 		return reconcile.Result{}, err
 	}
-
-	reqLogger.Info("Spec " + virtualEnv.Spec.VeLabel + virtualEnv.Spec.VeSplitter + virtualEnv.Spec.VeHeader)
 
 	if status.VirtualEnvIns != request.Name {
 		if status.VirtualEnvIns != "" {
 			reqLogger.Info("New VirtualEnv resource detected, deleting " + status.VirtualEnvIns)
 			deleteVirtualEnv(request.Namespace, status.VirtualEnvIns)
 		}
+		reqLogger.Info("VirtualEnv added", "VeLabel", virtualEnv.Spec.VeLabel,
+			"VeHeader", virtualEnv.Spec.VeHeader, "VeSplitter", virtualEnv.Spec.VeSplitter)
 		status.VirtualEnvIns = request.Name
 	}
 	reqLogger.Info("Responding VirtualEnv")
@@ -119,14 +127,22 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 				err = r.client.Create(context.TODO(), virtualSrv)
 				if err != nil {
 					reqLogger.Error(err, "Failed to create VirtualService "+virtualSrv.Name)
+					status.Lock.Unlock()
 					return reconcile.Result{}, err
 				}
 			} else {
 				reqLogger.Error(err, "Failed to get VirtualService")
+				status.Lock.Unlock()
 				return reconcile.Result{}, err
 			}
 		} else {
 			// VirtualService already exist, TODO: check and update
+			//err := r.client.Status().Update(context.TODO(), virtualSrv)
+			//if err != nil {
+			//	reqLogger.Error(err, "Failed to update VirtualService status")
+			//	status.Lock.Unlock()
+			//	return reconcile.Result{}, err
+			//}
 		}
 
 		destRule := &networkingv1alpha3.DestinationRule{}
@@ -139,17 +155,26 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 				err = r.client.Create(context.TODO(), destRule)
 				if err != nil {
 					reqLogger.Error(err, "Failed to create DestinationRule "+destRule.Name)
+					status.Lock.Unlock()
 					return reconcile.Result{}, err
 				}
 			} else {
 				reqLogger.Error(err, "Failed to get DestinationRule")
+				status.Lock.Unlock()
 				return reconcile.Result{}, err
 			}
 		} else {
 			// DestinationRule already exist, TODO: check and update
+			//err := r.client.Status().Update(context.TODO(), destRule)
+			//if err != nil {
+			//	reqLogger.Error(err, "Failed to update DestinationRule status")
+			//	status.Lock.Unlock()
+			//	return reconcile.Result{}, err
+			//}
 		}
 	}
 
+	status.Lock.Unlock()
 	return reconcile.Result{}, nil
 }
 
