@@ -11,7 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"knative.dev/pkg/apis/istio/common/v1alpha1"
 	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -165,9 +164,10 @@ func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.V
 			reqLogger.Error(err, "Failed to get DestinationRule")
 			return err
 		}
-	} else if !reflect.DeepEqual(foundDestRule.Spec, destRule.Spec) {
+	} else if isDifferentDestinationRule(foundDestRule.Spec, destRule.Spec, virtualEnv.Spec.VeLabel) {
 		// existing DestinationRule changed
-		err := r.client.Status().Update(context.TODO(), destRule)
+		foundDestRule.Spec = destRule.Spec
+		err := r.client.Update(context.TODO(), foundDestRule)
 		if err != nil {
 			reqLogger.Error(err, "Failed to update DestinationRule status")
 			return err
@@ -177,7 +177,8 @@ func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.V
 	return nil
 }
 
-func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.VirtualEnv, srv string, request reconcile.Request, availableLabels []string, relatedDeployments map[string]string, reqLogger logr.Logger) error {
+func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.VirtualEnv, srv string, request reconcile.Request,
+	availableLabels []string, relatedDeployments map[string]string, reqLogger logr.Logger) error {
 	virtualSrv := r.virtualService(virtualEnv, srv, request.Namespace, availableLabels, relatedDeployments)
 	foundVirtualSrv := &networkingv1alpha3.VirtualService{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: srv, Namespace: request.Namespace}, foundVirtualSrv)
@@ -194,9 +195,10 @@ func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.Vi
 			reqLogger.Error(err, "Failed to get VirtualService")
 			return err
 		}
-	} else if !reflect.DeepEqual(foundVirtualSrv.Spec, virtualSrv.Spec) {
+	} else if isDifferentVirtualService(foundVirtualSrv.Spec, virtualSrv.Spec, virtualEnv.Spec.VeHeader) {
 		// existing VirtualService changed
-		err := r.client.Status().Update(context.TODO(), virtualSrv)
+		foundVirtualSrv.Spec = virtualSrv.Spec
+		err := r.client.Update(context.TODO(), foundVirtualSrv)
 		if err != nil {
 			reqLogger.Error(err, "Failed to update VirtualService status")
 			return err
@@ -204,6 +206,64 @@ func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.Vi
 		reqLogger.Info("VirtualService " + virtualSrv.Name + " changed")
 	}
 	return nil
+}
+
+// check whether DestinationRule is different
+func isDifferentDestinationRule(spec1 networkingv1alpha3.DestinationRuleSpec,
+	spec2 networkingv1alpha3.DestinationRuleSpec, label string) bool {
+	if len(spec1.Subsets) != len(spec2.Subsets) {
+		return true
+	}
+	for _, subset1 := range spec1.Subsets {
+		subset2 := findSubsetByName(spec2.Subsets, subset1.Name)
+		if subset2 == nil {
+			return true
+		}
+		if subset1.Labels[label] != subset2.Labels[label] {
+			return true
+		}
+	}
+	return false
+}
+
+// find subset from list
+func findSubsetByName(subsets []networkingv1alpha3.Subset, name string) *networkingv1alpha3.Subset {
+	for _, subset := range subsets {
+		if subset.Name == name {
+			return &subset
+		}
+	}
+	return nil
+}
+
+// check whether VirtualService is different
+func isDifferentVirtualService(spec1 networkingv1alpha3.VirtualServiceSpec, spec2 networkingv1alpha3.VirtualServiceSpec, header string) bool {
+	if len(spec1.HTTP) != len(spec2.HTTP) {
+		return true
+	}
+	for _, route1 := range spec1.HTTP {
+		if route1.Match == nil {
+			continue
+		}
+		if !findMatchRoute(spec2.HTTP, &route1, header) {
+			return true
+		}
+	}
+	return false
+}
+
+// check whether HTTPRoute exist in list
+func findMatchRoute(routes []networkingv1alpha3.HTTPRoute, target *networkingv1alpha3.HTTPRoute, header string) bool {
+	for _, route := range routes {
+		if route.Match == nil {
+			continue
+		}
+		if route.Route[0].Destination.Subset == target.Route[0].Destination.Subset &&
+			route.Match[0].Headers[header] == target.Match[0].Headers[header] {
+			return true
+		}
+	}
+	return false
 }
 
 // generate istio virtual service instance
