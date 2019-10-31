@@ -14,7 +14,7 @@ import (
 // generate istio virtual service instance
 func VirtualService(name string, namespace string, availableLabels []string, relatedDeployments map[string]string,
 	veHeader string, veSplitter string) *networkingv1alpha3.VirtualService {
-	virtualSrv := &networkingv1alpha3.VirtualService{
+	virtualSvc := &networkingv1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -33,10 +33,10 @@ func VirtualService(name string, namespace string, availableLabels []string, rel
 	for _, label := range availableLabels {
 		matchRoute, ok := virtualServiceMatchRoute(name, relatedDeployments, label, veHeader, veSplitter)
 		if ok {
-			virtualSrv.Spec.HTTP = append(virtualSrv.Spec.HTTP, matchRoute)
+			virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
 		}
 	}
-	return virtualSrv
+	return virtualSvc
 }
 
 // generate istio destination rule instance

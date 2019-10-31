@@ -94,17 +94,17 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	reqLogger.Info("Responding VirtualService and DestinationRule")
-	for srv, selector := range shared.AvailableServices {
+	for svc, selector := range shared.AvailableServices {
 		availableLabels := shared.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.VeLabel)
 		relatedDeployments := shared.FindAllRelatedDeployments(shared.AvailableDeployments, selector, virtualEnv.Spec.VeLabel)
 
 		if len(availableLabels) > 0 && len(relatedDeployments) > 0 {
-			err = r.reconcileVirtualService(virtualEnv, srv, request, availableLabels, relatedDeployments, reqLogger)
+			err = r.reconcileVirtualService(virtualEnv, svc, request, availableLabels, relatedDeployments, reqLogger)
 			if err != nil {
 				shared.Lock.Unlock()
 				return reconcile.Result{}, err
 			}
-			err = r.reconcileDestinationRule(virtualEnv, srv, request, relatedDeployments, reqLogger)
+			err = r.reconcileDestinationRule(virtualEnv, svc, request, relatedDeployments, reqLogger)
 			if err != nil {
 				shared.Lock.Unlock()
 				return reconcile.Result{}, err
@@ -155,54 +155,54 @@ func (r *ReconcileVirtualEnv) deleteVirtualEnv(namespace string, name string, lo
 }
 
 // reconcile virtual service according to related deployments and available labels
-func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.VirtualEnv, srv string, request reconcile.Request,
+func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.VirtualEnv, svc string, request reconcile.Request,
 	availableLabels []string, relatedDeployments map[string]string, logger logr.Logger) error {
-	virtualSrv := shared.VirtualService(srv, request.Namespace, availableLabels, relatedDeployments,
+	virtualSvc := shared.VirtualService(svc, request.Namespace, availableLabels, relatedDeployments,
 		virtualEnv.Spec.VeHeader, virtualEnv.Spec.VeSplitter)
 	// Set VirtualEnv instance as the owner and controller
-	err := controllerutil.SetControllerReference(virtualEnv, virtualSrv, r.scheme)
+	err := controllerutil.SetControllerReference(virtualEnv, virtualSvc, r.scheme)
 	if err != nil {
 		return err
 	}
-	foundVirtualSrv := &networkingv1alpha3.VirtualService{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: srv, Namespace: request.Namespace}, foundVirtualSrv)
+	foundVirtualSvc := &networkingv1alpha3.VirtualService{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: svc, Namespace: request.Namespace}, foundVirtualSvc)
 	if err != nil {
 		// VirtualService not exist, create one
 		if errors.IsNotFound(err) {
-			err = r.client.Create(context.TODO(), virtualSrv)
+			err = r.client.Create(context.TODO(), virtualSvc)
 			if err != nil {
-				logger.Error(err, "Failed to create VirtualService "+virtualSrv.Name)
+				logger.Error(err, "Failed to create VirtualService "+virtualSvc.Name)
 				return err
 			}
-			logger.Info("VirtualService " + virtualSrv.Name + " created")
+			logger.Info("VirtualService " + virtualSvc.Name + " created")
 		} else {
 			logger.Error(err, "Failed to get VirtualService")
 			return err
 		}
-	} else if shared.IsDifferentVirtualService(foundVirtualSrv.Spec, virtualSrv.Spec, virtualEnv.Spec.VeHeader) {
+	} else if shared.IsDifferentVirtualService(foundVirtualSvc.Spec, virtualSvc.Spec, virtualEnv.Spec.VeHeader) {
 		// existing VirtualService changed
-		foundVirtualSrv.Spec = virtualSrv.Spec
-		err := r.client.Update(context.TODO(), foundVirtualSrv)
+		foundVirtualSvc.Spec = virtualSvc.Spec
+		err := r.client.Update(context.TODO(), foundVirtualSvc)
 		if err != nil {
 			logger.Error(err, "Failed to update VirtualService status")
 			return err
 		}
-		logger.Info("VirtualService " + virtualSrv.Name + " changed")
+		logger.Info("VirtualService " + virtualSvc.Name + " changed")
 	}
 	return nil
 }
 
 // reconcile destination rule according to related deployments
-func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.VirtualEnv, srv string, request reconcile.Request,
+func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.VirtualEnv, svc string, request reconcile.Request,
 	relatedDeployments map[string]string, logger logr.Logger) error {
-	destRule := shared.DestinationRule(srv, request.Namespace, relatedDeployments, virtualEnv.Spec.VeLabel)
+	destRule := shared.DestinationRule(svc, request.Namespace, relatedDeployments, virtualEnv.Spec.VeLabel)
 	// Set VirtualEnv instance as the owner and controller
 	err := controllerutil.SetControllerReference(virtualEnv, destRule, r.scheme)
 	if err != nil {
 		return err
 	}
 	foundDestRule := &networkingv1alpha3.DestinationRule{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: srv, Namespace: request.Namespace}, foundDestRule)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: svc, Namespace: request.Namespace}, foundDestRule)
 	if err != nil {
 		// DestinationRule not exist, create one
 		if errors.IsNotFound(err) {
