@@ -1,11 +1,13 @@
 package servicelistener
 
 import (
-	"alibaba.com/virtual-env-operator/pkg/status"
+	"alibaba.com/virtual-env-operator/pkg/shared"
 	"context"
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -69,25 +71,45 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 		return reconcile.Result{}, nil
 	}
 
-	status.Lock.RLock()
+	shared.Lock.RLock()
 
 	service := &corev1.Service{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, service)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			reqLogger.Info("Removing Service")
-			delete(status.AvailableServices, request.Name)
-			// TODO: delete related virtual service and destination rule
-			status.Lock.RUnlock()
+			delete(shared.AvailableServices, request.Name)
+			// delete related virtual service and destination rule
+			r.deleteVirtualService(request.Namespace, request.Name, reqLogger)
+			r.deleteDestinationRule(request.Namespace, request.Name, reqLogger)
+			shared.Lock.RUnlock()
 			return reconcile.Result{}, nil
 		}
-		status.Lock.RUnlock()
+		shared.Lock.RUnlock()
 		return reconcile.Result{}, err
 	}
 
 	reqLogger.Info("Adding Service")
-	status.AvailableServices[request.Name] = service.Spec.Selector
+	shared.AvailableServices[request.Name] = service.Spec.Selector
 
-	status.Lock.RUnlock()
+	shared.Lock.RUnlock()
 	return reconcile.Result{}, nil
+}
+
+func (r *ReconcileServiceListener) deleteVirtualService(namespace string, name string, logger logr.Logger) {
+	err := shared.DeleteIns(r.client, namespace, name, &networkingv1alpha3.VirtualService{})
+	if err != nil {
+		logger.Error(err, "failed to remove VirtualService instance")
+	} else {
+		logger.Info("VirtualService deleted")
+	}
+}
+
+func (r *ReconcileServiceListener) deleteDestinationRule(namespace string, name string, logger logr.Logger) {
+	err := shared.DeleteIns(r.client, namespace, name, &networkingv1alpha3.DestinationRule{})
+	if err != nil {
+		logger.Error(err, "failed to remove DestinationRule instance")
+	} else {
+		logger.Info("DestinationRule deleted")
+	}
 }

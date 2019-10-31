@@ -2,14 +2,12 @@ package virtualenv
 
 import (
 	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1"
-	"alibaba.com/virtual-env-operator/pkg/status"
+	"alibaba.com/virtual-env-operator/pkg/shared"
 	"context"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"knative.dev/pkg/apis/istio/common/v1alpha1"
 	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -19,7 +17,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"strings"
 )
 
 var log = logf.Log.WithName("controller_virtualenv")
@@ -88,343 +85,146 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 	reqLogger := log.WithValues("Namespace", request.Namespace, "Name", request.Name)
 	reqLogger.Info("Reconciling VirtualEnv")
 
-	status.Lock.Lock()
+	shared.Lock.Lock()
 
 	virtualEnv, err := r.fetchVirtualEnvIns(request, reqLogger)
-	if virtualEnv == nil {
-		status.Lock.Unlock()
+	if err != nil {
+		shared.Lock.Unlock()
 		return reconcile.Result{}, err
 	}
 
 	reqLogger.Info("Responding VirtualService and DestinationRule")
-	for srv, selector := range status.AvailableServices {
-		availableLabels := findAllVirtualEnvLabelValues(status.AvailableDeployments, virtualEnv.Spec.VeLabel)
-		relatedDeployments := findAllRelatedDeployments(status.AvailableDeployments, selector, virtualEnv.Spec.VeLabel)
+	for srv, selector := range shared.AvailableServices {
+		availableLabels := shared.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.VeLabel)
+		relatedDeployments := shared.FindAllRelatedDeployments(shared.AvailableDeployments, selector, virtualEnv.Spec.VeLabel)
 
 		if len(availableLabels) > 0 && len(relatedDeployments) > 0 {
 			err = r.reconcileVirtualService(virtualEnv, srv, request, availableLabels, relatedDeployments, reqLogger)
 			if err != nil {
-				status.Lock.Unlock()
+				shared.Lock.Unlock()
 				return reconcile.Result{}, err
 			}
 			err = r.reconcileDestinationRule(virtualEnv, srv, request, relatedDeployments, reqLogger)
 			if err != nil {
-				status.Lock.Unlock()
+				shared.Lock.Unlock()
 				return reconcile.Result{}, err
 			}
 		}
 	}
 
-	status.Lock.Unlock()
+	shared.Lock.Unlock()
 	return reconcile.Result{}, nil
 }
 
 // fetch the VirtualEnv instance from request
-func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, reqLogger logr.Logger) (*envv1alpha1.VirtualEnv, error) {
+func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logger logr.Logger) (*envv1alpha1.VirtualEnv, error) {
 	virtualEnv := &envv1alpha1.VirtualEnv{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, virtualEnv)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			reqLogger.Info("VirtualEnv resource missing")
-			if status.VirtualEnvIns == request.Name {
-				reqLogger.Info("VirtualEnv deleted")
-				status.VirtualEnvIns = ""
+			logger.Info("VirtualEnv resource missing")
+			if shared.VirtualEnvIns == request.Name {
+				shared.VirtualEnvIns = ""
+				logger.Info("VirtualEnv record removed")
 			}
-			return nil, nil
+			return nil, err
 		}
-		reqLogger.Error(err, "Failed to get VirtualEnv")
+		logger.Error(err, "Failed to get VirtualEnv")
 		return nil, err
 	}
-	if status.VirtualEnvIns != request.Name {
-		if status.VirtualEnvIns != "" {
-			reqLogger.Info("New VirtualEnv resource detected, deleting " + status.VirtualEnvIns)
-			deleteVirtualEnv(request.Namespace, status.VirtualEnvIns)
+	if shared.VirtualEnvIns != request.Name {
+		if shared.VirtualEnvIns != "" {
+			logger.Info("New VirtualEnv resource detected, deleting " + shared.VirtualEnvIns)
+			r.deleteVirtualEnv(request.Namespace, shared.VirtualEnvIns, logger)
 		}
-		reqLogger.Info("VirtualEnv added", "VeLabel", virtualEnv.Spec.VeLabel,
+		shared.VirtualEnvIns = request.Name
+		logger.Info("VirtualEnv added", "VeLabel", virtualEnv.Spec.VeLabel,
 			"VeHeader", virtualEnv.Spec.VeHeader, "VeSplitter", virtualEnv.Spec.VeSplitter)
-		status.VirtualEnvIns = request.Name
 	}
 	return virtualEnv, err
 }
 
-func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.VirtualEnv, srv string, request reconcile.Request, relatedDeployments map[string]string, reqLogger logr.Logger) error {
-	destRule := r.destinationRule(virtualEnv, srv, request.Namespace, relatedDeployments)
-	foundDestRule := &networkingv1alpha3.DestinationRule{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: srv, Namespace: request.Namespace}, foundDestRule)
+// delete specified virtual env instance
+func (r *ReconcileVirtualEnv) deleteVirtualEnv(namespace string, name string, logger logr.Logger) {
+	err := shared.DeleteIns(r.client, namespace, name, &envv1alpha1.VirtualEnv{})
 	if err != nil {
-		// DestinationRule not exist, create one
-		if errors.IsNotFound(err) {
-			err = r.client.Create(context.TODO(), destRule)
-			if err != nil {
-				reqLogger.Error(err, "Failed to create DestinationRule "+destRule.Name)
-				return err
-			}
-			reqLogger.Info("DestinationRule " + destRule.Name + " created")
-		} else {
-			reqLogger.Error(err, "Failed to get DestinationRule")
-			return err
-		}
-	} else if isDifferentDestinationRule(foundDestRule.Spec, destRule.Spec, virtualEnv.Spec.VeLabel) {
-		// existing DestinationRule changed
-		foundDestRule.Spec = destRule.Spec
-		err := r.client.Update(context.TODO(), foundDestRule)
-		if err != nil {
-			reqLogger.Error(err, "Failed to update DestinationRule status")
-			return err
-		}
-		reqLogger.Info("DestinationRule " + destRule.Name + " changed")
+		logger.Error(err, "failed to remove VirtualEnv instance "+name)
+	} else {
+		logger.Info("VirtualEnv deleted")
 	}
-	return nil
 }
 
+// reconcile virtual service according to related deployments and available labels
 func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.VirtualEnv, srv string, request reconcile.Request,
-	availableLabels []string, relatedDeployments map[string]string, reqLogger logr.Logger) error {
-	virtualSrv := r.virtualService(virtualEnv, srv, request.Namespace, availableLabels, relatedDeployments)
+	availableLabels []string, relatedDeployments map[string]string, logger logr.Logger) error {
+	virtualSrv := shared.VirtualService(srv, request.Namespace, availableLabels, relatedDeployments,
+		virtualEnv.Spec.VeHeader, virtualEnv.Spec.VeSplitter)
+	// Set VirtualEnv instance as the owner and controller
+	err := controllerutil.SetControllerReference(virtualEnv, virtualSrv, r.scheme)
+	if err != nil {
+		return err
+	}
 	foundVirtualSrv := &networkingv1alpha3.VirtualService{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: srv, Namespace: request.Namespace}, foundVirtualSrv)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: srv, Namespace: request.Namespace}, foundVirtualSrv)
 	if err != nil {
 		// VirtualService not exist, create one
 		if errors.IsNotFound(err) {
 			err = r.client.Create(context.TODO(), virtualSrv)
 			if err != nil {
-				reqLogger.Error(err, "Failed to create VirtualService "+virtualSrv.Name)
+				logger.Error(err, "Failed to create VirtualService "+virtualSrv.Name)
 				return err
 			}
-			reqLogger.Info("VirtualService " + virtualSrv.Name + " created")
+			logger.Info("VirtualService " + virtualSrv.Name + " created")
 		} else {
-			reqLogger.Error(err, "Failed to get VirtualService")
+			logger.Error(err, "Failed to get VirtualService")
 			return err
 		}
-	} else if isDifferentVirtualService(foundVirtualSrv.Spec, virtualSrv.Spec, virtualEnv.Spec.VeHeader) {
+	} else if shared.IsDifferentVirtualService(foundVirtualSrv.Spec, virtualSrv.Spec, virtualEnv.Spec.VeHeader) {
 		// existing VirtualService changed
 		foundVirtualSrv.Spec = virtualSrv.Spec
 		err := r.client.Update(context.TODO(), foundVirtualSrv)
 		if err != nil {
-			reqLogger.Error(err, "Failed to update VirtualService status")
+			logger.Error(err, "Failed to update VirtualService status")
 			return err
 		}
-		reqLogger.Info("VirtualService " + virtualSrv.Name + " changed")
+		logger.Info("VirtualService " + virtualSrv.Name + " changed")
 	}
 	return nil
 }
 
-// check whether DestinationRule is different
-func isDifferentDestinationRule(spec1 networkingv1alpha3.DestinationRuleSpec,
-	spec2 networkingv1alpha3.DestinationRuleSpec, label string) bool {
-	if len(spec1.Subsets) != len(spec2.Subsets) {
-		return true
-	}
-	for _, subset1 := range spec1.Subsets {
-		subset2 := findSubsetByName(spec2.Subsets, subset1.Name)
-		if subset2 == nil {
-			return true
-		}
-		if subset1.Labels[label] != subset2.Labels[label] {
-			return true
-		}
-	}
-	return false
-}
-
-// find subset from list
-func findSubsetByName(subsets []networkingv1alpha3.Subset, name string) *networkingv1alpha3.Subset {
-	for _, subset := range subsets {
-		if subset.Name == name {
-			return &subset
-		}
-	}
-	return nil
-}
-
-// check whether VirtualService is different
-func isDifferentVirtualService(spec1 networkingv1alpha3.VirtualServiceSpec, spec2 networkingv1alpha3.VirtualServiceSpec, header string) bool {
-	if len(spec1.HTTP) != len(spec2.HTTP) {
-		return true
-	}
-	for _, route1 := range spec1.HTTP {
-		if route1.Match == nil {
-			continue
-		}
-		if !findMatchRoute(spec2.HTTP, &route1, header) {
-			return true
-		}
-	}
-	return false
-}
-
-// check whether HTTPRoute exist in list
-func findMatchRoute(routes []networkingv1alpha3.HTTPRoute, target *networkingv1alpha3.HTTPRoute, header string) bool {
-	for _, route := range routes {
-		if route.Match == nil {
-			continue
-		}
-		if route.Route[0].Destination.Subset == target.Route[0].Destination.Subset &&
-			route.Match[0].Headers[header] == target.Match[0].Headers[header] {
-			return true
-		}
-	}
-	return false
-}
-
-// generate istio virtual service instance
-func (r *ReconcileVirtualEnv) virtualService(e *envv1alpha1.VirtualEnv, name string, namespace string,
-	availableLabels []string, relatedDeployments map[string]string) *networkingv1alpha3.VirtualService {
-	virtualSrv := &networkingv1alpha3.VirtualService{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: networkingv1alpha3.VirtualServiceSpec{
-			Hosts: []string{name},
-			HTTP: []networkingv1alpha3.HTTPRoute{{
-				Route: []networkingv1alpha3.HTTPRouteDestination{{
-					Destination: networkingv1alpha3.Destination{
-						Host: name,
-					},
-				}},
-			}},
-		},
-	}
-	for _, label := range availableLabels {
-		matchRoute, ok := virtualServiceMatchRoute(name, relatedDeployments, label, e.Spec.VeHeader, e.Spec.VeSplitter)
-		if ok {
-			virtualSrv.Spec.HTTP = append(virtualSrv.Spec.HTTP, matchRoute)
-		}
-	}
+// reconcile destination rule according to related deployments
+func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.VirtualEnv, srv string, request reconcile.Request,
+	relatedDeployments map[string]string, logger logr.Logger) error {
+	destRule := shared.DestinationRule(srv, request.Namespace, relatedDeployments, virtualEnv.Spec.VeLabel)
 	// Set VirtualEnv instance as the owner and controller
-	controllerutil.SetControllerReference(e, virtualSrv, r.scheme)
-	return virtualSrv
-}
-
-// generate istio destination rule instance
-func (r *ReconcileVirtualEnv) destinationRule(e *envv1alpha1.VirtualEnv, name string, namespace string,
-	relatedDeployments map[string]string) *networkingv1alpha3.DestinationRule {
-	destRule := &networkingv1alpha3.DestinationRule{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: networkingv1alpha3.DestinationRuleSpec{
-			Host:    name,
-			Subsets: []networkingv1alpha3.Subset{},
-		},
+	err := controllerutil.SetControllerReference(virtualEnv, destRule, r.scheme)
+	if err != nil {
+		return err
 	}
-	for dep, label := range relatedDeployments {
-		destRule.Spec.Subsets = append(destRule.Spec.Subsets, destinationRuleMatchSubset(dep, e.Spec.VeLabel, label))
-	}
-	// Set VirtualEnv instance as the owner and controller
-	controllerutil.SetControllerReference(e, destRule, r.scheme)
-	return destRule
-}
-
-// generate istio destination rule subset instance
-func destinationRuleMatchSubset(name string, labelKey string, labelValue string) networkingv1alpha3.Subset {
-	return networkingv1alpha3.Subset{
-		Name: name,
-		Labels: map[string]string{
-			labelKey: labelValue,
-		},
-	}
-}
-
-func deleteVirtualEnv(namespace string, virtualEnv string) {
-	//TODO: delete virtual env instance
-}
-
-// return map of deployment name to virtual label value
-func findAllRelatedDeployments(deployments map[string]map[string]string, selector map[string]string, velabel string) map[string]string {
-	relatedDeployments := make(map[string]string)
-	for dep, labels := range deployments {
-		match := true
-		for k, v := range selector {
-			if labels[k] != v {
-				match = false
-				break
+	foundDestRule := &networkingv1alpha3.DestinationRule{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: srv, Namespace: request.Namespace}, foundDestRule)
+	if err != nil {
+		// DestinationRule not exist, create one
+		if errors.IsNotFound(err) {
+			err = r.client.Create(context.TODO(), destRule)
+			if err != nil {
+				logger.Error(err, "Failed to create DestinationRule "+destRule.Name)
+				return err
 			}
-		}
-		if _, exist := labels[velabel]; match && exist {
-			relatedDeployments[dep] = labels[velabel]
-		}
-	}
-	return relatedDeployments
-}
-
-// list all possible values in deployment virtual env label
-func findAllVirtualEnvLabelValues(deployments map[string]map[string]string, velabel string) []string {
-	labelSet := make(map[string]bool)
-	for _, labels := range deployments {
-		labelVal, exist := labels[velabel]
-		if exist {
-			labelSet[labelVal] = true
-		}
-	}
-	return getKeys(labelSet)
-}
-
-// get all keys of a map as array
-func getKeys(kv map[string]bool) []string {
-	keys := make([]string, 0, len(kv))
-	for k := range kv {
-		keys = append(keys, k)
-	}
-	return keys
-}
-
-// calculate and generate http route instance
-func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]string, labelVal string, headerKey string,
-	splitter string) (networkingv1alpha3.HTTPRoute, bool) {
-	var possibleRoutes []string
-	for k, v := range relatedDeployments {
-		if leveledEqual(v, labelVal, splitter) {
-			possibleRoutes = append(possibleRoutes, k)
-		}
-	}
-	if len(possibleRoutes) > 0 {
-		return matchRoute(serviceName, headerKey, labelVal, findLongestString(possibleRoutes)), true
-	}
-	return networkingv1alpha3.HTTPRoute{}, false
-}
-
-// generate istio virtual service http route instance
-func matchRoute(serviceName string, headerKey string, labelVal string, matchedLabel string) networkingv1alpha3.HTTPRoute {
-	return networkingv1alpha3.HTTPRoute{
-		Route: []networkingv1alpha3.HTTPRouteDestination{{
-			Destination: networkingv1alpha3.Destination{
-				Host:   serviceName,
-				Subset: matchedLabel,
-			},
-		}},
-		Match: []networkingv1alpha3.HTTPMatchRequest{{
-			Headers: map[string]v1alpha1.StringMatch{
-				headerKey: {
-					Exact: labelVal,
-				},
-			},
-		}},
-	}
-}
-
-// get the longest string in list
-func findLongestString(strings []string) string {
-	mostLongStr := ""
-	for _, str := range strings {
-		if len(str) > len(mostLongStr) {
-			mostLongStr = str
-		}
-	}
-	return mostLongStr
-}
-
-// check whether source string match target string at any level
-func leveledEqual(source string, target string, splitter string) bool {
-	for {
-		if source == target {
-			return true
-		}
-		if strings.Contains(source, splitter) {
-			source = source[0:strings.LastIndex(source, splitter)]
+			logger.Info("DestinationRule " + destRule.Name + " created")
 		} else {
-			return false
+			logger.Error(err, "Failed to get DestinationRule")
+			return err
 		}
+	} else if shared.IsDifferentDestinationRule(foundDestRule.Spec, destRule.Spec, virtualEnv.Spec.VeLabel) {
+		// existing DestinationRule changed
+		foundDestRule.Spec = destRule.Spec
+		err := r.client.Update(context.TODO(), foundDestRule)
+		if err != nil {
+			logger.Error(err, "Failed to update DestinationRule status")
+			return err
+		}
+		logger.Info("DestinationRule " + destRule.Name + " changed")
 	}
+	return nil
 }
