@@ -52,8 +52,8 @@ func DestinationRule(name string, namespace string, relatedDeployments map[strin
 			Subsets: []networkingv1alpha3.Subset{},
 		},
 	}
-	for dep, label := range relatedDeployments {
-		destRule.Spec.Subsets = append(destRule.Spec.Subsets, destinationRuleMatchSubset(dep, veLabel, label))
+	for _, label := range relatedDeployments {
+		destRule.Spec.Subsets = append(destRule.Spec.Subsets, destinationRuleMatchSubset(veLabel, label))
 	}
 	return destRule
 }
@@ -160,9 +160,9 @@ func findMatchRoute(routes []networkingv1alpha3.HTTPRoute, target *networkingv1a
 }
 
 // generate istio destination rule subset instance
-func destinationRuleMatchSubset(name string, labelKey string, labelValue string) networkingv1alpha3.Subset {
+func destinationRuleMatchSubset(labelKey string, labelValue string) networkingv1alpha3.Subset {
 	return networkingv1alpha3.Subset{
-		Name: name,
+		Name: labelValue,
 		Labels: map[string]string{
 			labelKey: labelValue,
 		},
@@ -172,7 +172,7 @@ func destinationRuleMatchSubset(name string, labelKey string, labelValue string)
 // get all keys of a map as array
 func getKeys(kv map[string]bool) []string {
 	keys := make([]string, 0, len(kv))
-	for k := range kv {
+	for k, _ := range kv {
 		keys = append(keys, k)
 	}
 	return keys
@@ -182,9 +182,9 @@ func getKeys(kv map[string]bool) []string {
 func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]string, labelVal string, headerKey string,
 	splitter string) (networkingv1alpha3.HTTPRoute, bool) {
 	var possibleRoutes []string
-	for k, v := range relatedDeployments {
-		if leveledEqual(v, labelVal, splitter) {
-			possibleRoutes = append(possibleRoutes, k)
+	for _, v := range relatedDeployments {
+		if leveledEqual(labelVal, v, splitter) {
+			possibleRoutes = append(possibleRoutes, v)
 		}
 	}
 	if len(possibleRoutes) > 0 {

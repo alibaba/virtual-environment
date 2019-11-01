@@ -90,7 +90,11 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 	virtualEnv, err := r.fetchVirtualEnvIns(request, reqLogger)
 	if err != nil {
 		shared.Lock.Unlock()
-		return reconcile.Result{}, err
+		if errors.IsNotFound(err) {
+			return reconcile.Result{}, nil
+		} else {
+			return reconcile.Result{}, err
+		}
 	}
 
 	reqLogger.Info("Responding VirtualService and DestinationRule")
