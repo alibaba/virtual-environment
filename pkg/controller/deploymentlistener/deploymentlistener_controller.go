@@ -80,7 +80,7 @@ func (r *ReconcileDeploymentListener) Reconcile(request reconcile.Request) (reco
 	}
 
 	reqLogger.Info("Adding Deployment")
-	shared.AvailableDeployments[request.Name] = deployment.Labels
+	shared.AvailableDeployments[request.Name] = deployment.Spec.Template.Labels
 
 	shared.Lock.RUnlock()
 	return reconcile.Result{}, nil

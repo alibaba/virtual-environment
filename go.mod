@@ -1,7 +1,6 @@
 module alibaba.com/virtual-env-operator
 
 require (
-	github.com/davecgh/go-spew v1.1.1
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.17.2
 	github.com/gogo/protobuf v1.3.0 // indirect
