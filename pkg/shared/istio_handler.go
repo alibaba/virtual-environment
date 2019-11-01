@@ -21,13 +21,7 @@ func VirtualService(name string, namespace string, availableLabels []string, rel
 		},
 		Spec: networkingv1alpha3.VirtualServiceSpec{
 			Hosts: []string{name},
-			HTTP: []networkingv1alpha3.HTTPRoute{{
-				Route: []networkingv1alpha3.HTTPRouteDestination{{
-					Destination: networkingv1alpha3.Destination{
-						Host: name,
-					},
-				}},
-			}},
+			HTTP:  []networkingv1alpha3.HTTPRoute{},
 		},
 	}
 	for _, label := range availableLabels {
@@ -36,6 +30,7 @@ func VirtualService(name string, namespace string, availableLabels []string, rel
 			virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
 		}
 	}
+	virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, defaultRoute(name))
 	return virtualSvc
 }
 
@@ -191,6 +186,17 @@ func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]
 		return matchRoute(serviceName, headerKey, labelVal, findLongestString(possibleRoutes)), true
 	}
 	return networkingv1alpha3.HTTPRoute{}, false
+}
+
+// generate default http route instance
+func defaultRoute(name string) networkingv1alpha3.HTTPRoute {
+	return networkingv1alpha3.HTTPRoute{
+		Route: []networkingv1alpha3.HTTPRouteDestination{{
+			Destination: networkingv1alpha3.Destination{
+				Host: name,
+			},
+		}},
+	}
 }
 
 // generate istio virtual service http route instance
