@@ -12,14 +12,14 @@ import (
 type VirtualEnvSpec struct {
 	// Header to keep env name in trace
 	// +kubebuilder:validation:MinLength=1
-	VeHeader string `json:"veHeader,omitempty"`
+	EnvHeader string `json:"envHeader,omitempty"`
 	// Environment variable to mark env name of deployment
 	// +kubebuilder:validation:MinLength=1
-	VeLabel string `json:"veLabel,omitempty"`
+	EnvLabel string `json:"envLabel,omitempty"`
 	// Symbol to split virtual env levels
 	// +kubebuilder:validation:MaxLength=1
 	// +kubebuilder:validation:MinLength=1
-	VeSplitter string `json:"veSplitter,omitempty"`
+	EnvSplitter string `json:"envSplitter,omitempty"`
 }
 
 // VirtualEnvStatus defines the observed state of VirtualEnv

@@ -13,7 +13,7 @@ import (
 
 // generate istio virtual service instance
 func VirtualService(name string, namespace string, availableLabels []string, relatedDeployments map[string]string,
-	veHeader string, veSplitter string) *networkingv1alpha3.VirtualService {
+	envHeader string, envSplitter string) *networkingv1alpha3.VirtualService {
 	virtualSvc := &networkingv1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -25,7 +25,7 @@ func VirtualService(name string, namespace string, availableLabels []string, rel
 		},
 	}
 	for _, label := range availableLabels {
-		matchRoute, ok := virtualServiceMatchRoute(name, relatedDeployments, label, veHeader, veSplitter)
+		matchRoute, ok := virtualServiceMatchRoute(name, relatedDeployments, label, envHeader, envSplitter)
 		if ok {
 			virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
 		}
@@ -36,7 +36,7 @@ func VirtualService(name string, namespace string, availableLabels []string, rel
 
 // generate istio destination rule instance
 func DestinationRule(name string, namespace string, relatedDeployments map[string]string,
-	veLabel string) *networkingv1alpha3.DestinationRule {
+	envLabel string) *networkingv1alpha3.DestinationRule {
 	destRule := &networkingv1alpha3.DestinationRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -48,7 +48,7 @@ func DestinationRule(name string, namespace string, relatedDeployments map[strin
 		},
 	}
 	for _, label := range relatedDeployments {
-		destRule.Spec.Subsets = append(destRule.Spec.Subsets, destinationRuleMatchSubset(veLabel, label))
+		destRule.Spec.Subsets = append(destRule.Spec.Subsets, destinationRuleMatchSubset(envLabel, label))
 	}
 	return destRule
 }
@@ -88,7 +88,7 @@ func IsDifferentVirtualService(spec1 networkingv1alpha3.VirtualServiceSpec, spec
 }
 
 // return map of deployment name to virtual label value
-func FindAllRelatedDeployments(deployments map[string]map[string]string, selector map[string]string, velabel string) map[string]string {
+func FindAllRelatedDeployments(deployments map[string]map[string]string, selector map[string]string, envLabel string) map[string]string {
 	relatedDeployments := make(map[string]string)
 	for dep, labels := range deployments {
 		match := true
@@ -98,18 +98,18 @@ func FindAllRelatedDeployments(deployments map[string]map[string]string, selecto
 				break
 			}
 		}
-		if _, exist := labels[velabel]; match && exist {
-			relatedDeployments[dep] = labels[velabel]
+		if _, exist := labels[envLabel]; match && exist {
+			relatedDeployments[dep] = labels[envLabel]
 		}
 	}
 	return relatedDeployments
 }
 
 // list all possible values in deployment virtual env label
-func FindAllVirtualEnvLabelValues(deployments map[string]map[string]string, velabel string) []string {
+func FindAllVirtualEnvLabelValues(deployments map[string]map[string]string, envLabel string) []string {
 	labelSet := make(map[string]bool)
 	for _, labels := range deployments {
-		labelVal, exist := labels[velabel]
+		labelVal, exist := labels[envLabel]
 		if exist {
 			labelSet[labelVal] = true
 		}

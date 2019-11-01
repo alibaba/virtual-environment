@@ -68,21 +68,21 @@ func schema_pkg_apis_env_v1alpha1_VirtualEnvSpec(ref common.ReferenceCallback) c
 				Description: "VirtualEnvSpec defines the desired state of VirtualEnv",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"veHeader": {
+					"envHeader": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Header to keep env name in trace",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"veLabel": {
+					"envLabel": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Environment variable to mark env name of deployment",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"veSplitter": {
+					"envSplitter": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Symbol to split virtual env levels",
 							Type:        []string{"string"},

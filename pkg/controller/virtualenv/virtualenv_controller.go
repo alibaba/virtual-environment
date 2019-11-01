@@ -21,6 +21,10 @@ import (
 
 var log = logf.Log.WithName("controller_virtualenv")
 
+const defaultEnvLabel = "virtualEnv"
+const defaultEnvHeader = "x-virtual-env"
+const defaultEnvSplitter = "/"
+
 // Add creates a new VirtualEnv Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
@@ -83,7 +87,6 @@ type ReconcileVirtualEnv struct {
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Namespace", request.Namespace, "Name", request.Name)
-	reqLogger.Info("Reconciling VirtualEnv")
 
 	shared.Lock.Lock()
 
@@ -97,10 +100,11 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 		}
 	}
 
-	reqLogger.Info("Responding VirtualService and DestinationRule")
+	reqLogger.Info("Reconciling VirtualEnv")
+	r.handleDefaultConfig(virtualEnv)
 	for svc, selector := range shared.AvailableServices {
-		availableLabels := shared.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.VeLabel)
-		relatedDeployments := shared.FindAllRelatedDeployments(shared.AvailableDeployments, selector, virtualEnv.Spec.VeLabel)
+		availableLabels := shared.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.EnvLabel)
+		relatedDeployments := shared.FindAllRelatedDeployments(shared.AvailableDeployments, selector, virtualEnv.Spec.EnvLabel)
 
 		if len(availableLabels) > 0 && len(relatedDeployments) > 0 {
 			err = r.reconcileVirtualService(virtualEnv, svc, request, availableLabels, relatedDeployments, reqLogger)
@@ -142,8 +146,8 @@ func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logg
 			r.deleteVirtualEnv(request.Namespace, shared.VirtualEnvIns, logger)
 		}
 		shared.VirtualEnvIns = request.Name
-		logger.Info("VirtualEnv added", "VeLabel", virtualEnv.Spec.VeLabel,
-			"VeHeader", virtualEnv.Spec.VeHeader, "VeSplitter", virtualEnv.Spec.VeSplitter)
+		logger.Info("VirtualEnv added", "EnvLabel", virtualEnv.Spec.EnvLabel,
+			"EnvHeader", virtualEnv.Spec.EnvHeader, "EnvSplitter", virtualEnv.Spec.EnvSplitter)
 	}
 	return virtualEnv, err
 }
@@ -158,11 +162,24 @@ func (r *ReconcileVirtualEnv) deleteVirtualEnv(namespace string, name string, lo
 	}
 }
 
+// handle empty virtual env configure item with default value
+func (r *ReconcileVirtualEnv) handleDefaultConfig(virtualEnv *envv1alpha1.VirtualEnv) {
+	if virtualEnv.Spec.EnvLabel == "" {
+		virtualEnv.Spec.EnvLabel = defaultEnvLabel
+	}
+	if virtualEnv.Spec.EnvHeader == "" {
+		virtualEnv.Spec.EnvHeader = defaultEnvHeader
+	}
+	if virtualEnv.Spec.EnvSplitter == "" {
+		virtualEnv.Spec.EnvSplitter = defaultEnvSplitter
+	}
+}
+
 // reconcile virtual service according to related deployments and available labels
 func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.VirtualEnv, svc string, request reconcile.Request,
 	availableLabels []string, relatedDeployments map[string]string, logger logr.Logger) error {
 	virtualSvc := shared.VirtualService(svc, request.Namespace, availableLabels, relatedDeployments,
-		virtualEnv.Spec.VeHeader, virtualEnv.Spec.VeSplitter)
+		virtualEnv.Spec.EnvHeader, virtualEnv.Spec.EnvSplitter)
 	// Set VirtualEnv instance as the owner and controller
 	err := controllerutil.SetControllerReference(virtualEnv, virtualSvc, r.scheme)
 	if err != nil {
@@ -183,7 +200,7 @@ func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.Vi
 			logger.Error(err, "Failed to get VirtualService")
 			return err
 		}
-	} else if shared.IsDifferentVirtualService(foundVirtualSvc.Spec, virtualSvc.Spec, virtualEnv.Spec.VeHeader) {
+	} else if shared.IsDifferentVirtualService(foundVirtualSvc.Spec, virtualSvc.Spec, virtualEnv.Spec.EnvHeader) {
 		// existing VirtualService changed
 		foundVirtualSvc.Spec = virtualSvc.Spec
 		err := r.client.Update(context.TODO(), foundVirtualSvc)
@@ -199,7 +216,7 @@ func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.Vi
 // reconcile destination rule according to related deployments
 func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.VirtualEnv, svc string, request reconcile.Request,
 	relatedDeployments map[string]string, logger logr.Logger) error {
-	destRule := shared.DestinationRule(svc, request.Namespace, relatedDeployments, virtualEnv.Spec.VeLabel)
+	destRule := shared.DestinationRule(svc, request.Namespace, relatedDeployments, virtualEnv.Spec.EnvLabel)
 	// Set VirtualEnv instance as the owner and controller
 	err := controllerutil.SetControllerReference(virtualEnv, destRule, r.scheme)
 	if err != nil {
@@ -220,7 +237,7 @@ func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.V
 			logger.Error(err, "Failed to get DestinationRule")
 			return err
 		}
-	} else if shared.IsDifferentDestinationRule(foundDestRule.Spec, destRule.Spec, virtualEnv.Spec.VeLabel) {
+	} else if shared.IsDifferentDestinationRule(foundDestRule.Spec, destRule.Spec, virtualEnv.Spec.EnvLabel) {
 		// existing DestinationRule changed
 		foundDestRule.Spec = destRule.Spec
 		err := r.client.Update(context.TODO(), foundDestRule)
