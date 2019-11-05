@@ -66,6 +66,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	shared.VirtualEnvController = &c
 	return nil
 }
 
@@ -100,7 +101,7 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 		}
 	}
 
-	reqLogger.Info("Reconciling VirtualEnv")
+	reqLogger.Info("Reconciling VirtualEnvironment")
 	r.handleDefaultConfig(virtualEnv)
 	for svc, selector := range shared.AvailableServices {
 		availableLabels := shared.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.EnvLabel)
@@ -137,7 +138,7 @@ func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logg
 			}
 			return nil, err
 		}
-		logger.Error(err, "Failed to get VirtualEnv")
+		logger.Error(err, "Failed to get VirtualEnvironment")
 		return nil, err
 	}
 	if shared.VirtualEnvIns != request.Name {

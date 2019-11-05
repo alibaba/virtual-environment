@@ -1,13 +1,9 @@
 package shared
 
 import (
-	"context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"knative.dev/pkg/apis/istio/common/v1alpha1"
 	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
 
@@ -115,19 +111,6 @@ func FindAllVirtualEnvLabelValues(deployments map[string]map[string]string, envL
 		}
 	}
 	return getKeys(labelSet)
-}
-
-// delete specified instance
-func DeleteIns(client client.Client, namespace string, name string, obj runtime.Object) error {
-	err := client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, obj)
-	if err != nil {
-		return err
-	}
-	err = client.Delete(context.TODO(), obj)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // find subset from list

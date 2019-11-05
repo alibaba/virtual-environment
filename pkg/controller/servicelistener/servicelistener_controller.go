@@ -93,6 +93,8 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 	shared.AvailableServices[request.Name] = service.Spec.Selector
 
 	shared.Lock.RUnlock()
+
+	shared.ReconcileVirtualEnv(request.Namespace, reqLogger)
 	return reconcile.Result{}, nil
 }
 
