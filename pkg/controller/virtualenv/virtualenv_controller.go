@@ -45,7 +45,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// Watch for changes to primary resource VirtualEnv
-	err = c.Watch(&source.Kind{Type: &envv1alpha1.VirtualEnv{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &envv1alpha1.VirtualEnvironment{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -53,14 +53,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Watch for changes to secondary resource VirtualService & DestinationRule, requeue their owner to VirtualEnv
 	err = c.Watch(&source.Kind{Type: &networkingv1alpha3.VirtualService{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &envv1alpha1.VirtualEnv{},
+		OwnerType:    &envv1alpha1.VirtualEnvironment{},
 	})
 	if err != nil {
 		return err
 	}
 	err = c.Watch(&source.Kind{Type: &networkingv1alpha3.DestinationRule{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &envv1alpha1.VirtualEnv{},
+		OwnerType:    &envv1alpha1.VirtualEnvironment{},
 	})
 	if err != nil {
 		return err
@@ -126,8 +126,8 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 }
 
 // fetch the VirtualEnv instance from request
-func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logger logr.Logger) (*envv1alpha1.VirtualEnv, error) {
-	virtualEnv := &envv1alpha1.VirtualEnv{}
+func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logger logr.Logger) (*envv1alpha1.VirtualEnvironment, error) {
+	virtualEnv := &envv1alpha1.VirtualEnvironment{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, virtualEnv)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -155,7 +155,7 @@ func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logg
 
 // delete specified virtual env instance
 func (r *ReconcileVirtualEnv) deleteVirtualEnv(namespace string, name string, logger logr.Logger) {
-	err := shared.DeleteIns(r.client, namespace, name, &envv1alpha1.VirtualEnv{})
+	err := shared.DeleteIns(r.client, namespace, name, &envv1alpha1.VirtualEnvironment{})
 	if err != nil {
 		logger.Error(err, "failed to remove VirtualEnv instance "+name)
 	} else {
@@ -164,7 +164,7 @@ func (r *ReconcileVirtualEnv) deleteVirtualEnv(namespace string, name string, lo
 }
 
 // handle empty virtual env configure item with default value
-func (r *ReconcileVirtualEnv) handleDefaultConfig(virtualEnv *envv1alpha1.VirtualEnv) {
+func (r *ReconcileVirtualEnv) handleDefaultConfig(virtualEnv *envv1alpha1.VirtualEnvironment) {
 	if virtualEnv.Spec.EnvLabel == "" {
 		virtualEnv.Spec.EnvLabel = defaultEnvLabel
 	}
@@ -177,7 +177,7 @@ func (r *ReconcileVirtualEnv) handleDefaultConfig(virtualEnv *envv1alpha1.Virtua
 }
 
 // reconcile virtual service according to related deployments and available labels
-func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.VirtualEnv, svc string, request reconcile.Request,
+func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.VirtualEnvironment, svc string, request reconcile.Request,
 	availableLabels []string, relatedDeployments map[string]string, logger logr.Logger) error {
 	virtualSvc := shared.VirtualService(svc, request.Namespace, availableLabels, relatedDeployments,
 		virtualEnv.Spec.EnvHeader, virtualEnv.Spec.EnvSplitter)
@@ -215,8 +215,8 @@ func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.Vi
 }
 
 // reconcile destination rule according to related deployments
-func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.VirtualEnv, svc string, request reconcile.Request,
-	relatedDeployments map[string]string, logger logr.Logger) error {
+func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.VirtualEnvironment, svc string,
+	request reconcile.Request, relatedDeployments map[string]string, logger logr.Logger) error {
 	destRule := shared.DestinationRule(svc, request.Namespace, relatedDeployments, virtualEnv.Spec.EnvLabel)
 	// Set VirtualEnv instance as the owner and controller
 	err := controllerutil.SetControllerReference(virtualEnv, destRule, r.scheme)

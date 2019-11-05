@@ -7,9 +7,9 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// VirtualEnvSpec defines the desired state of VirtualEnv
+// VirtualEnvironmentSpec defines the desired state of VirtualEnvironment
 // +k8s:openapi-gen=true
-type VirtualEnvSpec struct {
+type VirtualEnvironmentSpec struct {
 	// Header to keep env name in trace
 	// +kubebuilder:validation:MinLength=1
 	EnvHeader string `json:"envHeader,omitempty"`
@@ -22,34 +22,34 @@ type VirtualEnvSpec struct {
 	EnvSplitter string `json:"envSplitter,omitempty"`
 }
 
-// VirtualEnvStatus defines the observed state of VirtualEnv
+// VirtualEnvironmentStatus defines the observed state of VirtualEnvironment
 // +k8s:openapi-gen=true
-type VirtualEnvStatus struct {
+type VirtualEnvironmentStatus struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// VirtualEnv is the Schema for the virtualenvs API
+// VirtualEnvironment is the Schema for the virtualenvironments API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=virtualenvs,scope=Namespaced
-type VirtualEnv struct {
+// +kubebuilder:resource:path=virtualenvironments,scope=Namespaced
+type VirtualEnvironment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   VirtualEnvSpec   `json:"spec,omitempty"`
-	Status VirtualEnvStatus `json:"status,omitempty"`
+	Spec   VirtualEnvironmentSpec   `json:"spec,omitempty"`
+	Status VirtualEnvironmentStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// VirtualEnvList contains a list of VirtualEnv
-type VirtualEnvList struct {
+// VirtualEnvironmentList contains a list of VirtualEnvironment
+type VirtualEnvironmentList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []VirtualEnv `json:"items"`
+	Items           []VirtualEnvironment `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&VirtualEnv{}, &VirtualEnvList{})
+	SchemeBuilder.Register(&VirtualEnvironment{}, &VirtualEnvironmentList{})
 }

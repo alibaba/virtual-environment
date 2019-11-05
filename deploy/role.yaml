@@ -57,5 +57,6 @@ rules:
   - env.alibaba.com
   resources:
   - '*'
+  - virtualenvironments
   verbs:
   - '*'

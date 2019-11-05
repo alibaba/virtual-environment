@@ -11,17 +11,17 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnv":       schema_pkg_apis_env_v1alpha1_VirtualEnv(ref),
-		"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvSpec":   schema_pkg_apis_env_v1alpha1_VirtualEnvSpec(ref),
-		"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvStatus": schema_pkg_apis_env_v1alpha1_VirtualEnvStatus(ref),
+		"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvironment":       schema_pkg_apis_env_v1alpha1_VirtualEnvironment(ref),
+		"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvironmentSpec":   schema_pkg_apis_env_v1alpha1_VirtualEnvironmentSpec(ref),
+		"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvironmentStatus": schema_pkg_apis_env_v1alpha1_VirtualEnvironmentStatus(ref),
 	}
 }
 
-func schema_pkg_apis_env_v1alpha1_VirtualEnv(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_env_v1alpha1_VirtualEnvironment(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "VirtualEnv is the Schema for the virtualenvs API",
+				Description: "VirtualEnvironment is the Schema for the virtualenvironments API",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -45,27 +45,27 @@ func schema_pkg_apis_env_v1alpha1_VirtualEnv(ref common.ReferenceCallback) commo
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvSpec"),
+							Ref: ref("alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvironmentSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvStatus"),
+							Ref: ref("alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvironmentStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvSpec", "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvironmentSpec", "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvironmentStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
-func schema_pkg_apis_env_v1alpha1_VirtualEnvSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_env_v1alpha1_VirtualEnvironmentSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "VirtualEnvSpec defines the desired state of VirtualEnv",
+				Description: "VirtualEnvironmentSpec defines the desired state of VirtualEnvironment",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"envHeader": {
@@ -95,11 +95,11 @@ func schema_pkg_apis_env_v1alpha1_VirtualEnvSpec(ref common.ReferenceCallback) c
 	}
 }
 
-func schema_pkg_apis_env_v1alpha1_VirtualEnvStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_env_v1alpha1_VirtualEnvironmentStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "VirtualEnvStatus defines the observed state of VirtualEnv",
+				Description: "VirtualEnvironmentStatus defines the observed state of VirtualEnvironment",
 				Type:        []string{"object"},
 			},
 		},
