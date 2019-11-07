@@ -50,8 +50,8 @@ func DestinationRule(name string, namespace string, relatedDeployments map[strin
 }
 
 // check whether DestinationRule is different
-func IsDifferentDestinationRule(spec1 networkingv1alpha3.DestinationRuleSpec,
-	spec2 networkingv1alpha3.DestinationRuleSpec, label string) bool {
+func IsDifferentDestinationRule(spec1 *networkingv1alpha3.DestinationRuleSpec,
+	spec2 *networkingv1alpha3.DestinationRuleSpec, label string) bool {
 	if len(spec1.Subsets) != len(spec2.Subsets) {
 		return true
 	}
@@ -68,7 +68,8 @@ func IsDifferentDestinationRule(spec1 networkingv1alpha3.DestinationRuleSpec,
 }
 
 // check whether VirtualService is different
-func IsDifferentVirtualService(spec1 networkingv1alpha3.VirtualServiceSpec, spec2 networkingv1alpha3.VirtualServiceSpec, header string) bool {
+func IsDifferentVirtualService(spec1 *networkingv1alpha3.VirtualServiceSpec, spec2 *networkingv1alpha3.VirtualServiceSpec,
+	header string) bool {
 	if len(spec1.HTTP) != len(spec2.HTTP) {
 		return true
 	}
@@ -84,7 +85,8 @@ func IsDifferentVirtualService(spec1 networkingv1alpha3.VirtualServiceSpec, spec
 }
 
 // return map of deployment name to virtual label value
-func FindAllRelatedDeployments(deployments map[string]map[string]string, selector map[string]string, envLabel string) map[string]string {
+func FindAllRelatedDeployments(deployments map[string]map[string]string, selector map[string]string,
+	envLabel string) map[string]string {
 	relatedDeployments := make(map[string]string)
 	for dep, labels := range deployments {
 		match := true

@@ -201,7 +201,7 @@ func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.Vi
 			logger.Error(err, "Failed to get VirtualService")
 			return err
 		}
-	} else if shared.IsDifferentVirtualService(foundVirtualSvc.Spec, virtualSvc.Spec, virtualEnv.Spec.EnvHeader) {
+	} else if shared.IsDifferentVirtualService(&foundVirtualSvc.Spec, &virtualSvc.Spec, virtualEnv.Spec.EnvHeader) {
 		// existing VirtualService changed
 		foundVirtualSvc.Spec = virtualSvc.Spec
 		err := r.client.Update(context.TODO(), foundVirtualSvc)
@@ -238,7 +238,7 @@ func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.V
 			logger.Error(err, "Failed to get DestinationRule")
 			return err
 		}
-	} else if shared.IsDifferentDestinationRule(foundDestRule.Spec, destRule.Spec, virtualEnv.Spec.EnvLabel) {
+	} else if shared.IsDifferentDestinationRule(&foundDestRule.Spec, &destRule.Spec, virtualEnv.Spec.EnvLabel) {
 		// existing DestinationRule changed
 		foundDestRule.Spec = destRule.Spec
 		err := r.client.Update(context.TODO(), foundDestRule)
