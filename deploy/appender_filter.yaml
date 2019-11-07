@@ -1,0 +1,29 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: virtual-env-header-appender
+spec:
+  filters:
+    - listenerMatch:
+        listenerType: SIDECAR_OUTBOUND
+      filterName: envoy.lua
+      filterType: HTTP
+      filterConfig:
+        inlineCode: |
+          local envLabel = "virtualEnv"
+          local envHeader = "x-virtual-env"
+          local labels = os.getenv ("ISTIO_METAJSON_LABELS")
+          local beginPos, endPos, curEnv
+          _, beginPos = string.find(labels, '","' .. envLabel .. '":"')
+          if beginPos ~= nil then
+            endPos = string.find(labels, '"', beginPos + 1)
+            if endPos ~= nil and endPos > beginPos then
+              curEnv = string.sub(labels, beginPos + 1, endPos - 1)
+            end
+          end
+          function envoy_on_request(request_handle)
+            local env = request_handle:headers()[envHeader]
+            if env == nil and curEnv ~= nil then
+              request_handle:headers():add(envHeader, curEnv)
+            end
+          end
