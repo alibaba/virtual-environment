@@ -9,7 +9,7 @@ import (
 
 // generate istio virtual service instance
 func VirtualService(name string, namespace string, availableLabels []string, relatedDeployments map[string]string,
-	envHeader string, envSplitter string) *networkingv1alpha3.VirtualService {
+	envHeader string, envSplitter string, defaultSubset string) *networkingv1alpha3.VirtualService {
 	virtualSvc := &networkingv1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -21,12 +21,12 @@ func VirtualService(name string, namespace string, availableLabels []string, rel
 		},
 	}
 	for _, label := range availableLabels {
-		matchRoute, ok := virtualServiceMatchRoute(name, relatedDeployments, label, envHeader, envSplitter)
+		matchRoute, ok := virtualServiceMatchRoute(name, relatedDeployments, label, envHeader, envSplitter, defaultSubset)
 		if ok {
 			virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
 		}
 	}
-	virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, defaultRoute(name))
+	virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, defaultRoute(name, defaultSubset))
 	return virtualSvc
 }
 
@@ -74,9 +74,6 @@ func IsDifferentVirtualService(spec1 *networkingv1alpha3.VirtualServiceSpec, spe
 		return true
 	}
 	for _, route1 := range spec1.HTTP {
-		if route1.Match == nil {
-			continue
-		}
 		if !findMatchRoute(spec2.HTTP, &route1, header) {
 			return true
 		}
@@ -128,15 +125,27 @@ func findSubsetByName(subsets []networkingv1alpha3.Subset, name string) *network
 // check whether HTTPRoute exist in list
 func findMatchRoute(routes []networkingv1alpha3.HTTPRoute, target *networkingv1alpha3.HTTPRoute, header string) bool {
 	for _, route := range routes {
-		if route.Match == nil {
-			continue
-		}
-		if route.Route[0].Destination.Subset == target.Route[0].Destination.Subset &&
-			route.Match[0].Headers[header] == target.Match[0].Headers[header] {
+		if isRouteEqual(&route, target, header) {
 			return true
 		}
 	}
 	return false
+}
+
+// compare whether route rule is equal
+func isRouteEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv1alpha3.HTTPRoute, header string) bool {
+	if route.Match == nil || target.Match == nil {
+		return route.Match == nil && target.Match == nil && isDestinationEqual(route, target)
+	} else if len(route.Match) == 0 || len(target.Match) == 0 {
+		return len(route.Match) == 0 && len(target.Match) == 0 && isDestinationEqual(route, target)
+	} else {
+		return route.Match[0].Headers[header] == target.Match[0].Headers[header] && isDestinationEqual(route, target)
+	}
+}
+
+// compare whether route destination is equal
+func isDestinationEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv1alpha3.HTTPRoute) bool {
+	return route.Route[0].Destination.Subset == target.Route[0].Destination.Subset
 }
 
 // generate istio destination rule subset instance
@@ -160,7 +169,7 @@ func getKeys(kv map[string]bool) []string {
 
 // calculate and generate http route instance
 func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]string, labelVal string, headerKey string,
-	splitter string) (networkingv1alpha3.HTTPRoute, bool) {
+	splitter string, defaultSubset string) (networkingv1alpha3.HTTPRoute, bool) {
 	var possibleRoutes []string
 	for _, v := range relatedDeployments {
 		if leveledEqual(labelVal, v, splitter) {
@@ -168,17 +177,21 @@ func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]
 		}
 	}
 	if len(possibleRoutes) > 0 {
-		return matchRoute(serviceName, headerKey, labelVal, findLongestString(possibleRoutes)), true
+		var subset = findLongestString(possibleRoutes)
+		if defaultSubset != subset {
+			return matchRoute(serviceName, headerKey, labelVal, subset), true
+		}
 	}
 	return networkingv1alpha3.HTTPRoute{}, false
 }
 
 // generate default http route instance
-func defaultRoute(name string) networkingv1alpha3.HTTPRoute {
+func defaultRoute(name string, defaultSubset string) networkingv1alpha3.HTTPRoute {
 	return networkingv1alpha3.HTTPRoute{
 		Route: []networkingv1alpha3.HTTPRouteDestination{{
 			Destination: networkingv1alpha3.Destination{
-				Host: name,
+				Host:   name,
+				Subset: defaultSubset,
 			},
 		}},
 	}

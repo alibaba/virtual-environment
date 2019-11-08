@@ -10,6 +10,9 @@ import (
 // VirtualEnvironmentSpec defines the desired state of VirtualEnvironment
 // +k8s:openapi-gen=true
 type VirtualEnvironmentSpec struct {
+	// Default subset to route when env header matches nothing
+	// +kubebuilder:validation:MinLength=1
+	DefaultSubset string `json:"defaultSubset,omitempty"`
 	// Header to keep env name in trace
 	// +kubebuilder:validation:MinLength=1
 	EnvHeader string `json:"envHeader,omitempty"`

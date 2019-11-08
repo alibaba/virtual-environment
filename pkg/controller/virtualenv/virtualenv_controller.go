@@ -22,7 +22,7 @@ import (
 var log = logf.Log.WithName("controller_virtualenv")
 
 const defaultEnvLabel = "virtualEnv"
-const defaultEnvHeader = "x-virtual-env"
+const defaultEnvHeader = "X-Virtual-Env"
 const defaultEnvSplitter = "/"
 
 // Add creates a new VirtualEnv Controller and adds it to the Manager. The Manager will set fields on the Controller
@@ -180,7 +180,7 @@ func (r *ReconcileVirtualEnv) handleDefaultConfig(virtualEnv *envv1alpha1.Virtua
 func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.VirtualEnvironment, svc string, request reconcile.Request,
 	availableLabels []string, relatedDeployments map[string]string, logger logr.Logger) error {
 	virtualSvc := shared.VirtualService(svc, request.Namespace, availableLabels, relatedDeployments,
-		virtualEnv.Spec.EnvHeader, virtualEnv.Spec.EnvSplitter)
+		virtualEnv.Spec.EnvHeader, virtualEnv.Spec.EnvSplitter, virtualEnv.Spec.DefaultSubset)
 	// Set VirtualEnv instance as the owner and controller
 	err := controllerutil.SetControllerReference(virtualEnv, virtualSvc, r.scheme)
 	if err != nil {

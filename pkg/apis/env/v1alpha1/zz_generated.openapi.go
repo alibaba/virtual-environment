@@ -68,6 +68,13 @@ func schema_pkg_apis_env_v1alpha1_VirtualEnvironmentSpec(ref common.ReferenceCal
 				Description: "VirtualEnvironmentSpec defines the desired state of VirtualEnvironment",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"defaultSubset": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Default subset to route when env header matches nothing",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"envHeader": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Header to keep env name in trace",
