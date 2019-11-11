@@ -13,6 +13,7 @@ import (
 
 	"alibaba.com/virtual-env-operator/pkg/apis"
 	"alibaba.com/virtual-env-operator/pkg/controller"
+	"alibaba.com/virtual-env-operator/pkg/envoy"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
@@ -105,6 +106,12 @@ func main() {
 	// Setup Scheme for istio networking resource
 	if err := networkingv1alpha3.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "failed to init istio networking scheme")
+		os.Exit(1)
+	}
+
+	// Setup Scheme for istio envoy filter resource
+	if err := envoy.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "failed to init istio envoy filter scheme")
 		os.Exit(1)
 	}
 

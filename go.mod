@@ -3,13 +3,13 @@ module alibaba.com/virtual-env-operator
 require (
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.17.2
-	github.com/gogo/protobuf v1.3.0 // indirect
-	github.com/golang/protobuf v1.3.2 // indirect
+	github.com/gogo/protobuf v1.3.0
 	github.com/operator-framework/operator-sdk v0.11.1-0.20191024020519-c7f429f05808
 	github.com/spf13/pflag v1.0.3
-	google.golang.org/grpc v1.23.1 // indirect
-	k8s.io/api v0.0.0-20190918155943-95b840bb6a1f
-	k8s.io/apimachinery v0.0.0-20190913080033-27d36303b655
+	istio.io/api v0.0.0-20191109011911-e51134872853
+	istio.io/client-go v0.0.0-20191104174404-7b65e62d85b0
+	k8s.io/api v0.0.0-20191016110408-35e52d86657a
+	k8s.io/apimachinery v0.0.0-20191004115801-a2eda9f80ab8
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/kube-openapi v0.0.0-20190401085232-94e1e7b7574c
 	knative.dev/pkg v0.0.0-20191024051936-4befa47ec54b
