@@ -68,37 +68,23 @@ func schema_pkg_apis_env_v1alpha1_VirtualEnvironmentSpec(ref common.ReferenceCal
 				Description: "VirtualEnvironmentSpec defines the desired state of VirtualEnvironment",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"defaultSubset": {
+					"envLabel": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Default subset to route when env header matches nothing",
-							Type:        []string{"string"},
-							Format:      "",
+							Description: "Pod label to mark virtual environment name",
+							Ref:         ref("alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.EnvLabelSpec"),
 						},
 					},
 					"envHeader": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Header to keep env name in trace",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"envLabel": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Environment variable to mark env name of deployment",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"envSplitter": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Symbol to split virtual env levels",
-							Type:        []string{"string"},
-							Format:      "",
+							Ref:         ref("alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.EnvHeaderSpec"),
 						},
 					},
 				},
 			},
 		},
+		Dependencies: []string{
+			"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.EnvHeaderSpec", "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.EnvLabelSpec"},
 	}
 }
 

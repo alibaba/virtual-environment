@@ -22,8 +22,8 @@ import (
 
 var log = logf.Log.WithName("controller_virtualenv")
 
-const defaultEnvLabel = "virtualEnv"
 const defaultEnvHeader = "X-Virtual-Env"
+const defaultEnvLabel = "virtualEnv"
 const defaultEnvSplitter = "/"
 
 // Add creates a new VirtualEnv Controller and adds it to the Manager. The Manager will set fields on the Controller
@@ -104,8 +104,8 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 
 	reqLogger.Info("Reconciling VirtualEnvironment")
 	for svc, selector := range shared.AvailableServices {
-		availableLabels := shared.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.EnvLabel)
-		relatedDeployments := shared.FindAllRelatedDeployments(shared.AvailableDeployments, selector, virtualEnv.Spec.EnvLabel)
+		availableLabels := shared.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.EnvLabel.Name)
+		relatedDeployments := shared.FindAllRelatedDeployments(shared.AvailableDeployments, selector, virtualEnv.Spec.EnvLabel.Name)
 
 		if len(availableLabels) > 0 && len(relatedDeployments) > 0 {
 			err = r.reconcileVirtualService(virtualEnv, svc, request, availableLabels, relatedDeployments, reqLogger)
@@ -151,10 +151,11 @@ func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logg
 			r.deleteVirtualEnv(request.Namespace, shared.VirtualEnvIns, logger)
 		}
 		r.handleDefaultConfig(virtualEnv)
-		r.createTagAppender(request.Namespace, request.Name, virtualEnv, logger)
+		if virtualEnv.Spec.EnvHeader.AutoInject {
+			r.createTagAppender(request.Namespace, request.Name, virtualEnv, logger)
+		}
 		shared.VirtualEnvIns = request.Name
-		logger.Info("VirtualEnv added", "EnvLabel", virtualEnv.Spec.EnvLabel,
-			"EnvHeader", virtualEnv.Spec.EnvHeader, "EnvSplitter", virtualEnv.Spec.EnvSplitter)
+		logger.Info("VirtualEnv added", "Spec", virtualEnv.Spec)
 	}
 	return virtualEnv, err
 }
@@ -173,7 +174,7 @@ func (r *ReconcileVirtualEnv) deleteVirtualEnv(namespace string, name string, lo
 func (r *ReconcileVirtualEnv) createTagAppender(namespace string, name string, virtualEnv *envv1alpha1.VirtualEnvironment,
 	logger logr.Logger) {
 	r.deleteTagAppenderIfExist(namespace, name, logger)
-	err := envoy.CreateTagAppender(r.client, namespace, name, virtualEnv.Spec.EnvLabel, virtualEnv.Spec.EnvHeader)
+	err := envoy.CreateTagAppender(r.client, namespace, name, virtualEnv.Spec.EnvLabel.Name, virtualEnv.Spec.EnvHeader.Name)
 	if err != nil {
 		logger.Error(err, "failed to create TagAppender instance "+name)
 	} else {
@@ -195,14 +196,14 @@ func (r *ReconcileVirtualEnv) deleteTagAppenderIfExist(namespace string, name st
 
 // handle empty virtual env configure item with default value
 func (r *ReconcileVirtualEnv) handleDefaultConfig(virtualEnv *envv1alpha1.VirtualEnvironment) {
-	if virtualEnv.Spec.EnvLabel == "" {
-		virtualEnv.Spec.EnvLabel = defaultEnvLabel
+	if virtualEnv.Spec.EnvHeader.Name == "" {
+		virtualEnv.Spec.EnvHeader.Name = defaultEnvHeader
 	}
-	if virtualEnv.Spec.EnvHeader == "" {
-		virtualEnv.Spec.EnvHeader = defaultEnvHeader
+	if virtualEnv.Spec.EnvLabel.Name == "" {
+		virtualEnv.Spec.EnvLabel.Name = defaultEnvLabel
 	}
-	if virtualEnv.Spec.EnvSplitter == "" {
-		virtualEnv.Spec.EnvSplitter = defaultEnvSplitter
+	if virtualEnv.Spec.EnvLabel.Splitter == "" {
+		virtualEnv.Spec.EnvLabel.Splitter = defaultEnvSplitter
 	}
 }
 
@@ -210,7 +211,7 @@ func (r *ReconcileVirtualEnv) handleDefaultConfig(virtualEnv *envv1alpha1.Virtua
 func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.VirtualEnvironment, svc string, request reconcile.Request,
 	availableLabels []string, relatedDeployments map[string]string, logger logr.Logger) error {
 	virtualSvc := shared.VirtualService(request.Namespace, svc, availableLabels, relatedDeployments,
-		virtualEnv.Spec.EnvHeader, virtualEnv.Spec.EnvSplitter, virtualEnv.Spec.DefaultSubset)
+		virtualEnv.Spec.EnvHeader.Name, virtualEnv.Spec.EnvLabel.Splitter, virtualEnv.Spec.EnvLabel.DefaultSubset)
 	foundVirtualSvc := &networkingv1alpha3.VirtualService{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: svc, Namespace: request.Namespace}, foundVirtualSvc)
 	if err != nil {
@@ -231,7 +232,7 @@ func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.Vi
 			logger.Error(err, "Failed to get VirtualService")
 			return err
 		}
-	} else if shared.IsDifferentVirtualService(&foundVirtualSvc.Spec, &virtualSvc.Spec, virtualEnv.Spec.EnvHeader) {
+	} else if shared.IsDifferentVirtualService(&foundVirtualSvc.Spec, &virtualSvc.Spec, virtualEnv.Spec.EnvHeader.Name) {
 		// existing VirtualService changed
 		foundVirtualSvc.Spec = virtualSvc.Spec
 		err := r.client.Update(context.TODO(), foundVirtualSvc)
@@ -247,7 +248,7 @@ func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.Vi
 // reconcile destination rule according to related deployments
 func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.VirtualEnvironment, svc string,
 	request reconcile.Request, relatedDeployments map[string]string, logger logr.Logger) error {
-	destRule := shared.DestinationRule(request.Namespace, svc, relatedDeployments, virtualEnv.Spec.EnvLabel)
+	destRule := shared.DestinationRule(request.Namespace, svc, relatedDeployments, virtualEnv.Spec.EnvLabel.Name)
 	foundDestRule := &networkingv1alpha3.DestinationRule{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: svc, Namespace: request.Namespace}, foundDestRule)
 	if err != nil {
@@ -268,7 +269,7 @@ func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.V
 			logger.Error(err, "Failed to get DestinationRule")
 			return err
 		}
-	} else if shared.IsDifferentDestinationRule(&foundDestRule.Spec, &destRule.Spec, virtualEnv.Spec.EnvLabel) {
+	} else if shared.IsDifferentDestinationRule(&foundDestRule.Spec, &destRule.Spec, virtualEnv.Spec.EnvLabel.Name) {
 		// existing DestinationRule changed
 		foundDestRule.Spec = destRule.Spec
 		err := r.client.Update(context.TODO(), foundDestRule)

@@ -10,19 +10,31 @@ import (
 // VirtualEnvironmentSpec defines the desired state of VirtualEnvironment
 // +k8s:openapi-gen=true
 type VirtualEnvironmentSpec struct {
-	// Default subset to route when env header matches nothing
-	// +kubebuilder:validation:MinLength=1
-	DefaultSubset string `json:"defaultSubset,omitempty"`
+	// Pod label to mark virtual environment name
+	EnvLabel EnvLabelSpec `json:"envLabel,omitempty"`
 	// Header to keep env name in trace
+	EnvHeader EnvHeaderSpec `json:"envHeader,omitempty"`
+}
+
+type EnvLabelSpec struct {
+	// Name of the label
 	// +kubebuilder:validation:MinLength=1
-	EnvHeader string `json:"envHeader,omitempty"`
-	// Environment variable to mark env name of deployment
-	// +kubebuilder:validation:MinLength=1
-	EnvLabel string `json:"envLabel,omitempty"`
+	Name string `json:"name,omitempty"`
 	// Symbol to split virtual env levels
 	// +kubebuilder:validation:MaxLength=1
 	// +kubebuilder:validation:MinLength=1
-	EnvSplitter string `json:"envSplitter,omitempty"`
+	Splitter string `json:"splitter,omitempty"`
+	// Default subset to route when env header matches nothing
+	// +kubebuilder:validation:MinLength=1
+	DefaultSubset string `json:"defaultSubset,omitempty"`
+}
+
+type EnvHeaderSpec struct {
+	// Name of the header
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name,omitempty"`
+	// Whether auto inject env header via sidecar
+	AutoInject bool `json:"autoInject,omitempty"`
 }
 
 // VirtualEnvironmentStatus defines the observed state of VirtualEnvironment
