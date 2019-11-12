@@ -1,31 +1,14 @@
 package envoy
 
 import (
-	"alibaba.com/virtual-env-operator/pkg/shared"
-	"context"
 	protobuftypes "github.com/gogo/protobuf/types"
 	networkingv1alpha3 "istio.io/api/networking/v1alpha3"
 	networkingv1alpha3api "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func Exist(client client.Client, namespace string, name string) bool {
-	err := client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &networkingv1alpha3api.EnvoyFilter{})
-	return err == nil
-}
-
-func CreateTagAppender(client client.Client, namespace string, name string, envLabel string, envHeader string) error {
-	return client.Create(context.TODO(), tagAppenderFilter(namespace, name, envLabel, envHeader))
-}
-
-func DeleteTagAppender(client client.Client, namespace string, name string) error {
-	return shared.DeleteIns(client, namespace, name, &networkingv1alpha3api.EnvoyFilter{})
-}
-
 // EnvoyFilter to auto append env tag into HTTP header
-func tagAppenderFilter(namespace string, name string, envLabel string, envHeader string) *networkingv1alpha3api.EnvoyFilter {
+func TagAppenderFilter(namespace string, name string, envLabel string, envHeader string) *networkingv1alpha3api.EnvoyFilter {
 	return &networkingv1alpha3api.EnvoyFilter{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,

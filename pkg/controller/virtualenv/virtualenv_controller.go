@@ -137,12 +137,12 @@ func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logg
 				shared.VirtualEnvIns = ""
 				logger.Info("VirtualEnv record removed")
 			}
-			r.deleteTagAppenderIfExist(request.Namespace, request.Name, logger)
 			return nil, err
 		}
 		logger.Error(err, "Failed to get VirtualEnvironment")
 		return nil, err
 	}
+	r.handleDefaultConfig(virtualEnv)
 	if shared.VirtualEnvIns != request.Name {
 		// new virtual environment found
 		if shared.VirtualEnvIns != "" {
@@ -150,11 +150,15 @@ func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logg
 			logger.Info("New VirtualEnv resource detected, deleting " + shared.VirtualEnvIns)
 			r.deleteVirtualEnv(request.Namespace, shared.VirtualEnvIns, logger)
 		}
-		r.handleDefaultConfig(virtualEnv)
-		if virtualEnv.Spec.EnvHeader.AutoInject {
-			r.createTagAppender(request.Namespace, request.Name, virtualEnv, logger)
-		}
 		shared.VirtualEnvIns = request.Name
+		if virtualEnv.Spec.EnvHeader.AutoInject {
+			tagAppenderName := nameWithPostfix(request.Name, virtualEnv.Spec.InstancePostfix)
+			err = r.createTagAppender(request.Namespace, tagAppenderName, virtualEnv, logger)
+			if err != nil {
+				logger.Error(err, "failed to create TagAppender instance "+tagAppenderName)
+				return virtualEnv, err
+			}
+		}
 		logger.Info("VirtualEnv added", "Spec", virtualEnv.Spec)
 	}
 	return virtualEnv, err
@@ -172,26 +176,17 @@ func (r *ReconcileVirtualEnv) deleteVirtualEnv(namespace string, name string, lo
 
 // create tag auto appender filter instance
 func (r *ReconcileVirtualEnv) createTagAppender(namespace string, name string, virtualEnv *envv1alpha1.VirtualEnvironment,
-	logger logr.Logger) {
-	r.deleteTagAppenderIfExist(namespace, name, logger)
-	err := envoy.CreateTagAppender(r.client, namespace, name, virtualEnv.Spec.EnvLabel.Name, virtualEnv.Spec.EnvHeader.Name)
-	if err != nil {
-		logger.Error(err, "failed to create TagAppender instance "+name)
-	} else {
-		logger.Info("TagAppender created")
-	}
-}
-
-// delete tag auto appender filter instance if it already created
-func (r *ReconcileVirtualEnv) deleteTagAppenderIfExist(namespace string, name string, logger logr.Logger) {
-	if envoy.Exist(r.client, namespace, name) {
-		err := envoy.DeleteTagAppender(r.client, namespace, name)
-		if err != nil {
-			logger.Error(err, "failed to remove TagAppender instance "+name)
-		} else {
-			logger.Info("TagAppender deleted")
+	logger logr.Logger) error {
+	tagAppender := envoy.TagAppenderFilter(namespace, name, virtualEnv.Spec.EnvLabel.Name, virtualEnv.Spec.EnvHeader.Name)
+	// set VirtualEnv instance as the owner and controller
+	err := controllerutil.SetControllerReference(virtualEnv, tagAppender, r.scheme)
+	if err == nil {
+		err = r.client.Create(context.TODO(), tagAppender)
+		if err == nil {
+			logger.Info("TagAppender created")
 		}
 	}
+	return err
 }
 
 // handle empty virtual env configure item with default value
@@ -210,16 +205,18 @@ func (r *ReconcileVirtualEnv) handleDefaultConfig(virtualEnv *envv1alpha1.Virtua
 // reconcile virtual service according to related deployments and available labels
 func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.VirtualEnvironment, svc string, request reconcile.Request,
 	availableLabels []string, relatedDeployments map[string]string, logger logr.Logger) error {
-	virtualSvc := shared.VirtualService(request.Namespace, svc, availableLabels, relatedDeployments,
+	virtualServiceName := nameWithPostfix(svc, virtualEnv.Spec.InstancePostfix)
+	virtualSvc := shared.VirtualService(request.Namespace, virtualServiceName, availableLabels, relatedDeployments,
 		virtualEnv.Spec.EnvHeader.Name, virtualEnv.Spec.EnvLabel.Splitter, virtualEnv.Spec.EnvLabel.DefaultSubset)
 	foundVirtualSvc := &networkingv1alpha3.VirtualService{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: svc, Namespace: request.Namespace}, foundVirtualSvc)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: virtualServiceName, Namespace: request.Namespace}, foundVirtualSvc)
 	if err != nil {
 		// VirtualService not exist, create one
 		if errors.IsNotFound(err) {
-			// Set VirtualEnv instance as the owner and controller
+			// set VirtualEnv instance as the owner and controller
 			err = controllerutil.SetControllerReference(virtualEnv, virtualSvc, r.scheme)
 			if err != nil {
+				logger.Error(err, "Failed to set owner of "+virtualSvc.Name)
 				return err
 			}
 			err = r.client.Create(context.TODO(), virtualSvc)
@@ -248,15 +245,17 @@ func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.Vi
 // reconcile destination rule according to related deployments
 func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.VirtualEnvironment, svc string,
 	request reconcile.Request, relatedDeployments map[string]string, logger logr.Logger) error {
-	destRule := shared.DestinationRule(request.Namespace, svc, relatedDeployments, virtualEnv.Spec.EnvLabel.Name)
+	destRuleName := nameWithPostfix(svc, virtualEnv.Spec.InstancePostfix)
+	destRule := shared.DestinationRule(request.Namespace, destRuleName, relatedDeployments, virtualEnv.Spec.EnvLabel.Name)
 	foundDestRule := &networkingv1alpha3.DestinationRule{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: svc, Namespace: request.Namespace}, foundDestRule)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: destRuleName, Namespace: request.Namespace}, foundDestRule)
 	if err != nil {
 		// DestinationRule not exist, create one
 		if errors.IsNotFound(err) {
-			// Set VirtualEnv instance as the owner and controller
+			// set VirtualEnv instance as the owner and controller
 			err = controllerutil.SetControllerReference(virtualEnv, destRule, r.scheme)
 			if err != nil {
+				logger.Error(err, "Failed to set owner of "+destRule.Name)
 				return err
 			}
 			err = r.client.Create(context.TODO(), destRule)
@@ -280,4 +279,11 @@ func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.V
 		logger.Info("DestinationRule " + destRule.Name + " changed")
 	}
 	return nil
+}
+
+func nameWithPostfix(name string, postfix string) string {
+	if len(postfix) > 0 {
+		return name + "-" + postfix
+	}
+	return name
 }

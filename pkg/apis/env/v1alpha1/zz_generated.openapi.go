@@ -80,6 +80,13 @@ func schema_pkg_apis_env_v1alpha1_VirtualEnvironmentSpec(ref common.ReferenceCal
 							Ref:         ref("alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.EnvHeaderSpec"),
 						},
 					},
+					"instancePostfix": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Naming postfix of generated VirtualService and DestinationRule instance",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},
