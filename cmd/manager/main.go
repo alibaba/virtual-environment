@@ -11,10 +11,10 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 
+	"alibaba.com/virtual-env-operator/inspect"
 	"alibaba.com/virtual-env-operator/pkg/apis"
 	"alibaba.com/virtual-env-operator/pkg/controller"
 	"alibaba.com/virtual-env-operator/pkg/envoy"
-
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
@@ -37,6 +37,8 @@ var (
 	metricsHost               = "0.0.0.0"
 	metricsPort         int32 = 8383
 	operatorMetricsPort int32 = 8686
+	inspectHost               = "127.0.0.1"
+	inspectPort               = 8000
 )
 var log = logf.Log.WithName("cmd")
 
@@ -100,6 +102,9 @@ func main() {
 		log.Error(err, "")
 		os.Exit(1)
 	}
+
+	// Create inspect api
+	inspect.Start(inspectHost, inspectPort)
 
 	log.Info("Registering Components.")
 

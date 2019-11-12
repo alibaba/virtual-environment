@@ -4,6 +4,7 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.17.2
 	github.com/gogo/protobuf v1.3.0
+	github.com/labstack/echo/v4 v4.1.11
 	github.com/operator-framework/operator-sdk v0.11.1-0.20191024020519-c7f429f05808
 	github.com/spf13/pflag v1.0.3
 	istio.io/api v0.0.0-20191109011911-e51134872853
