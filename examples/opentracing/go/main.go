@@ -21,17 +21,12 @@ func printOpenTracingText(w http.ResponseWriter, r *http.Request) {
 	tracer, closer := jaeger.NewTracer("demo", jaeger.NewConstSampler(false), jaeger.NewNullReporter())
 	defer closer.Close()
 	ctx, err := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
-	var reqEnvMark, requestText string = "undefined", ""
-	if err == nil {
-		ctx.ForeachBaggageItem(func(k, v string) bool {
-			if k == "envMark" {
-				reqEnvMark = v
-			}
-			return false
-		})
+	if err != nil {
+		log.Fatal("tracer Extract failed")
 	}
-
 	span := tracer.StartSpan("root", opentracing.ChildOf(ctx))
+
+	var reqEnvMark, requestText string = span.BaggageItem("ali-env-mark"), ""
 
 	hdr := opentracing.HTTPHeadersCarrier{}
 	err = tracer.Inject(span.Context(), opentracing.HTTPHeaders, hdr)

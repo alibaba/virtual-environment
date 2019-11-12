@@ -30,8 +30,9 @@ public class DemoController {
     @Autowired
     private ApplicationArguments applicationArguments;
 
-    private final static String ENV_MARK = "ali-env-mark";
+    private final static String HEADER_ENV_MARK_NAME = "ali-env-mark";
     private final static String LINE_BREAK_TEXT = "\n";
+    private final static String ENV_MARK_KEY = "envMark";
 
     @RequestMapping("/demo")
     public String demo(HttpServletRequest request) {
@@ -41,10 +42,10 @@ public class DemoController {
 
         Scope orderSpanScope = GlobalTracer.get().buildSpan("demo").asChildOf(parentContext).startActive(true);
 
-        String url = CollectionUtils.isEmpty(applicationArguments.getOptionValues("url")) ? null
+        String url = CollectionUtils.isEmpty(applicationArguments.getOptionValues("url")) ? "none"
             : applicationArguments.getOptionValues("url").get(0);
-        String envMark = CollectionUtils.isEmpty(applicationArguments.getOptionValues("envMark")) ? null
-            : applicationArguments.getOptionValues("envMark").get(0);
+        String envMark = CollectionUtils.isEmpty(applicationArguments.getOptionValues(ENV_MARK_KEY)) ? "dev"
+            : applicationArguments.getOptionValues(ENV_MARK_KEY).get(0);
 
         String requestText = "";
         if (!StringUtils.isEmpty(url) && !"none".equals(url)) {
@@ -59,7 +60,9 @@ public class DemoController {
         }
 
         return (StringUtils.isEmpty(requestText) ? "" : requestText + LINE_BREAK_TEXT) + String.format(
-            "[springboot][request env mark is %s][my env mark is %s]", orderSpanScope.span().getBaggageItem(ENV_MARK),
+            "[springboot][request env mark is %s][my env mark is %s]",
+            StringUtils.isEmpty(orderSpanScope.span().getBaggageItem(HEADER_ENV_MARK_NAME)) ? "empty"
+                : orderSpanScope.span().getBaggageItem(HEADER_ENV_MARK_NAME),
             envMark);
     }
 
@@ -88,6 +91,7 @@ public class DemoController {
         while (headerNames.hasMoreElements()) {
             String key = headerNames.nextElement();
             headers.put(key, request.getHeader(key));
+            System.out.println(key + " : " + request.getHeader(key));
         }
         return headers;
     }
