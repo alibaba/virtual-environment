@@ -1,11 +1,24 @@
 package envoy
 
 import (
+	"alibaba.com/virtual-env-operator/pkg/shared"
+	"context"
 	protobuftypes "github.com/gogo/protobuf/types"
 	networkingv1alpha3 "istio.io/api/networking/v1alpha3"
 	networkingv1alpha3api "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+// Delete EnvoyFilter instance if it already exist
+func DeleteTagAppenderIfExist(client client.Client, namespace string, name string) error {
+	err := client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &networkingv1alpha3api.EnvoyFilter{})
+	if err == nil {
+		return shared.DeleteIns(client, namespace, name, &networkingv1alpha3api.EnvoyFilter{})
+	}
+	return nil
+}
 
 // EnvoyFilter to auto append env tag into HTTP header
 func TagAppenderFilter(namespace string, name string, envLabel string, envHeader string) *networkingv1alpha3api.EnvoyFilter {

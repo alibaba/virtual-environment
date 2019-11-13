@@ -177,9 +177,14 @@ func (r *ReconcileVirtualEnv) deleteVirtualEnv(namespace string, name string, lo
 // create tag auto appender filter instance
 func (r *ReconcileVirtualEnv) createTagAppender(namespace string, name string, virtualEnv *envv1alpha1.VirtualEnvironment,
 	logger logr.Logger) error {
+	err := envoy.DeleteTagAppenderIfExist(r.client, namespace, name)
+	if err != nil {
+		logger.Error(err, "failed to remove old TagAppender instance")
+		return err
+	}
 	tagAppender := envoy.TagAppenderFilter(namespace, name, virtualEnv.Spec.EnvLabel.Name, virtualEnv.Spec.EnvHeader.Name)
 	// set VirtualEnv instance as the owner and controller
-	err := controllerutil.SetControllerReference(virtualEnv, tagAppender, r.scheme)
+	err = controllerutil.SetControllerReference(virtualEnv, tagAppender, r.scheme)
 	if err == nil {
 		err = r.client.Create(context.TODO(), tagAppender)
 		if err == nil {
