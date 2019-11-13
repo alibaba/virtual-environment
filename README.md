@@ -33,9 +33,36 @@ ProjectEnv -> ServiceA +-----+      +-----> ServiceC |
 - 由于本质是动态生成Istio规则，因此仅支持Istio可配置的通信协议，目前为HTTP
 - 在应用程序中需要实现Header标签在请求之间的传递，可通过OpenTracing的baggage机制完成，也可在请求代码中直接传递
 
-## 使用示例
+## 使用概述
 
-1. 准备添加了自动透传Header标签能力的应用程序（假设约定Header为`X-Virtual-Env`）
-2. 将改程序打包为镜像，并在部署到Kubernetes时，为Deployment的Pod模板增加一个Label项（假设为`virtualEnv`）
-3. 创建一个`VirtualEnvironment`的YAML文件，然后使用kubectl apply命令将它添加到Kubernetes集群
+1. 为集群安装虚拟环境的CRD，命令为`kubectl apply -f deploy/crds/env.alibaba.com_virtualenvironments_crd.yaml`
+2. 准备添加了自动透传Header标签能力的应用程序（默认约定Header为`X-Virtual-Env`）
+3. 将改程序打包为镜像，并在部署到Kubernetes时，为Deployment的Pod模板增加一个Label项（默认约定为`virtualEnv`）
+4. 创建一个类型为`VirtualEnvironment`的YAML文件，根据实际情况修改配置参数，使用`kubectl apply`命令添加到Kubernetes集群
 
+## CRD配置
+
+```yaml
+apiVersion: env.alibaba.com/v1alpha1
+kind: VirtualEnvironment
+metadata:
+  name: example-virtualenv
+spec:
+  envHeader:
+    name: X-Virtual-Env
+    autoInject: true
+  envLabel:
+    name: virtualEnv
+    splitter: /
+    defaultSubset: dev
+  instancePostfix: virenv
+```
+
+| 配置参数                | 默认值         | 说明  |
+| :--------              | :-----:       | :---- |
+| envHeader.name         | X-Virtual-Env | 用于记录虚拟环境名的HTTP头名称（虽然有默认值，强烈建议显性设置） |
+| envHeader.autoInject   | false         | 是否为没有虚拟环境HTTP头记录的请求自动注入HTTP头（建议开启） |
+| envLabel.name          | virtualEnv    | Pod用于表示虚拟环境名的标签名称（虽然有默认值，强烈建议显性设置） |
+| envLabel.splitter      | /             | 虚拟环境名中用于划分环境默认路由层级的字符（只能是单个字符） |
+| envLabel.defaultSubset |               | 请求未匹配到任何存在的虚拟环境时，进行兜底虚拟环境名（默认为随机路由） |
+| instancePostfix        |               | 自动创建的Istio对象命名的名字尾缀，默认与相应服务名相同（无尾缀） |
