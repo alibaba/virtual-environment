@@ -21,12 +21,17 @@ func printOpenTracingText(w http.ResponseWriter, r *http.Request) {
 	tracer, closer := jaeger.NewTracer("demo", jaeger.NewConstSampler(false), jaeger.NewNullReporter())
 	defer closer.Close()
 	ctx, err := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
+	var span opentracing.Span
 	if err != nil {
-		log.Fatal("tracer Extract failed")
+		span = tracer.StartSpan("root")
+	} else {
+		span = tracer.StartSpan("root", opentracing.ChildOf(ctx))
 	}
-	span := tracer.StartSpan("root", opentracing.ChildOf(ctx))
 
 	var reqEnvMark, requestText string = span.BaggageItem("ali-env-mark"), ""
+	if reqEnvMark=="" {
+		reqEnvMark = "empty"
+	}
 
 	hdr := opentracing.HTTPHeadersCarrier{}
 	err = tracer.Inject(span.Context(), opentracing.HTTPHeaders, hdr)
@@ -54,9 +59,10 @@ func printOpenTracingText(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
+		requestText += "\n"
 	}
 
-	fmt.Fprintf(w, requestText+"\n"+"[go][request env mark is "+reqEnvMark+"][my env mark is "+envMark+"]")
+	fmt.Fprintf(w, requestText+"[go][request env mark is "+reqEnvMark+"][my env mark is "+envMark+"]")
 }
 
 func main() {
