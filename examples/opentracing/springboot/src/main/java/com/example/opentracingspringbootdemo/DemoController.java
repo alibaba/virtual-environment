@@ -19,7 +19,6 @@ import io.opentracing.propagation.TextMapInjectAdapter;
 import io.opentracing.util.GlobalTracer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,6 +32,7 @@ public class DemoController {
     private final static String HEADER_ENV_MARK_NAME = "ali-env-mark";
     private final static String LINE_BREAK_TEXT = "\n";
     private final static String ENV_MARK_KEY = "envMark";
+    private final static String URL_KEY = "url";
 
     @RequestMapping("/demo")
     public String demo(HttpServletRequest request) {
@@ -42,13 +42,12 @@ public class DemoController {
 
         Scope orderSpanScope = GlobalTracer.get().buildSpan("demo").asChildOf(parentContext).startActive(true);
 
-        String url = CollectionUtils.isEmpty(applicationArguments.getOptionValues("url")) ? "none"
-            : applicationArguments.getOptionValues("url").get(0);
-        String envMark = CollectionUtils.isEmpty(applicationArguments.getOptionValues(ENV_MARK_KEY)) ? "dev"
-            : applicationArguments.getOptionValues(ENV_MARK_KEY).get(0);
+        String url = System.getenv(URL_KEY);
+        String envMark = System.getenv(ENV_MARK_KEY);
+        System.out.println(String.format("url is: %s, envMark is: %s", url, envMark));
 
         String requestText = "";
-        if (!StringUtils.isEmpty(url) && !"none".equals(url)) {
+        if (!StringUtils.isEmpty(url)) {
             Map<String, String> sendHeaders = new HashMap<>();
             GlobalTracer.get().inject(orderSpanScope.span().context(), Builtin.HTTP_HEADERS,
                 new TextMapInjectAdapter(sendHeaders));
@@ -63,7 +62,7 @@ public class DemoController {
             "[springboot][request env mark is %s][my env mark is %s]",
             StringUtils.isEmpty(orderSpanScope.span().getBaggageItem(HEADER_ENV_MARK_NAME)) ? "empty"
                 : orderSpanScope.span().getBaggageItem(HEADER_ENV_MARK_NAME),
-            envMark);
+            StringUtils.isEmpty(envMark) ? "dev" : envMark);
     }
 
     private static String httpGetCall(String url, Map<String, String> headers) throws IOException {
@@ -91,7 +90,6 @@ public class DemoController {
         while (headerNames.hasMoreElements()) {
             String key = headerNames.nextElement();
             headers.put(key, request.getHeader(key));
-            System.out.println(key + " : " + request.getHeader(key));
         }
         return headers;
     }
