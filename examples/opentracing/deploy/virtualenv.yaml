@@ -1,0 +1,13 @@
+apiVersion: env.alibaba.com/v1alpha1
+kind: VirtualEnvironment
+metadata:
+  name: demo-virtualenv
+spec:
+  envHeader:
+    name: uberctx-ali-env-mark
+    autoInject: true
+  envLabel:
+    name: virtualEnv
+    splitter: "-"
+    defaultSubset: dev
+  instancePostfix: virenv
