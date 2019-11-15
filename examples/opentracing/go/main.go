@@ -23,13 +23,13 @@ func printOpenTracingText(w http.ResponseWriter, r *http.Request) {
 	ctx, err := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
 	var span opentracing.Span
 	if err != nil {
-		span = tracer.StartSpan("root")
+		span = tracer.StartSpan("demo")
 	} else {
-		span = tracer.StartSpan("root", opentracing.ChildOf(ctx))
+		span = tracer.StartSpan("demo", opentracing.ChildOf(ctx))
 	}
 
 	var reqEnvMark, requestText string = span.BaggageItem("ali-env-mark"), ""
-	if reqEnvMark=="" {
+	if reqEnvMark == "" {
 		reqEnvMark = "empty"
 	}
 

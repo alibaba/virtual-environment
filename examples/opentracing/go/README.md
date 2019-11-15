@@ -1,20 +1,27 @@
 ## 使用示例
-####构建应用
-```
-go mod init main.go
-go build main.go
-```
 
-####构建镜像
+### 构建镜像
+
 ```
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build main.go
 docker build -t go-demo:latest .
 ```
-####启动镜像
+
+### 启动镜像
+
+Linux
 
 ```
-docker run -p 9090:9090  go-demo:latest --envMark=dev --url=http://127.0.0.1:8888/demo
+ip=`ip addr show eth0 | grep -oP '(?<=inet )[0-9.]+'`
+docker run -p 8082:8080 go-demo:latest --envMark=dev --url=http://${ip}:8003/demo
 ```
 
-`envMark`环境标识，默认为`dev`
+Mac
 
-`url`此程序会get调用一个地址来测试透传效果，默认不调用
+```
+ip=`ip addr show en0 | grep 'inet ' | sed 's/.*inet \([0-9.]*\).*/\1/g'`
+docker run -p 8082:8080 go-demo:latest --envMark=dev --url=http://${ip}:8003/demo
+```
+
+- `envMark`环境标识，默认为`dev`
+- `url`此程序会get调用一个地址来测试透传效果，默认不调用

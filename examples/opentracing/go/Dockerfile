@@ -1,4 +1,6 @@
 FROM scratch
+
 ADD main /main
-EXPOSE 9090
+EXPOSE 8080
+
 ENTRYPOINT ["/main"]
