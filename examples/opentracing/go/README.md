@@ -13,14 +13,14 @@ Linux
 
 ```
 ip=`ip addr show eth0 | grep -oP '(?<=inet )[0-9.]+'`
-docker run -p 8082:8080 go-demo:latest --envMark=dev --url=http://${ip}:8003/demo
+docker run -p 8002:8080 -e envMark=dev -e url=http://${ip}:8003/demo go-demo:latest
 ```
 
 Mac
 
 ```
 ip=`ip addr show en0 | grep 'inet ' | sed 's/.*inet \([0-9.]*\).*/\1/g'`
-docker run -p 8082:8080 go-demo:latest --envMark=dev --url=http://${ip}:8003/demo
+docker run -p 8002:8080 -e envMark=dev -e url=http://${ip}:8003/demo go-demo:latest
 ```
 
 - `envMark`环境标识，默认为`dev`

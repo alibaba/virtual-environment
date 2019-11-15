@@ -1,21 +1,17 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	opentracing "github.com/opentracing/opentracing-go"
-	jaeger "github.com/uber/jaeger-client-go"
+	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
-var envMark, url string
-
-func init() {
-	flag.StringVar(&envMark, "envMark", "dev", "")
-	flag.StringVar(&url, "url", "none", "")
-}
+var envMark = os.Getenv("envMark")
+var url = os.Getenv("url")
 
 func printOpenTracingText(w http.ResponseWriter, r *http.Request) {
 	tracer, closer := jaeger.NewTracer("demo", jaeger.NewConstSampler(false), jaeger.NewNullReporter())
@@ -66,13 +62,12 @@ func printOpenTracingText(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	flag.Parse() //暂停获取参数
-
 	log.Printf("envMark:" + envMark)
 	log.Printf("url:" + url)
 
 	http.HandleFunc("/demo", printOpenTracingText)
-	err := http.ListenAndServe(":9090", nil)
+	log.Printf("listening to port 8080")
+	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
