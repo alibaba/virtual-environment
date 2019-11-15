@@ -59,10 +59,9 @@ public class DemoController {
         }
 
         return (StringUtils.isEmpty(requestText) ? "" : requestText + LINE_BREAK_TEXT) + String.format(
-            "[springboot][request env mark is %s][my env mark is %s]",
+            "[springboot @ %s] <-%s", StringUtils.isEmpty(envMark) ? "dev" : envMark,
             StringUtils.isEmpty(orderSpanScope.span().getBaggageItem(HEADER_ENV_MARK_NAME)) ? "empty"
-                : orderSpanScope.span().getBaggageItem(HEADER_ENV_MARK_NAME),
-            StringUtils.isEmpty(envMark) ? "dev" : envMark);
+                : orderSpanScope.span().getBaggageItem(HEADER_ENV_MARK_NAME) );
     }
 
     private static String httpGetCall(String url, Map<String, String> headers) throws IOException {

@@ -58,7 +58,7 @@ func printOpenTracingText(w http.ResponseWriter, r *http.Request) {
 		requestText += "\n"
 	}
 
-	fmt.Fprintf(w, requestText+"[go][request env mark is "+reqEnvMark+"][my env mark is "+envMark+"]")
+	fmt.Fprintf(w, requestText+"[go @ "+envMark+"] <-"+reqEnvMark+"\n")
 }
 
 func main() {

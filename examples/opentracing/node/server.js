@@ -36,10 +36,10 @@ app.get('/demo', function (req, res) {
         }else{
             requestText = 'call ' + url + ' failed'
         }
-        res.send(requestText + '\n' + '[node][request env mark is ' + (reqEnvMark?reqEnvMark:'empty') + '][my env mark is ' + envMark + ']');
+        res.send(requestText + '[node @ ' + envMark + '] <-' + (reqEnvMark?reqEnvMark:'empty') + '\n');
     }); 
   }else{
-    res.send('[node][request env mark is ' + (reqEnvMark?reqEnvMark:'empty') + '][my env mark is ' + envMark + ']');
+    res.send('[node @ ' + envMark + '] <-' + (reqEnvMark?reqEnvMark:'empty') + '\n');
   }
 });
 console.log("listening to 8080")
