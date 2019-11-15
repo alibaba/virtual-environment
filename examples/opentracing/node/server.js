@@ -42,4 +42,5 @@ app.get('/demo', function (req, res) {
     res.send('[node][request env mark is ' + (reqEnvMark?reqEnvMark:'empty') + '][my env mark is ' + envMark + ']');
   }
 });
-app.listen(8888);
+console.log("listening to 8080")
+app.listen(8080);

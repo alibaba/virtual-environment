@@ -2,9 +2,8 @@ FROM node
 
 WORKDIR /usr/src/node
 
-COPY . .
+COPY server.js package.json ./
 RUN npm install
-EXPOSE 8888
+EXPOSE 8080
 
-#运行命令
-CMD ["npm", "start"]
+ENTRYPOINT ["npm", "start"]
