@@ -53,7 +53,7 @@ spec:
     autoInject: true
   envLabel:
     name: virtualEnv
-    splitter: /
+    splitter: .
     defaultSubset: dev
   instancePostfix: virenv
 ```
@@ -63,6 +63,6 @@ spec:
 | envHeader.name         | X-Virtual-Env | 用于记录虚拟环境名的HTTP头名称（虽然有默认值，强烈建议显性设置） |
 | envHeader.autoInject   | false         | 是否为没有虚拟环境HTTP头记录的请求自动注入HTTP头（建议开启） |
 | envLabel.name          | virtualEnv    | Pod用于表示虚拟环境名的标签名称（虽然有默认值，强烈建议显性设置） |
-| envLabel.splitter      | /             | 虚拟环境名中用于划分环境默认路由层级的字符（只能是单个字符） |
+| envLabel.splitter      | .             | 虚拟环境名中用于划分环境默认路由层级的字符（只能是单个字符） |
 | envLabel.defaultSubset |               | 请求未匹配到任何存在的虚拟环境时，进行兜底虚拟环境名（默认为随机路由） |
 | instancePostfix        |               | 自动创建的Istio对象命名的名字尾缀，默认与相应服务名相同（无尾缀） |
