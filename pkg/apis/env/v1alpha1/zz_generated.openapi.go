@@ -11,9 +11,9 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvironment":       schema_pkg_apis_env_v1alpha1_VirtualEnvironment(ref),
-		"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvironmentSpec":   schema_pkg_apis_env_v1alpha1_VirtualEnvironmentSpec(ref),
-		"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvironmentStatus": schema_pkg_apis_env_v1alpha1_VirtualEnvironmentStatus(ref),
+		"./pkg/apis/env/v1alpha1.VirtualEnvironment":       schema_pkg_apis_env_v1alpha1_VirtualEnvironment(ref),
+		"./pkg/apis/env/v1alpha1.VirtualEnvironmentSpec":   schema_pkg_apis_env_v1alpha1_VirtualEnvironmentSpec(ref),
+		"./pkg/apis/env/v1alpha1.VirtualEnvironmentStatus": schema_pkg_apis_env_v1alpha1_VirtualEnvironmentStatus(ref),
 	}
 }
 
@@ -45,19 +45,19 @@ func schema_pkg_apis_env_v1alpha1_VirtualEnvironment(ref common.ReferenceCallbac
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvironmentSpec"),
+							Ref: ref("./pkg/apis/env/v1alpha1.VirtualEnvironmentSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvironmentStatus"),
+							Ref: ref("./pkg/apis/env/v1alpha1.VirtualEnvironmentStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvironmentSpec", "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.VirtualEnvironmentStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"./pkg/apis/env/v1alpha1.VirtualEnvironmentSpec", "./pkg/apis/env/v1alpha1.VirtualEnvironmentStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -71,13 +71,13 @@ func schema_pkg_apis_env_v1alpha1_VirtualEnvironmentSpec(ref common.ReferenceCal
 					"envLabel": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Pod label to mark virtual environment name",
-							Ref:         ref("alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.EnvLabelSpec"),
+							Ref:         ref("./pkg/apis/env/v1alpha1.EnvLabelSpec"),
 						},
 					},
 					"envHeader": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Header to keep env name in trace",
-							Ref:         ref("alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.EnvHeaderSpec"),
+							Ref:         ref("./pkg/apis/env/v1alpha1.EnvHeaderSpec"),
 						},
 					},
 					"instancePostfix": {
@@ -91,7 +91,7 @@ func schema_pkg_apis_env_v1alpha1_VirtualEnvironmentSpec(ref common.ReferenceCal
 			},
 		},
 		Dependencies: []string{
-			"alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.EnvHeaderSpec", "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1.EnvLabelSpec"},
+			"./pkg/apis/env/v1alpha1.EnvHeaderSpec", "./pkg/apis/env/v1alpha1.EnvLabelSpec"},
 	}
 }
 
