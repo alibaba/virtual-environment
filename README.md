@@ -35,12 +35,27 @@ ProjectEnv -> ServiceA +-----+      +-----> ServiceC |
 
 ## 使用概述
 
-1. 为集群安装虚拟环境的CRD，命令为`kubectl apply -f deploy/crds/env.alibaba.com_virtualenvironments_crd.yaml`
-2. 准备添加了自动透传Header标签能力的应用程序（默认约定Header为`X-Virtual-Env`）
-3. 将改程序打包为镜像，并在部署到Kubernetes时，为Deployment的Pod模板增加一个Label项（默认约定为`virtualEnv`）
-4. 创建一个类型为`VirtualEnvironment`的YAML文件，根据实际情况修改配置参数，使用`kubectl apply`命令添加到Kubernetes集群
+[0] 前提：集群已经部署Istio
 
-## CRD配置
+[1] 部署CRD和Operator
+```bash
+kubectl apply -f deploy/crds/env.alibaba.com_virtualenvironments_crd.yaml
+kubectl apply -f deploy/operator.yaml
+```
+如果开启了RBAC，还需要部署相应的Role和ServiceAccount
+```bash
+kubectl apply -f deploy/service_account.yaml
+kubectl apply -f deploy/role.yaml
+kubectl apply -f deploy/role_binding.yaml
+```
+
+[2] 为应用程序添加透传标签Header的功能（默认约定Header为`X-Virtual-Env`）
+
+[3] 将改程序打包为镜像，并在部署到Kubernetes时，为Deployment的Pod模板增加一个表示虚拟环境名称的Label（默认约定为`virtualEnv`）
+
+[4] 创建类型为`VirtualEnvironment`的资源定义文件（参考`deploy/crds/env.alibaba.com_v1alpha1_virtualenvironment_cr.yaml`），根据实际情况修改配置参数，使用`kubectl apply`命令添加到Kubernetes集群
+
+## VirtualEnvironment配置
 
 ```yaml
 apiVersion: env.alibaba.com/v1alpha1
