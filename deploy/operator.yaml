@@ -15,8 +15,7 @@ spec:
       serviceAccountName: virtual-env-operator
       containers:
         - name: virtual-env-operator
-          # Replace this with the built image name
-          image: REPLACE_IMAGE
+          image: virtualenvironment/virtual-env-operator:v0.1.0
           command:
           - virtual-env-operator
           imagePullPolicy: Always

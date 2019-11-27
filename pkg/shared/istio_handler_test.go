@@ -20,16 +20,16 @@ func TestGetKeys(t *testing.T) {
 }
 
 func TestVirtualServiceMatchRoute(t *testing.T) {
-	deployments := map[string]string{"dep1": "a/b/c", "dep2": "a/b", "dep3": "a", "dep4": "a/d", "dep5": "a/d/e/f/g"}
-	route, ok := virtualServiceMatchRoute("testSvc", deployments, "a/b", "test", "/")
-	if !ok || route.Match[0].Headers["test"].Exact != "a/b" || route.Route[0].Destination.Subset != "a/b" {
+	deployments := map[string]string{"dep1": "a.b.c", "dep2": "a.b", "dep3": "a", "dep4": "a.d", "dep5": "a.d.e.f.g"}
+	route, ok := virtualServiceMatchRoute("testSvc", deployments, "a.b", "test", ".", "dev")
+	if !ok || route.Match[0].Headers["test"].Exact != "a.b" || route.Route[0].Destination.Subset != "a.b" {
 		t.Fail()
 	}
-	route, ok = virtualServiceMatchRoute("testSvc", deployments, "a/d/e/f", "test", "/")
-	if !ok || route.Match[0].Headers["test"].Exact != "a/d/e/f" || route.Route[0].Destination.Subset != "a/d" {
+	route, ok = virtualServiceMatchRoute("testSvc", deployments, "a.d.e.f", "test", ".", "dev")
+	if !ok || route.Match[0].Headers["test"].Exact != "a.d.e.f" || route.Route[0].Destination.Subset != "a.d" {
 		t.Fail()
 	}
-	route, ok = virtualServiceMatchRoute("testSvc", deployments, "b/x", "test", "/")
+	route, ok = virtualServiceMatchRoute("testSvc", deployments, "b.x", "test", ".", "dev")
 	if ok {
 		t.Fail()
 	}
@@ -48,19 +48,19 @@ func TestFindLongestString(t *testing.T) {
 }
 
 func TestLeveledEqual(t *testing.T) {
-	if !leveledEqual("top/second/third", "top/second/third", "/") {
+	if !leveledEqual("top.second.third", "top.second.third", ".") {
 		t.Fail()
 	}
-	if !leveledEqual("top/second/third", "top/second", "/") {
+	if !leveledEqual("top.second.third", "top.second", ".") {
 		t.Fail()
 	}
-	if !leveledEqual("top/second/third", "top", "/") {
+	if !leveledEqual("top.second.third", "top", ".") {
 		t.Fail()
 	}
-	if leveledEqual("top/second", "top/second/third", "/") {
+	if leveledEqual("top.second", "top.second.third", ".") {
 		t.Fail()
 	}
-	if leveledEqual("top/second/third", "top/second/", "/") {
+	if leveledEqual("top.second.third", "top.second.", ".") {
 		t.Fail()
 	}
 }
