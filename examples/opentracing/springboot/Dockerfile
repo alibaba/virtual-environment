@@ -1,5 +1,5 @@
 FROM openjdk:8
 
-COPY ./target/opentracing-springboot-demo-0.0.1-SNAPSHOT.jar opentracingSpringbootDemo.jar
+COPY ./target/springboot-demo-0.0.1-SNAPSHOT.jar springbootDemo.jar
 
-ENTRYPOINT ["java", "-jar", "./opentracingSpringbootDemo.jar"]
+ENTRYPOINT ["java", "-jar", "./springbootDemo.jar"]

@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>opentracing-springboot-demo</artifactId>
+	<artifactId>springboot-demo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>opentracing-springboot-demo</name>
+	<name>springboot-demo</name>
 	<description>Demo project for Spring Boot</description>
 
 	<properties>
@@ -34,23 +34,6 @@
 					<artifactId>junit-vintage-engine</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-
-		<dependency>
-			<groupId>io.jaegertracing</groupId>
-			<artifactId>jaeger-core</artifactId>
-			<version>0.27.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>io.jaegertracing</groupId>
-			<artifactId>jaeger-client</artifactId>
-			<version>0.35.0</version>
-		</dependency>
-		<dependency>
-			<groupId>io.opentracing.brave</groupId>
-			<artifactId>brave-opentracing</artifactId>
-			<version>0.31.2</version>
 		</dependency>
 	</dependencies>
 

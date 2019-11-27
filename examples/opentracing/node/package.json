@@ -1,5 +1,5 @@
 {
-  "name": "opentracing-node-demo",
+  "name": "node-demo",
   "version": "0.0.1",
   "description": "Node.js on Docker",
   "author": "wangte.wt",
@@ -10,9 +10,6 @@
   "dependencies": {
     "express": "^4.13.3",
     "http_request": "^0.1.2",
-    "jaeger-client": "^3.17.1",
-    "opentracing": "^0.14.4",
-    "request": "^2.88.0",
-    "tracer": "^1.0.1"
+    "request": "^2.88.0"
   }
 }

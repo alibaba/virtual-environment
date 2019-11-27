@@ -1,4 +1,4 @@
-package com.example.opentracingspringbootdemo;
+package com.example.springbootdemo;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,12 +11,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import io.opentracing.Scope;
-import io.opentracing.SpanContext;
-import io.opentracing.propagation.Format.Builtin;
-import io.opentracing.propagation.TextMapExtractAdapter;
-import io.opentracing.propagation.TextMapInjectAdapter;
-import io.opentracing.util.GlobalTracer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.util.StringUtils;
@@ -37,10 +31,6 @@ public class DemoController {
     @RequestMapping("/demo")
     public String demo(HttpServletRequest request) {
         Map<String, String> recieveHeaders = getHeaderMap(request);
-        SpanContext parentContext = GlobalTracer.get().extract(Builtin.HTTP_HEADERS,
-            new TextMapExtractAdapter(recieveHeaders));
-
-        Scope orderSpanScope = GlobalTracer.get().buildSpan("demo").asChildOf(parentContext).startActive(true);
 
         String url = System.getenv(URL_KEY);
         String envMark = System.getenv(ENV_MARK_KEY);
@@ -48,11 +38,8 @@ public class DemoController {
 
         String requestText = "";
         if (!StringUtils.isEmpty(url)) {
-            Map<String, String> sendHeaders = new HashMap<>();
-            GlobalTracer.get().inject(orderSpanScope.span().context(), Builtin.HTTP_HEADERS,
-                new TextMapInjectAdapter(sendHeaders));
             try {
-                requestText = httpGetCall(url, sendHeaders);
+                requestText = httpGetCall(url, recieveHeaders);
             } catch (IOException e) {
                 requestText = String.format("call %s failed", url);
             }
@@ -60,8 +47,7 @@ public class DemoController {
 
         return (StringUtils.isEmpty(requestText) ? "" : requestText + LINE_BREAK_TEXT) + String.format(
             "[springboot @ %s] <-%s", StringUtils.isEmpty(envMark) ? "dev" : envMark,
-            StringUtils.isEmpty(orderSpanScope.span().getBaggageItem(HEADER_ENV_MARK_NAME)) ? "empty"
-                : orderSpanScope.span().getBaggageItem(HEADER_ENV_MARK_NAME) );
+            recieveHeaders.containsKey(HEADER_ENV_MARK_NAME) ? recieveHeaders.get(HEADER_ENV_MARK_NAME) : "empty");
     }
 
     private static String httpGetCall(String url, Map<String, String> headers) throws IOException {
