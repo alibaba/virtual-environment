@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: service-name-placeholder
-          image: docker.io/virtualenvironment/go-demo
+          image: docker.io/virtualenvironment/go-demo-debug:latest
           imagePullPolicy: IfNotPresent #Always
           env:
             - name: envMark
