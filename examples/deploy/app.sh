@@ -29,3 +29,4 @@ for s in app-java; do
     cat ${s}.yaml | sed -e "s/service-name-env-placeholder/${s}-${e}/g" -e "s/service-name-placeholder/${s}/g" -e "s/app-env-placeholder/${e}/g" | kubectl ${action} -f -
 done
 
+kubectl ${action} -f virtualenv.yaml

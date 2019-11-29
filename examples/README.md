@@ -67,6 +67,10 @@ dev-proj2                           |  demo-go  |
 ```bash
 # 首先创建一个在集群中的容器用于访问服务
 kubectl create deployment sleep --image=virtualenvironment/sleep
+# 启动演示的服务实例
+cd examples/deploy/
+./app.sh apply
+
 # 进入集群中的容器
 kubectl exec -it $(kubectl get pod -l app=sleep -o jsonpath='{.items[0].metadata.name}') /bin/sh
 # 使用dev-proj1标签
@@ -89,4 +93,8 @@ kubectl exec -it $(kubectl get pod -l app=sleep -o jsonpath='{.items[0].metadata
   [springboot @ dev] <-dev
   [go @ dev] <-dev
   [node @ dev] <-
+  
+# 清理演示使用的服务实例
+./app.sh delete
+kubectl delete deployment sleep
 ```
