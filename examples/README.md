@@ -26,6 +26,7 @@ dev-proj2                           |  demo-go  |
 
 - 来源请求包含`dev-proj1`头标签。
 由于`dev-proj1`虚拟环境中只存在`demo-js`和`demo-java`服务，因此访问途径为：
+
 ```
                                     +-----------+                
 dev                                 |  demo-go  |                
@@ -37,6 +38,7 @@ dev-proj1           |  demo-js  |                   | demo-java |
 
 - 来源请求包含`dev-proj1-feature1`头标签。
 由于`dev-proj1-feature1`虚拟环境中只存在`demo-java`服务，因此访问途径为：
+
 ```
                                     +-----------+                
 dev                                 |  demo-go  |                
@@ -51,6 +53,7 @@ dev-proj1-feature1                                  | demo-java |
 
 - 来源请求包含`dev-proj2`头标签。
 由于`dev-proj2`虚拟环境中只存在`demo-go`服务，因此访问途径为：
+
 ```
                     +-----------+                   +-----------+
 dev                 |  demo-js  |                   | demo-java |
@@ -60,7 +63,7 @@ dev-proj2                           |  demo-go  |
                                     +-----------+
 ```
 
-其余以此类推。
+其余情况以此类推。
 
 ### 验证路由
 

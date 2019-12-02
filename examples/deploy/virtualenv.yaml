@@ -4,7 +4,7 @@ metadata:
   name: demo-virtualenv
 spec:
   envHeader:
-    name: uberctx-ali-env-mark
+    name: ali-env-mark
     autoInject: true
   envLabel:
     name: virtualEnv
