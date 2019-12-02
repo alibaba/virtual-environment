@@ -99,7 +99,7 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 }
 
 func (r *ReconcileServiceListener) deleteVirtualService(namespace string, name string, logger logr.Logger) {
-	err := shared.DeleteIns(r.client, namespace, name, &networkingv1alpha3.VirtualService{})
+	err := shared.DeleteIns(r.client, namespace, shared.NameWithPostfix(name), &networkingv1alpha3.VirtualService{})
 	if err != nil {
 		logger.Error(err, "failed to remove VirtualService instance")
 	} else {
@@ -108,7 +108,7 @@ func (r *ReconcileServiceListener) deleteVirtualService(namespace string, name s
 }
 
 func (r *ReconcileServiceListener) deleteDestinationRule(namespace string, name string, logger logr.Logger) {
-	err := shared.DeleteIns(r.client, namespace, name, &networkingv1alpha3.DestinationRule{})
+	err := shared.DeleteIns(r.client, namespace, shared.NameWithPostfix(name), &networkingv1alpha3.DestinationRule{})
 	if err != nil {
 		logger.Error(err, "failed to remove DestinationRule instance")
 	} else {

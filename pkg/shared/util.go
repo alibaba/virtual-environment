@@ -19,3 +19,11 @@ func DeleteIns(client client.Client, namespace string, name string, obj runtime.
 	}
 	return nil
 }
+
+// put postfix after target name if it's not empty
+func NameWithPostfix(name string) string {
+	if len(InsNamePostfix) > 0 {
+		return name + "-" + InsNamePostfix
+	}
+	return name
+}

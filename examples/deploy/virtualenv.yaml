@@ -10,4 +10,4 @@ spec:
     name: virtualEnv
     splitter: "-"
     defaultSubset: dev
-  instancePostfix: virenv
+  instancePostfix: demo

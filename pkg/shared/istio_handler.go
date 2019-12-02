@@ -12,7 +12,7 @@ func VirtualService(namespace string, name string, availableLabels []string, rel
 	envHeader string, envSplitter string, defaultSubset string) *networkingv1alpha3.VirtualService {
 	virtualSvc := &networkingv1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name:      NameWithPostfix(name),
 			Namespace: namespace,
 		},
 		Spec: networkingv1alpha3.VirtualServiceSpec{
@@ -35,7 +35,7 @@ func DestinationRule(namespace string, name string, relatedDeployments map[strin
 	envLabel string) *networkingv1alpha3.DestinationRule {
 	destRule := &networkingv1alpha3.DestinationRule{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name:      NameWithPostfix(name),
 			Namespace: namespace,
 		},
 		Spec: networkingv1alpha3.DestinationRuleSpec{

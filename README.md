@@ -70,7 +70,7 @@ spec:
     name: virtualEnv
     splitter: .
     defaultSubset: dev
-  instancePostfix: virenv
+  instancePostfix: kt-env
 ```
 
 | 配置参数                | 默认值         | 说明  |

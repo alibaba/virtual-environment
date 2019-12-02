@@ -10,6 +10,9 @@ var Lock = sync.RWMutex{}
 // virtual env instance name
 var VirtualEnvIns = ""
 
+// generated object naming postfix
+var InsNamePostfix = ""
+
 // service name -> selectors
 var AvailableServices = make(map[string]map[string]string)
 
