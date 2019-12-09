@@ -14,7 +14,7 @@ spec:
     metadata:
       labels:
         app: service-name-placeholder
-        virtualEnv: app-env-placeholder
+        virtual-env: app-env-placeholder
     spec:
       containers:
         - name: service-name-placeholder

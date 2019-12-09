@@ -7,7 +7,7 @@ spec:
     name: ali-env-mark
     autoInject: true
   envLabel:
-    name: virtualEnv
+    name: virtual-env
     splitter: "-"
     defaultSubset: dev
   instancePostfix: demo

@@ -23,7 +23,7 @@ import (
 var log = logf.Log.WithName("controller_virtualenv")
 
 const defaultEnvHeader = "X-Virtual-Env"
-const defaultEnvLabel = "virtualEnv"
+const defaultEnvLabel = "virtual-env"
 const defaultEnvSplitter = "."
 
 // Add creates a new VirtualEnv Controller and adds it to the Manager. The Manager will set fields on the Controller
