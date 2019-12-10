@@ -60,3 +60,11 @@ rules:
   - virtualenvironments
   verbs:
   - '*'
+- apiGroups:
+    - networking.istio.io
+  resources:
+    - envoyfilters
+    - destinationrules
+    - virtualservices
+  verbs:
+    - '*'
