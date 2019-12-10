@@ -69,7 +69,8 @@ dev-proj2                           |  demo-go  |
 
 ```bash
 # 首先创建一个在集群中的容器用于访问服务
-kubectl create deployment sleep --image=virtualenvironment/sleep
+kubectl create deployment sleep --image=virtualenvironment/sleep --dry-run -o yaml \
+        | istioctl kube-inject -f - | kubectl apply -f -
 # 启动演示的服务实例
 deploy/app.sh apply
 
