@@ -1,45 +1,48 @@
 package shared
 
 import (
+	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis/istio/common/v1alpha1"
 	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
 
 // generate istio virtual service instance
-func VirtualService(namespace string, name string, availableLabels []string, relatedDeployments map[string]string,
-	envHeader string, envSplitter string, defaultSubset string) *networkingv1alpha3.VirtualService {
+func VirtualService(namespace string, svcName string, virtualSvcName string, availableLabels []string,
+	relatedDeployments map[string]string, envHeader string, envSplitter string,
+	defaultSubset string) *networkingv1alpha3.VirtualService {
 	virtualSvc := &networkingv1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      NameWithPostfix(name),
+			Name:      virtualSvcName,
 			Namespace: namespace,
 		},
 		Spec: networkingv1alpha3.VirtualServiceSpec{
-			Hosts: []string{name},
+			Hosts: []string{svcName},
 			HTTP:  []networkingv1alpha3.HTTPRoute{},
 		},
 	}
 	for _, label := range availableLabels {
-		matchRoute, ok := virtualServiceMatchRoute(name, relatedDeployments, label, envHeader, envSplitter, defaultSubset)
+		matchRoute, ok := virtualServiceMatchRoute(svcName, relatedDeployments, label, envHeader, envSplitter, defaultSubset)
 		if ok {
 			virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
 		}
 	}
-	virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, defaultRoute(name, defaultSubset))
+	virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, defaultRoute(svcName, defaultSubset))
 	return virtualSvc
 }
 
 // generate istio destination rule instance
-func DestinationRule(namespace string, name string, relatedDeployments map[string]string,
+func DestinationRule(namespace string, svcName string, destinationRuleName string, relatedDeployments map[string]string,
 	envLabel string) *networkingv1alpha3.DestinationRule {
 	destRule := &networkingv1alpha3.DestinationRule{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      NameWithPostfix(name),
+			Name:      destinationRuleName,
 			Namespace: namespace,
 		},
 		Spec: networkingv1alpha3.DestinationRuleSpec{
-			Host:    name,
+			Host:    svcName,
 			Subsets: []networkingv1alpha3.Subset{},
 		},
 	}
@@ -47,6 +50,26 @@ func DestinationRule(namespace string, name string, relatedDeployments map[strin
 		destRule.Spec.Subsets = append(destRule.Spec.Subsets, destinationRuleMatchSubset(envLabel, label))
 	}
 	return destRule
+}
+
+// delete VirtualService
+func DeleteVirtualService(client client.Client, namespace string, name string, logger logr.Logger) {
+	err := DeleteIns(client, namespace, name, &networkingv1alpha3.VirtualService{})
+	if err != nil {
+		logger.Error(err, "failed to remove VirtualService instance")
+	} else {
+		logger.Info("VirtualService deleted")
+	}
+}
+
+// delete DestinationRule
+func DeleteDestinationRule(client client.Client, namespace string, name string, logger logr.Logger) {
+	err := DeleteIns(client, namespace, name, &networkingv1alpha3.DestinationRule{})
+	if err != nil {
+		logger.Error(err, "failed to remove DestinationRule instance")
+	} else {
+		logger.Info("DestinationRule deleted")
+	}
 }
 
 // check whether DestinationRule is different

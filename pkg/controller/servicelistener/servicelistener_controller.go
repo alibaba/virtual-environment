@@ -3,11 +3,9 @@ package servicelistener
 import (
 	"alibaba.com/virtual-env-operator/pkg/shared"
 	"context"
-	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -80,8 +78,9 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 			reqLogger.Info("Removing Service")
 			delete(shared.AvailableServices, request.Name)
 			// delete related virtual service and destination rule
-			r.deleteVirtualService(request.Namespace, request.Name, reqLogger)
-			r.deleteDestinationRule(request.Namespace, request.Name, reqLogger)
+			cachedInstanceName := shared.NameWithPostfix(request.Name, shared.InsNamePostfix)
+			shared.DeleteVirtualService(r.client, request.Namespace, cachedInstanceName, reqLogger)
+			shared.DeleteDestinationRule(r.client, request.Namespace, cachedInstanceName, reqLogger)
 			shared.Lock.RUnlock()
 			return reconcile.Result{}, nil
 		}
@@ -96,22 +95,4 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 
 	shared.ReconcileVirtualEnv(request.Namespace, reqLogger)
 	return reconcile.Result{}, nil
-}
-
-func (r *ReconcileServiceListener) deleteVirtualService(namespace string, name string, logger logr.Logger) {
-	err := shared.DeleteIns(r.client, namespace, shared.NameWithPostfix(name), &networkingv1alpha3.VirtualService{})
-	if err != nil {
-		logger.Error(err, "failed to remove VirtualService instance")
-	} else {
-		logger.Info("VirtualService deleted")
-	}
-}
-
-func (r *ReconcileServiceListener) deleteDestinationRule(namespace string, name string, logger logr.Logger) {
-	err := shared.DeleteIns(r.client, namespace, shared.NameWithPostfix(name), &networkingv1alpha3.DestinationRule{})
-	if err != nil {
-		logger.Error(err, "failed to remove DestinationRule instance")
-	} else {
-		logger.Info("DestinationRule deleted")
-	}
 }
