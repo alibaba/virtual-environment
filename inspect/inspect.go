@@ -20,6 +20,7 @@ func Start(inspectHost string, inspectPort int) {
 	// Routes
 	e.GET("/inspect/deployment", inspectDeployment)
 	e.GET("/inspect/service", inspectService)
+	e.GET("/inspect/global", inspectGlobalVariable)
 	e.POST("/trigger", triggerReconcile)
 
 	// Start server
@@ -41,6 +42,13 @@ func inspectDeployment(c echo.Context) error {
 
 func inspectService(c echo.Context) error {
 	return c.JSON(http.StatusOK, shared.AvailableServices)
+}
+
+func inspectGlobalVariable(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]string{
+		"VirtualEnvIns":  shared.VirtualEnvIns,
+		"InsNamePostfix": shared.InsNamePostfix,
+	})
 }
 
 func triggerReconcile(c echo.Context) error {
