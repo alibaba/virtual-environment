@@ -16,17 +16,20 @@ ns="${2:-virtual-env-ci}"
 full_image_name="${image}:${tag}"
 operator-sdk build ${full_image_name}
 docker push ${full_image_name}
+echo "---- Build OK ----"
 
 # Create temporary namespace and put operator into it
 kubectl create namespace ${ns}
 for f in deploy/*.yaml; do
     cat $f | sed "s#virtualenvironment/virtual-env-operator:[^ ]*#${full_image_name}#g" | kubectl apply -n ${ns} -f -
 done
+echo "---- Operator deployment OK ----"
 
 # Deploy demo apps
 kubectl create -n ${ns} deployment sleep --image=virtualenvironment/sleep --dry-run -o yaml \
         | istioctl kube-inject -f - | kubectl apply -n ${ns} -f -
 examples/deploy/app.sh apply ${ns}
+echo "---- Demo apps deployment begin ----"
 
 # Call service and format response
 function invoke_api()
@@ -44,13 +47,27 @@ function check_result()
     expect_2="${3}"
     if [[ "${real}" != "${expect_1}" && "${real}" != "${expect_2}" ]]; then
         echo "Test failed !!!"
-        echo "Namespace: $ns"
+        echo "Namespace: ${ns}"
         echo "Real response: ${real}"
         echo "Expectation 1: ${expect_1}"
         echo "Expectation 2: ${expect_2}"
         exit -1
     fi
 }
+
+# Wait for apps ready
+count=`kubectl get -n $ns pods | awk '{print $3}' | grep 'Running' | wc -l`
+for i in `seq 30`; do
+    if [ ${count} -eq 9 ]; then
+        break
+    fi
+    echo "waiting ... ${i} (count: ${count})"
+    sleep 10s
+done
+if [ ${count} -eq 9 ]; then
+    echo "Apps deployment not ready"
+    exit -1
+fi
 
 # Do functional check
 res=$(invoke_api dev-proj1)
@@ -68,9 +85,11 @@ check_result "$res" "[springboot @ dev] <-dev, [go @ dev] <-dev, [node @ dev] <-
 res=$(invoke_api)
 check_result "$res" "[springboot @ dev] <-dev, [go @ dev] <-dev, [node @ dev] <-" \
              "[springboot @ dev-proj1] <-dev-proj1, [go @ dev] <-dev-proj1, [node @ dev-proj1] <-"
+echo "---- Functional check OK ----"
 
 # Clean up everything
 examples/deploy/app.sh delete ${ns}
 kubectl delete -n ${ns} deployment sleep
 for f in deploy/*.yaml; do kubectl delete -n ${ns} -f ${f}; done
 kubectl delete namespace ${ns}
+echo "---- Clean up OK ----"
