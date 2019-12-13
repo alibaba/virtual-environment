@@ -1,6 +1,7 @@
-package shared
+package istio
 
 import (
+	"alibaba.com/virtual-env-operator/pkg/shared"
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis/istio/common/v1alpha1"
@@ -54,7 +55,7 @@ func DestinationRule(namespace string, svcName string, destinationRuleName strin
 
 // delete VirtualService
 func DeleteVirtualService(client client.Client, namespace string, name string, logger logr.Logger) {
-	err := DeleteIns(client, namespace, name, &networkingv1alpha3.VirtualService{})
+	err := shared.DeleteIns(client, namespace, name, &networkingv1alpha3.VirtualService{})
 	if err != nil {
 		logger.Error(err, "failed to remove VirtualService instance")
 	} else {
@@ -64,7 +65,7 @@ func DeleteVirtualService(client client.Client, namespace string, name string, l
 
 // delete DestinationRule
 func DeleteDestinationRule(client client.Client, namespace string, name string, logger logr.Logger) {
-	err := DeleteIns(client, namespace, name, &networkingv1alpha3.DestinationRule{})
+	err := shared.DeleteIns(client, namespace, name, &networkingv1alpha3.DestinationRule{})
 	if err != nil {
 		logger.Error(err, "failed to remove DestinationRule instance")
 	} else {

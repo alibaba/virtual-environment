@@ -2,7 +2,8 @@ package virtualenv
 
 import (
 	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1"
-	"alibaba.com/virtual-env-operator/pkg/envoy"
+	"alibaba.com/virtual-env-operator/pkg/istio"
+	"alibaba.com/virtual-env-operator/pkg/istio/envoy"
 	"alibaba.com/virtual-env-operator/pkg/shared"
 	"context"
 	"github.com/go-logr/logr"
@@ -88,7 +89,7 @@ type ReconcileVirtualEnv struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Namespace", request.Namespace, "Name", request.Name)
+	reqLogger := log.WithValues("Ref", request.Namespace+":"+request.Name)
 
 	shared.Lock.Lock()
 
@@ -104,8 +105,8 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 
 	reqLogger.Info("Reconciling VirtualEnvironment")
 	for svc, selector := range shared.AvailableServices {
-		availableLabels := shared.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.EnvLabel.Name)
-		relatedDeployments := shared.FindAllRelatedDeployments(shared.AvailableDeployments, selector, virtualEnv.Spec.EnvLabel.Name)
+		availableLabels := istio.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.EnvLabel.Name)
+		relatedDeployments := istio.FindAllRelatedDeployments(shared.AvailableDeployments, selector, virtualEnv.Spec.EnvLabel.Name)
 		if len(availableLabels) > 0 && len(relatedDeployments) > 0 {
 			err = r.updateRoute(virtualEnv, svc, request, availableLabels, relatedDeployments, reqLogger)
 		}
@@ -162,6 +163,8 @@ func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logg
 				logger.Error(err, "failed to create TagAppender instance for "+request.Name)
 				return virtualEnv, err
 			}
+		} else {
+			r.deleteTagAppender(request.Namespace, request.Name, logger)
 		}
 		logger.Info("VirtualEnv added", "Spec", virtualEnv.Spec)
 	}
@@ -181,16 +184,11 @@ func (r *ReconcileVirtualEnv) deleteVirtualEnv(namespace string, name string, lo
 // create tag auto appender filter instance
 func (r *ReconcileVirtualEnv) createTagAppender(namespace string, name string, virtualEnv *envv1alpha1.VirtualEnvironment,
 	logger logr.Logger) error {
-	cachedTagAppenderName := shared.NameWithPostfix(name, shared.InsNamePostfix)
 	tagAppenderName := shared.NameWithPostfix(name, virtualEnv.Spec.InstancePostfix)
-	err := envoy.DeleteTagAppenderIfExist(r.client, namespace, cachedTagAppenderName)
-	if err != nil {
-		logger.Error(err, "Failed to remove old TagAppender instance")
-		return err
-	}
+	r.deleteTagAppender(namespace, name, logger)
 	tagAppender := envoy.TagAppenderFilter(namespace, tagAppenderName, virtualEnv.Spec.EnvLabel.Name, virtualEnv.Spec.EnvHeader.Name)
 	// set VirtualEnv instance as the owner and controller
-	err = controllerutil.SetControllerReference(virtualEnv, tagAppender, r.scheme)
+	err := controllerutil.SetControllerReference(virtualEnv, tagAppender, r.scheme)
 	if err == nil {
 		err = r.client.Create(context.TODO(), tagAppender)
 		if err == nil {
@@ -198,6 +196,15 @@ func (r *ReconcileVirtualEnv) createTagAppender(namespace string, name string, v
 		}
 	}
 	return err
+}
+
+// remove tag auto appender filter instance
+func (r *ReconcileVirtualEnv) deleteTagAppender(namespace string, name string, logger logr.Logger) {
+	cachedTagAppenderName := shared.NameWithPostfix(name, shared.InsNamePostfix)
+	err := envoy.DeleteTagAppenderIfExist(r.client, namespace, cachedTagAppenderName)
+	if err != nil {
+		logger.Error(err, "Failed to remove old TagAppender instance")
+	}
 }
 
 // handle empty virtual env configure item with default value
@@ -223,7 +230,7 @@ func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.Vi
 	availableLabels []string, relatedDeployments map[string]string, logger logr.Logger) error {
 	cachedVirtualServiceName := shared.NameWithPostfix(svc, shared.InsNamePostfix)
 	virtualServiceName := shared.NameWithPostfix(svc, virtualEnv.Spec.InstancePostfix)
-	virtualSvc := shared.VirtualService(request.Namespace, svc, virtualServiceName, availableLabels, relatedDeployments,
+	virtualSvc := istio.VirtualService(request.Namespace, svc, virtualServiceName, availableLabels, relatedDeployments,
 		virtualEnv.Spec.EnvHeader.Name, virtualEnv.Spec.EnvLabel.Splitter, virtualEnv.Spec.EnvLabel.DefaultSubset)
 	foundVirtualSvc := &networkingv1alpha3.VirtualService{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: cachedVirtualServiceName, Namespace: request.Namespace}, foundVirtualSvc)
@@ -241,14 +248,14 @@ func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.Vi
 		}
 	} else if cachedVirtualServiceName != virtualSvc.Name {
 		// VirtualService name changed, delete and re-create
-		shared.DeleteVirtualService(r.client, request.Namespace, cachedVirtualServiceName, logger)
+		istio.DeleteVirtualService(r.client, request.Namespace, cachedVirtualServiceName, logger)
 		logger.Info("VirtualService " + cachedVirtualServiceName + " deleted")
 		err = r.createVirtualService(virtualEnv, virtualSvc, logger)
 		if err != nil {
 			logger.Error(err, "Failed to re-create VirtualService")
 			return err
 		}
-	} else if shared.IsDifferentVirtualService(&foundVirtualSvc.Spec, &virtualSvc.Spec, virtualEnv.Spec.EnvHeader.Name) {
+	} else if istio.IsDifferentVirtualService(&foundVirtualSvc.Spec, &virtualSvc.Spec, virtualEnv.Spec.EnvHeader.Name) {
 		// existing VirtualService changed
 		foundVirtualSvc.Spec = virtualSvc.Spec
 		err := r.client.Update(context.TODO(), foundVirtualSvc)
@@ -266,7 +273,7 @@ func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.V
 	request reconcile.Request, relatedDeployments map[string]string, logger logr.Logger) error {
 	cachedDestinationRuleName := shared.NameWithPostfix(svc, shared.InsNamePostfix)
 	destinationRuleName := shared.NameWithPostfix(svc, virtualEnv.Spec.InstancePostfix)
-	destRule := shared.DestinationRule(request.Namespace, svc, destinationRuleName, relatedDeployments, virtualEnv.Spec.EnvLabel.Name)
+	destRule := istio.DestinationRule(request.Namespace, svc, destinationRuleName, relatedDeployments, virtualEnv.Spec.EnvLabel.Name)
 	foundDestRule := &networkingv1alpha3.DestinationRule{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: cachedDestinationRuleName, Namespace: request.Namespace}, foundDestRule)
 	if err != nil {
@@ -283,14 +290,14 @@ func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.V
 		}
 	} else if cachedDestinationRuleName != destRule.Name {
 		// DestinationRule name changed, delete and re-create
-		shared.DeleteDestinationRule(r.client, request.Namespace, cachedDestinationRuleName, logger)
+		istio.DeleteDestinationRule(r.client, request.Namespace, cachedDestinationRuleName, logger)
 		logger.Info("DestinationRule " + cachedDestinationRuleName + " deleted")
 		err = r.createDestinationRule(virtualEnv, destRule, logger)
 		if err != nil {
 			logger.Error(err, "Failed to re-create DestinationRule")
 			return err
 		}
-	} else if shared.IsDifferentDestinationRule(&foundDestRule.Spec, &destRule.Spec, virtualEnv.Spec.EnvLabel.Name) {
+	} else if istio.IsDifferentDestinationRule(&foundDestRule.Spec, &destRule.Spec, virtualEnv.Spec.EnvLabel.Name) {
 		// existing DestinationRule changed
 		foundDestRule.Spec = destRule.Spec
 		err := r.client.Update(context.TODO(), foundDestRule)

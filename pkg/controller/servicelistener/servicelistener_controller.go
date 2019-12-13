@@ -1,6 +1,7 @@
 package servicelistener
 
 import (
+	"alibaba.com/virtual-env-operator/pkg/istio"
 	"alibaba.com/virtual-env-operator/pkg/shared"
 	"context"
 	corev1 "k8s.io/api/core/v1"
@@ -62,7 +63,7 @@ type ReconcileServiceListener struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Namespace", request.Namespace, "Name", request.Name)
+	reqLogger := log.WithValues("Ref", request.Namespace+":"+request.Name)
 
 	if request.Name == "kubernetes" {
 		// Ignore kubernetes service
@@ -79,8 +80,8 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 			delete(shared.AvailableServices, request.Name)
 			// delete related virtual service and destination rule
 			cachedInstanceName := shared.NameWithPostfix(request.Name, shared.InsNamePostfix)
-			shared.DeleteVirtualService(r.client, request.Namespace, cachedInstanceName, reqLogger)
-			shared.DeleteDestinationRule(r.client, request.Namespace, cachedInstanceName, reqLogger)
+			istio.DeleteVirtualService(r.client, request.Namespace, cachedInstanceName, reqLogger)
+			istio.DeleteDestinationRule(r.client, request.Namespace, cachedInstanceName, reqLogger)
 			shared.Lock.RUnlock()
 			return reconcile.Result{}, nil
 		}

@@ -62,7 +62,7 @@ type ReconcileDeploymentListener struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileDeploymentListener) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Namespace", request.Namespace, "Name", request.Name)
+	reqLogger := log.WithValues("Ref", request.Namespace+":"+request.Name)
 
 	shared.Lock.RLock()
 

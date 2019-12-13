@@ -1,4 +1,4 @@
-package inspect
+package api
 
 import (
 	"alibaba.com/virtual-env-operator/pkg/shared"
