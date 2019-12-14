@@ -11,12 +11,12 @@ import (
 )
 
 // generate istio virtual service instance
-func VirtualService(namespace string, svcName string, virtualSvcName string, availableLabels []string,
+func VirtualService(namespace string, svcName string, availableLabels []string,
 	relatedDeployments map[string]string, envHeader string, envSplitter string,
 	defaultSubset string) *networkingv1alpha3.VirtualService {
 	virtualSvc := &networkingv1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      virtualSvcName,
+			Name:      svcName,
 			Namespace: namespace,
 		},
 		Spec: networkingv1alpha3.VirtualServiceSpec{
@@ -35,11 +35,11 @@ func VirtualService(namespace string, svcName string, virtualSvcName string, ava
 }
 
 // generate istio destination rule instance
-func DestinationRule(namespace string, svcName string, destinationRuleName string, relatedDeployments map[string]string,
+func DestinationRule(namespace string, svcName string, relatedDeployments map[string]string,
 	envLabel string) *networkingv1alpha3.DestinationRule {
 	destRule := &networkingv1alpha3.DestinationRule{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      destinationRuleName,
+			Name:      svcName,
 			Namespace: namespace,
 		},
 		Spec: networkingv1alpha3.DestinationRuleSpec{

@@ -70,7 +70,6 @@ spec:
     name: virtual-env
     splitter: .
     defaultSubset: dev
-  instancePostfix: kt-env
 ```
 
 | 配置参数                | 默认值         | 说明  |
@@ -80,4 +79,3 @@ spec:
 | envLabel.name          | virtual-env   | Pod上标记虚拟环境名用的标签名称（除非确实必要，建议保留默认值） |
 | envLabel.splitter      | .             | 虚拟环境名中用于划分环境默认路由层级的字符（只能是单个字符） |
 | envLabel.defaultSubset |               | 请求未匹配到任何存在的虚拟环境时，进行兜底虚拟环境名（默认为随机路由） |
-| instancePostfix        |               | 自动创建的Istio对象命名的名字尾缀，默认与相应服务名相同（无尾缀） |

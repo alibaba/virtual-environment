@@ -14,8 +14,6 @@ type VirtualEnvironmentSpec struct {
 	EnvLabel EnvLabelSpec `json:"envLabel,omitempty"`
 	// Header to keep env name in trace
 	EnvHeader EnvHeaderSpec `json:"envHeader,omitempty"`
-	// Naming postfix of generated VirtualService and DestinationRule instance
-	InstancePostfix string `json:"instancePostfix,omitempty"`
 }
 
 type EnvLabelSpec struct {

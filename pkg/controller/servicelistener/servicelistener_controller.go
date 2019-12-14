@@ -79,9 +79,8 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 			reqLogger.Info("Removing Service")
 			delete(shared.AvailableServices, request.Name)
 			// delete related virtual service and destination rule
-			cachedInstanceName := shared.NameWithPostfix(request.Name, shared.InsNamePostfix)
-			istio.DeleteVirtualService(r.client, request.Namespace, cachedInstanceName, reqLogger)
-			istio.DeleteDestinationRule(r.client, request.Namespace, cachedInstanceName, reqLogger)
+			istio.DeleteVirtualService(r.client, request.Namespace, request.Name, reqLogger)
+			istio.DeleteDestinationRule(r.client, request.Namespace, request.Name, reqLogger)
 			shared.Lock.RUnlock()
 			return reconcile.Result{}, nil
 		}
