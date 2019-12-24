@@ -1,7 +1,7 @@
 package servicelistener
 
 import (
-	"alibaba.com/virtual-env-operator/pkg/istio"
+	"alibaba.com/virtual-env-operator/pkg/component/router"
 	"alibaba.com/virtual-env-operator/pkg/shared"
 	"context"
 	corev1 "k8s.io/api/core/v1"
@@ -79,8 +79,7 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 			reqLogger.Info("Removing Service")
 			delete(shared.AvailableServices, request.Name)
 			// delete related virtual service and destination rule
-			istio.DeleteVirtualService(r.client, request.Namespace, request.Name, reqLogger)
-			istio.DeleteDestinationRule(r.client, request.Namespace, request.Name, reqLogger)
+			_ = router.GetDefaultRoute().CleanupRoute(r.client, request.Namespace, request.Name)
 			shared.Lock.RUnlock()
 			return reconcile.Result{}, nil
 		}

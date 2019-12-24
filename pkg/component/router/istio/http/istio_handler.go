@@ -1,8 +1,7 @@
-package istio
+package http
 
 import (
 	"alibaba.com/virtual-env-operator/pkg/shared"
-	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis/istio/common/v1alpha1"
 	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
@@ -54,23 +53,13 @@ func DestinationRule(namespace string, svcName string, relatedDeployments map[st
 }
 
 // delete VirtualService
-func DeleteVirtualService(client client.Client, namespace string, name string, logger logr.Logger) {
-	err := shared.DeleteIns(client, namespace, name, &networkingv1alpha3.VirtualService{})
-	if err != nil {
-		logger.Error(err, "failed to remove VirtualService instance")
-	} else {
-		logger.Info("VirtualService deleted")
-	}
+func DeleteVirtualService(client client.Client, namespace string, name string) error {
+	return shared.DeleteIns(client, namespace, name, &networkingv1alpha3.VirtualService{})
 }
 
 // delete DestinationRule
-func DeleteDestinationRule(client client.Client, namespace string, name string, logger logr.Logger) {
-	err := shared.DeleteIns(client, namespace, name, &networkingv1alpha3.DestinationRule{})
-	if err != nil {
-		logger.Error(err, "failed to remove DestinationRule instance")
-	} else {
-		logger.Info("DestinationRule deleted")
-	}
+func DeleteDestinationRule(client client.Client, namespace string, name string) error {
+	return shared.DeleteIns(client, namespace, name, &networkingv1alpha3.DestinationRule{})
 }
 
 // check whether DestinationRule is different
@@ -103,37 +92,6 @@ func IsDifferentVirtualService(spec1 *networkingv1alpha3.VirtualServiceSpec, spe
 		}
 	}
 	return false
-}
-
-// return map of deployment name to virtual label value
-func FindAllRelatedDeployments(deployments map[string]map[string]string, selector map[string]string,
-	envLabel string) map[string]string {
-	relatedDeployments := make(map[string]string)
-	for dep, labels := range deployments {
-		match := true
-		for k, v := range selector {
-			if labels[k] != v {
-				match = false
-				break
-			}
-		}
-		if _, exist := labels[envLabel]; match && exist {
-			relatedDeployments[dep] = labels[envLabel]
-		}
-	}
-	return relatedDeployments
-}
-
-// list all possible values in deployment virtual env label
-func FindAllVirtualEnvLabelValues(deployments map[string]map[string]string, envLabel string) []string {
-	labelSet := make(map[string]bool)
-	for _, labels := range deployments {
-		labelVal, exist := labels[envLabel]
-		if exist {
-			labelSet[labelVal] = true
-		}
-	}
-	return getKeys(labelSet)
 }
 
 // find subset from list
@@ -180,15 +138,6 @@ func destinationRuleMatchSubset(labelKey string, labelValue string) networkingv1
 			labelKey: labelValue,
 		},
 	}
-}
-
-// get all keys of a map as array
-func getKeys(kv map[string]bool) []string {
-	keys := make([]string, 0, len(kv))
-	for k, _ := range kv {
-		keys = append(keys, k)
-	}
-	return keys
 }
 
 // calculate and generate http route instance

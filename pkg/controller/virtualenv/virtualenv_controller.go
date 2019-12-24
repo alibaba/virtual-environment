@@ -2,18 +2,15 @@ package virtualenv
 
 import (
 	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1"
-	"alibaba.com/virtual-env-operator/pkg/istio"
-	"alibaba.com/virtual-env-operator/pkg/istio/envoy"
+	"alibaba.com/virtual-env-operator/pkg/component/parser"
+	"alibaba.com/virtual-env-operator/pkg/component/router"
 	"alibaba.com/virtual-env-operator/pkg/shared"
 	"context"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -52,18 +49,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to secondary resource VirtualService & DestinationRule, requeue their owner to VirtualEnv
-	err = c.Watch(&source.Kind{Type: &networkingv1alpha3.VirtualService{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &envv1alpha1.VirtualEnvironment{},
-	})
-	if err != nil {
-		return err
-	}
-	err = c.Watch(&source.Kind{Type: &networkingv1alpha3.DestinationRule{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &envv1alpha1.VirtualEnvironment{},
-	})
+	// Watch for changes to generated resource
+	err = router.GetDefaultRoute().RegisterReconcileWatcher(c)
 	if err != nil {
 		return err
 	}
@@ -105,29 +92,16 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 
 	reqLogger.Info("Reconciling VirtualEnvironment")
 	for svc, selector := range shared.AvailableServices {
-		availableLabels := istio.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.EnvLabel.Name)
-		relatedDeployments := istio.FindAllRelatedDeployments(shared.AvailableDeployments, selector, virtualEnv.Spec.EnvLabel.Name)
+		availableLabels := parser.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.EnvLabel.Name)
+		relatedDeployments := parser.FindAllRelatedDeployments(shared.AvailableDeployments, selector, virtualEnv.Spec.EnvLabel.Name)
 		if len(availableLabels) > 0 && len(relatedDeployments) > 0 {
-			err = r.updateRoute(virtualEnv, svc, request, availableLabels, relatedDeployments, reqLogger)
+			// update mesh controller panel configure
+			err = router.GetDefaultRoute().GenerateRoute(r.client, r.scheme, virtualEnv, request.Namespace, svc, availableLabels, relatedDeployments)
 		}
 	}
 
 	shared.Lock.Unlock()
 	return reconcile.Result{}, err
-}
-
-// update mesh controller panel configure
-func (r *ReconcileVirtualEnv) updateRoute(virtualEnv *envv1alpha1.VirtualEnvironment, svc string, request reconcile.Request,
-	availableLabels []string, relatedDeployments map[string]string, reqLogger logr.Logger) error {
-	err := r.reconcileVirtualService(virtualEnv, svc, request, availableLabels, relatedDeployments, reqLogger)
-	if err != nil {
-		return err
-	}
-	err = r.reconcileDestinationRule(virtualEnv, svc, request, relatedDeployments, reqLogger)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // fetch the VirtualEnv instance from request
@@ -157,13 +131,15 @@ func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logg
 		}
 		shared.VirtualEnvIns = request.Name
 		if virtualEnv.Spec.EnvHeader.AutoInject {
-			err = r.createTagAppender(request.Namespace, request.Name, virtualEnv, logger)
+			err = router.GetDefaultRoute().CreateTagAppender(r.client, r.scheme, virtualEnv, request.Namespace, request.Name)
 			if err != nil {
-				logger.Error(err, "failed to create TagAppender instance for "+request.Name)
+				logger.Error(err, "Failed to create TagAppender instance for "+request.Name)
 				return virtualEnv, err
+			} else {
+				logger.Info("TagAppender created")
 			}
 		} else {
-			_ = envoy.DeleteTagAppenderIfExist(r.client, request.Namespace, request.Name)
+			_ = router.GetDefaultRoute().DeleteTagAppender(r.client, request.Namespace, request.Name)
 		}
 		logger.Info("VirtualEnv added", "Spec", virtualEnv.Spec)
 	}
@@ -180,22 +156,6 @@ func (r *ReconcileVirtualEnv) deleteVirtualEnv(namespace string, name string, lo
 	}
 }
 
-// create tag auto appender filter instance
-func (r *ReconcileVirtualEnv) createTagAppender(namespace string, name string, virtualEnv *envv1alpha1.VirtualEnvironment,
-	logger logr.Logger) error {
-	_ = envoy.DeleteTagAppenderIfExist(r.client, namespace, name)
-	tagAppender := envoy.TagAppenderFilter(namespace, name, virtualEnv.Spec.EnvLabel.Name, virtualEnv.Spec.EnvHeader.Name)
-	// set VirtualEnv instance as the owner and controller
-	err := controllerutil.SetControllerReference(virtualEnv, tagAppender, r.scheme)
-	if err == nil {
-		err = r.client.Create(context.TODO(), tagAppender)
-		if err == nil {
-			logger.Info("TagAppender created")
-		}
-	}
-	return err
-}
-
 // handle empty virtual env configure item with default value
 func (r *ReconcileVirtualEnv) handleDefaultConfig(virtualEnv *envv1alpha1.VirtualEnvironment) {
 	if virtualEnv.Spec.EnvHeader.Name == "" {
@@ -207,103 +167,4 @@ func (r *ReconcileVirtualEnv) handleDefaultConfig(virtualEnv *envv1alpha1.Virtua
 	if virtualEnv.Spec.EnvLabel.Splitter == "" {
 		virtualEnv.Spec.EnvLabel.Splitter = defaultEnvSplitter
 	}
-}
-
-// reconcile virtual service according to related deployments and available labels
-func (r *ReconcileVirtualEnv) reconcileVirtualService(virtualEnv *envv1alpha1.VirtualEnvironment, svcName string,
-	request reconcile.Request, availableLabels []string, relatedDeployments map[string]string, logger logr.Logger) error {
-	virtualSvc := istio.VirtualService(request.Namespace, svcName, availableLabels, relatedDeployments,
-		virtualEnv.Spec.EnvHeader.Name, virtualEnv.Spec.EnvLabel.Splitter, virtualEnv.Spec.EnvLabel.DefaultSubset)
-	foundVirtualSvc := &networkingv1alpha3.VirtualService{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: svcName, Namespace: request.Namespace}, foundVirtualSvc)
-	if err != nil {
-		// VirtualService not exist, create one
-		if errors.IsNotFound(err) {
-			err = r.createVirtualService(virtualEnv, virtualSvc, logger)
-			if err != nil {
-				logger.Error(err, "Failed to create new VirtualService")
-				return err
-			}
-		} else {
-			logger.Error(err, "Failed to get VirtualService")
-			return err
-		}
-	} else if istio.IsDifferentVirtualService(&foundVirtualSvc.Spec, &virtualSvc.Spec, virtualEnv.Spec.EnvHeader.Name) {
-		// existing VirtualService changed
-		foundVirtualSvc.Spec = virtualSvc.Spec
-		err := r.client.Update(context.TODO(), foundVirtualSvc)
-		if err != nil {
-			logger.Error(err, "Failed to update VirtualService status")
-			return err
-		}
-		logger.Info("VirtualService " + virtualSvc.Name + " changed")
-	}
-	return nil
-}
-
-// reconcile destination rule according to related deployments
-func (r *ReconcileVirtualEnv) reconcileDestinationRule(virtualEnv *envv1alpha1.VirtualEnvironment, svcName string,
-	request reconcile.Request, relatedDeployments map[string]string, logger logr.Logger) error {
-	destRule := istio.DestinationRule(request.Namespace, svcName, relatedDeployments, virtualEnv.Spec.EnvLabel.Name)
-	foundDestRule := &networkingv1alpha3.DestinationRule{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: svcName, Namespace: request.Namespace}, foundDestRule)
-	if err != nil {
-		// DestinationRule not exist, create one
-		if errors.IsNotFound(err) {
-			err = r.createDestinationRule(virtualEnv, destRule, logger)
-			if err != nil {
-				logger.Error(err, "Failed to create new DestinationRule")
-				return err
-			}
-		} else {
-			logger.Error(err, "Failed to get DestinationRule")
-			return err
-		}
-	} else if istio.IsDifferentDestinationRule(&foundDestRule.Spec, &destRule.Spec, virtualEnv.Spec.EnvLabel.Name) {
-		// existing DestinationRule changed
-		foundDestRule.Spec = destRule.Spec
-		err := r.client.Update(context.TODO(), foundDestRule)
-		if err != nil {
-			logger.Error(err, "Failed to update DestinationRule status")
-			return err
-		}
-		logger.Info("DestinationRule " + destRule.Name + " changed")
-	}
-	return nil
-}
-
-// create virtual service instance
-func (r *ReconcileVirtualEnv) createVirtualService(virtualEnv *envv1alpha1.VirtualEnvironment,
-	virtualSvc *networkingv1alpha3.VirtualService, logger logr.Logger) error {
-	// set VirtualEnv instance as the owner and controller
-	err := controllerutil.SetControllerReference(virtualEnv, virtualSvc, r.scheme)
-	if err != nil {
-		logger.Error(err, "Failed to set owner of "+virtualSvc.Name)
-		return err
-	}
-	err = r.client.Create(context.TODO(), virtualSvc)
-	if err != nil {
-		logger.Error(err, "Failed to create VirtualService "+virtualSvc.Name)
-		return err
-	}
-	logger.Info("VirtualService " + virtualSvc.Name + " created")
-	return nil
-}
-
-// create destination rule instance
-func (r *ReconcileVirtualEnv) createDestinationRule(virtualEnv *envv1alpha1.VirtualEnvironment,
-	destRule *networkingv1alpha3.DestinationRule, logger logr.Logger) error {
-	// set VirtualEnv instance as the owner and controller
-	err := controllerutil.SetControllerReference(virtualEnv, destRule, r.scheme)
-	if err != nil {
-		logger.Error(err, "Failed to set owner of "+destRule.Name)
-		return err
-	}
-	err = r.client.Create(context.TODO(), destRule)
-	if err != nil {
-		logger.Error(err, "Failed to create DestinationRule "+destRule.Name)
-		return err
-	}
-	logger.Info("DestinationRule " + destRule.Name + " created")
-	return nil
 }

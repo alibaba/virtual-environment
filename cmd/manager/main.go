@@ -1,6 +1,7 @@
 package main
 
 import (
+	"alibaba.com/virtual-env-operator/pkg/component/router/istio/envoy"
 	"context"
 	"flag"
 	"fmt"
@@ -14,7 +15,6 @@ import (
 	"alibaba.com/virtual-env-operator/api"
 	"alibaba.com/virtual-env-operator/pkg/apis"
 	"alibaba.com/virtual-env-operator/pkg/controller"
-	"alibaba.com/virtual-env-operator/pkg/istio/envoy"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
