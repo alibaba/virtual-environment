@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// Delete EnvoyFilter instance if it already exist
+// delete EnvoyFilter instance if it already exist
 func DeleteTagAppenderIfExist(client client.Client, namespace string, name string) error {
 	err := client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &networkingv1alpha3api.EnvoyFilter{})
 	if err == nil {
@@ -20,7 +20,7 @@ func DeleteTagAppenderIfExist(client client.Client, namespace string, name strin
 	return nil
 }
 
-// EnvoyFilter to auto append env tag into HTTP header
+// generate EnvoyFilter to auto append env tag into HTTP header
 func TagAppenderFilter(namespace string, name string, envLabel string, envHeader string) *networkingv1alpha3api.EnvoyFilter {
 	return &networkingv1alpha3api.EnvoyFilter{
 		ObjectMeta: metav1.ObjectMeta{

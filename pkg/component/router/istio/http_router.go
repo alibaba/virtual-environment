@@ -22,6 +22,7 @@ var logger = logf.Log.WithName("istio_http_router")
 type HttpRouter struct {
 }
 
+// generate virtual services and destination rules
 func (r *HttpRouter) GenerateRoute(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha1.VirtualEnvironment,
 	namespace string, svcName string, availableLabels []string, relatedDeployments map[string]string) error {
 	err := r.reconcileVirtualService(client, scheme, virtualEnv, namespace, svcName, availableLabels, relatedDeployments)
@@ -31,24 +32,25 @@ func (r *HttpRouter) GenerateRoute(client client.Client, scheme *runtime.Scheme,
 	return r.reconcileDestinationRule(client, scheme, virtualEnv, namespace, svcName, relatedDeployments)
 }
 
-func (r *HttpRouter) CleanupRoute(client client.Client, namespace string, name string) error {
-	err := http.DeleteVirtualService(client, namespace, name)
+// clean up virtual services and destination rules
+func (r *HttpRouter) CleanupRoute(client client.Client, namespace string, svcName string) error {
+	err := http.DeleteVirtualService(client, namespace, svcName)
 	if err != nil {
-		logger.Error(err, "failed to remove VirtualService instance "+name)
+		logger.Error(err, "failed to remove VirtualService instance "+svcName)
 	} else {
-		logger.Info("VirtualService deleted " + name)
+		logger.Info("VirtualService deleted " + svcName)
 	}
-	err = http.DeleteDestinationRule(client, namespace, name)
+	err = http.DeleteDestinationRule(client, namespace, svcName)
 	if err != nil {
-		logger.Error(err, "failed to remove DestinationRule instance "+name)
+		logger.Error(err, "failed to remove DestinationRule instance "+svcName)
 	} else {
-		logger.Info("DestinationRule deleted " + name)
+		logger.Info("DestinationRule deleted " + svcName)
 	}
 	return nil
 }
 
+// watch for changes to secondary resource VirtualService & DestinationRule, requeue their owner to VirtualEnv
 func (r *HttpRouter) RegisterReconcileWatcher(c controller.Controller) error {
-	// Watch for changes to secondary resource VirtualService & DestinationRule, requeue their owner to VirtualEnv
 	err := c.Watch(&source.Kind{Type: &networkingv1alpha3.VirtualService{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &envv1alpha1.VirtualEnvironment{},
@@ -66,11 +68,7 @@ func (r *HttpRouter) RegisterReconcileWatcher(c controller.Controller) error {
 	return nil
 }
 
-func (r *HttpRouter) DeleteTagAppender(client client.Client, namespace string, name string) error {
-	return envoy.DeleteTagAppenderIfExist(client, namespace, name)
-}
-
-// create tag auto appender filter instance
+// create envoy filter to automatically append tag to service
 func (r *HttpRouter) CreateTagAppender(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha1.VirtualEnvironment,
 	namespace string, name string) error {
 	_ = r.DeleteTagAppender(client, namespace, name)
@@ -81,6 +79,11 @@ func (r *HttpRouter) CreateTagAppender(client client.Client, scheme *runtime.Sch
 		err = client.Create(context.TODO(), tagAppender)
 	}
 	return err
+}
+
+// delete auto tag appender envoy filter
+func (r *HttpRouter) DeleteTagAppender(client client.Client, namespace string, name string) error {
+	return envoy.DeleteTagAppenderIfExist(client, namespace, name)
 }
 
 // reconcile virtual service according to related deployments and available labels
