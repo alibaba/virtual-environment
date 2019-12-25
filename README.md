@@ -3,6 +3,8 @@ Virtual Environment Operator
 
 Isolate kubernetes pod communication into virtual groups according to pod label, with route fallback support.
 
+[中文介绍](./README_CN.md)
+
 ## Instruction
 
 This project inspired by the "project environment" practice widely used in Alibaba Group,

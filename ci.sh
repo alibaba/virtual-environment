@@ -56,8 +56,8 @@ function check_result()
 }
 
 # Wait for apps ready
-count=`kubectl get -n $ns pods | awk '{print $3}' | grep 'Running' | wc -l`
-for i in `seq 30`; do
+for i in `seq 50`; do
+    count=`kubectl get -n $ns pods | awk '{print $3}' | grep 'Running' | wc -l`
     if [ ${count} -eq 9 ]; then
         break
     fi
@@ -68,6 +68,7 @@ if [ ${count} -eq 9 ]; then
     echo "Apps deployment not ready"
     exit -1
 fi
+echo "---- Apps deployment ready ----"
 
 # Do functional check
 res=$(invoke_api dev-proj1)
