@@ -81,6 +81,13 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 	shared.Lock.Lock()
 
 	virtualEnv, err := r.fetchVirtualEnvIns(request, reqLogger)
+
+	if _, ok := err.(shared.VirtualEnvChangedError); ok {
+		err = r.checkTagAppenderWithVirtualEnvChanged(virtualEnv, request, reqLogger)
+	} else {
+		_ = r.checkTagAppender(virtualEnv, request, reqLogger)
+	}
+
 	if err != nil {
 		shared.Lock.Unlock()
 		if errors.IsNotFound(err) {
@@ -102,6 +109,25 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 
 	shared.Lock.Unlock()
 	return reconcile.Result{}, err
+}
+
+// create or delete tag appender according to virtual environment configure
+func (r *ReconcileVirtualEnv) checkTagAppenderWithVirtualEnvChanged(virtualEnv *envv1alpha1.VirtualEnvironment,
+	request reconcile.Request, logger logr.Logger) error {
+	if virtualEnv.Spec.EnvHeader.AutoInject {
+		return router.GetDefaultRoute().CreateTagAppender(r.client, r.scheme, virtualEnv, request.Namespace, request.Name)
+	} else {
+		return router.GetDefaultRoute().DeleteTagAppender(r.client, request.Namespace, request.Name)
+	}
+}
+
+// create tag appender if it should exist
+func (r *ReconcileVirtualEnv) checkTagAppender(virtualEnv *envv1alpha1.VirtualEnvironment,
+	request reconcile.Request, logger logr.Logger) error {
+	if virtualEnv.Spec.EnvHeader.AutoInject && !router.GetDefaultRoute().TagAppenderExist(r.client, request.Namespace, request.Name) {
+		return router.GetDefaultRoute().CreateTagAppender(r.client, r.scheme, virtualEnv, request.Namespace, request.Name)
+	}
+	return nil
 }
 
 // fetch the VirtualEnv instance from request
@@ -130,20 +156,10 @@ func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logg
 			r.deleteVirtualEnv(request.Namespace, shared.VirtualEnvIns, logger)
 		}
 		shared.VirtualEnvIns = request.Name
-		if virtualEnv.Spec.EnvHeader.AutoInject {
-			err = router.GetDefaultRoute().CreateTagAppender(r.client, r.scheme, virtualEnv, request.Namespace, request.Name)
-			if err != nil {
-				logger.Error(err, "Failed to create TagAppender instance for "+request.Name)
-				return virtualEnv, err
-			} else {
-				logger.Info("TagAppender created")
-			}
-		} else {
-			_ = router.GetDefaultRoute().DeleteTagAppender(r.client, request.Namespace, request.Name)
-		}
 		logger.Info("VirtualEnv added", "Spec", virtualEnv.Spec)
+		return virtualEnv, shared.VirtualEnvChangedError{}
 	}
-	return virtualEnv, err
+	return virtualEnv, nil
 }
 
 // delete specified virtual env instance

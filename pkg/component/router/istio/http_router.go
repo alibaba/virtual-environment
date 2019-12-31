@@ -5,6 +5,7 @@ import (
 	"alibaba.com/virtual-env-operator/pkg/component/router/istio/envoy"
 	"alibaba.com/virtual-env-operator/pkg/component/router/istio/http"
 	"context"
+	networkingv1alpha3api "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -65,7 +66,21 @@ func (r *HttpRouter) RegisterReconcileWatcher(c controller.Controller) error {
 	if err != nil {
 		return err
 	}
+	err = c.Watch(&source.Kind{Type: &networkingv1alpha3api.EnvoyFilter{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &envv1alpha1.VirtualEnvironment{},
+	})
+	if err != nil {
+		return err
+	}
 	return nil
+}
+
+// look for envoy filter instance in namespace
+func (r *HttpRouter) TagAppenderExist(client client.Client, namespace string, name string) bool {
+	envoyFilter := &networkingv1alpha3api.EnvoyFilter{}
+	err := client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, envoyFilter)
+	return err == nil
 }
 
 // create envoy filter to automatically append tag to service
@@ -77,6 +92,11 @@ func (r *HttpRouter) CreateTagAppender(client client.Client, scheme *runtime.Sch
 	err := controllerutil.SetControllerReference(virtualEnv, tagAppender, scheme)
 	if err == nil {
 		err = client.Create(context.TODO(), tagAppender)
+	}
+	if err != nil {
+		logger.Error(err, "Failed to create TagAppender instance for "+name)
+	} else {
+		logger.Info("TagAppender created")
 	}
 	return err
 }

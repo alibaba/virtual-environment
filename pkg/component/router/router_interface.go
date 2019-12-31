@@ -19,6 +19,9 @@ type IsolationRouter interface {
 	// clean up dynamical route for specified service
 	CleanupRoute(client client.Client, namespace string, svcName string) error
 
+	// check whether tag appender exist
+	TagAppenderExist(client client.Client, namespace string, name string) bool
+
 	// create auto tag appender to all services in namespace
 	CreateTagAppender(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha1.VirtualEnvironment,
 		namespace string, name string) error
