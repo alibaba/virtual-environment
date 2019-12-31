@@ -82,10 +82,12 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 
 	virtualEnv, err := r.fetchVirtualEnvIns(request, reqLogger)
 
-	if _, ok := err.(shared.VirtualEnvChangedError); ok {
-		err = r.checkTagAppenderWithVirtualEnvChanged(virtualEnv, request, reqLogger)
-	} else {
-		_ = r.checkTagAppender(virtualEnv, request, reqLogger)
+	if virtualEnv != nil {
+		if _, ok := err.(shared.VirtualEnvChangedError); ok {
+			err = r.checkTagAppenderWithVirtualEnvChanged(virtualEnv, request, reqLogger)
+		} else {
+			_ = r.checkTagAppender(virtualEnv, request, reqLogger)
+		}
 	}
 
 	if err != nil {
