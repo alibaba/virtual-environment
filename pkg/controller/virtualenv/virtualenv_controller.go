@@ -81,16 +81,7 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 	shared.Lock.Lock()
 
 	virtualEnv, err := r.fetchVirtualEnvIns(request, reqLogger)
-
-	if virtualEnv != nil {
-		if _, ok := err.(shared.VirtualEnvChangedError); ok {
-			err = r.checkTagAppenderWithVirtualEnvChanged(virtualEnv, request, reqLogger)
-		} else {
-			_ = r.checkTagAppender(virtualEnv, request, reqLogger)
-		}
-	}
-
-	if err != nil {
+	if err != nil && !shared.IsVirtualEnvChanged(err) {
 		shared.Lock.Unlock()
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -100,6 +91,7 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	reqLogger.Info("Reconciling VirtualEnvironment")
+	err = r.checkTagAppender(virtualEnv, request, shared.IsVirtualEnvChanged(err), reqLogger)
 	for svc, selector := range shared.AvailableServices {
 		availableLabels := parser.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.EnvLabel.Name)
 		relatedDeployments := parser.FindAllRelatedDeployments(shared.AvailableDeployments, selector, virtualEnv.Spec.EnvLabel.Name)
@@ -114,20 +106,17 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 }
 
 // create or delete tag appender according to virtual environment configure
-func (r *ReconcileVirtualEnv) checkTagAppenderWithVirtualEnvChanged(virtualEnv *envv1alpha1.VirtualEnvironment,
-	request reconcile.Request, logger logr.Logger) error {
-	if virtualEnv.Spec.EnvHeader.AutoInject {
-		return router.GetDefaultRoute().CreateTagAppender(r.client, r.scheme, virtualEnv, request.Namespace, request.Name)
-	} else {
-		return router.GetDefaultRoute().DeleteTagAppender(r.client, request.Namespace, request.Name)
-	}
-}
-
-// create tag appender if it should exist
 func (r *ReconcileVirtualEnv) checkTagAppender(virtualEnv *envv1alpha1.VirtualEnvironment,
-	request reconcile.Request, logger logr.Logger) error {
-	if virtualEnv.Spec.EnvHeader.AutoInject && !router.GetDefaultRoute().TagAppenderExist(r.client, request.Namespace, request.Name) {
-		return router.GetDefaultRoute().CreateTagAppender(r.client, r.scheme, virtualEnv, request.Namespace, request.Name)
+	request reconcile.Request, isVirtualEnvChanged bool, logger logr.Logger) error {
+	isTagAppenderExist := router.GetDefaultRoute().TagAppenderExist(r.client, request.Namespace, request.Name)
+	if virtualEnv.Spec.EnvHeader.AutoInject {
+		if isVirtualEnvChanged || !isTagAppenderExist {
+			return router.GetDefaultRoute().CreateTagAppender(r.client, r.scheme, virtualEnv, request.Namespace, request.Name)
+		}
+	} else {
+		if isVirtualEnvChanged || isTagAppenderExist {
+			return router.GetDefaultRoute().DeleteTagAppender(r.client, request.Namespace, request.Name)
+		}
 	}
 	return nil
 }

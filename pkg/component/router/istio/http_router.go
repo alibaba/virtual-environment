@@ -96,14 +96,18 @@ func (r *HttpRouter) CreateTagAppender(client client.Client, scheme *runtime.Sch
 	if err != nil {
 		logger.Error(err, "Failed to create TagAppender instance for "+name)
 	} else {
-		logger.Info("TagAppender created")
+		logger.Info("TagAppender created for " + name)
 	}
 	return err
 }
 
 // delete auto tag appender envoy filter
 func (r *HttpRouter) DeleteTagAppender(client client.Client, namespace string, name string) error {
-	return envoy.DeleteTagAppenderIfExist(client, namespace, name)
+	err := envoy.DeleteTagAppenderIfExist(client, namespace, name)
+	if err == nil {
+		logger.Info("TagAppender deleted for " + name)
+	}
+	return err
 }
 
 // reconcile virtual service according to related deployments and available labels
