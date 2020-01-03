@@ -11,6 +11,7 @@
 image="virtualenvironment/virtual-env-operator"
 tag="${1:-ci}"
 ns="${2:-virtual-env-ci}"
+echo "---- Begin CI Test ----"
 
 # Generate temporary operator image
 full_image_name="${image}:${tag}"
@@ -43,14 +44,12 @@ function invoke_api()
 function check_result()
 {
     real="${1}"
-    expect_1="${2}"
-    expect_2="${3}"
-    if [[ "${real}" != "${expect_1}" && "${real}" != "${expect_2}" ]]; then
+    expect="${2}"
+    if [[ "${real}" != "${expect}" ]]; then
         echo "Test failed !!!"
         echo "Namespace: ${ns}"
         echo "Real response: ${real}"
-        echo "Expectation 1: ${expect_1}"
-        echo "Expectation 2: ${expect_2}"
+        echo "Expectation  : ${expect}"
         exit -1
     fi
 }
@@ -64,8 +63,8 @@ for i in `seq 50`; do
     echo "waiting ... ${i} (count: ${count})"
     sleep 10s
 done
-if [ ${count} -eq 9 ]; then
-    echo "Apps deployment not ready"
+if [ ${count} -ne 9 ]; then
+    echo "Apps deployment not ready !!!"
     exit -1
 fi
 echo "---- Apps deployment ready ----"
@@ -84,8 +83,7 @@ res=$(invoke_api dev)
 check_result "$res" "[springboot @ dev] <-dev, [go @ dev] <-dev, [node @ dev] <-dev"
 
 res=$(invoke_api)
-check_result "$res" "[springboot @ dev] <-dev, [go @ dev] <-dev, [node @ dev] <-" \
-             "[springboot @ dev-proj1] <-dev-proj1, [go @ dev] <-dev-proj1, [node @ dev-proj1] <-"
+check_result "$res" "[springboot @ dev] <-dev, [go @ dev] <-dev, [node @ dev] <-empty"
 echo "---- Functional check OK ----"
 
 # Clean up everything
