@@ -55,7 +55,7 @@ func luaScript(envLabel string, envHeader string) string {
 	  local envHeader = "` + envHeader + `"
 	  local labels = os.getenv ("ISTIO_METAJSON_LABELS")
 	  local beginPos, endPos, curEnv
-	  _, beginPos = string.find(labels, '","' .. envLabel .. '":"')
+	  _, beginPos = string.find(labels, '","' .. envLabel .. '":"', nil, true)
 	  if beginPos ~= nil then
 		endPos = string.find(labels, '"', beginPos + 1)
 		if endPos ~= nil and endPos > beginPos then
