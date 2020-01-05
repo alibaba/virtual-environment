@@ -94,9 +94,9 @@ func (r *HttpRouter) CreateTagAppender(client client.Client, scheme *runtime.Sch
 		err = client.Create(context.TODO(), tagAppender)
 	}
 	if err != nil {
-		logger.Error(err, "Failed to create TagAppender instance for "+name)
+		logger.Error(err, "Failed to create TagAppender instance "+namespace+":"+name)
 	} else {
-		logger.Info("TagAppender created for " + name)
+		logger.Info("TagAppender created " + namespace + ":" + name)
 	}
 	return err
 }
@@ -105,7 +105,7 @@ func (r *HttpRouter) CreateTagAppender(client client.Client, scheme *runtime.Sch
 func (r *HttpRouter) DeleteTagAppender(client client.Client, namespace string, name string) error {
 	err := envoy.DeleteTagAppenderIfExist(client, namespace, name)
 	if err == nil {
-		logger.Info("TagAppender deleted for " + name)
+		logger.Info("TagAppender deleted " + namespace + ":" + name)
 	}
 	return err
 }
