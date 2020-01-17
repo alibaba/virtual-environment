@@ -3,6 +3,8 @@ Virtual Environment Operator
 
 阿里测试环境服务隔离和联调机制的Kubernetes版实现，当前基于Istio。
 
+![isolation](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/static/virtualenv/20200111163437.jpg)
+
 阅读[这里](https://yq.aliyun.com/articles/700766)了解更多故事。
 
 ## 概述
@@ -78,6 +80,12 @@ spec:
 | envLabel.name          | virtual-env   | Pod上标记虚拟环境名用的标签名称（除非确实必要，建议保留默认值） |
 | envLabel.splitter      | .             | 虚拟环境名中用于划分环境默认路由层级的字符（只能是单个字符） |
 | envLabel.defaultSubset |               | 请求未匹配到任何存在的虚拟环境时，进行兜底虚拟环境名（默认为随机路由） |
+
+## 跨集群隔离
+
+默认情况下，VirtualEnvironment实例产生的隔离规则仅对所在Namespace内的Pod有效。但从原理上说，这种隔离能力是可以跨越Namespace以及跨越集群使用的。
+
+当请求从一个Pod发送到另一个Namespace甚至另一个Kubernetes集群的Pod中，如果目标Pod所在的集群部署有VirtualEnvironment CRD，且所在的Namespace具有相同配置的VirtualEnvironment实例，则该请求依然会在目标Pod所在的Namespace内遵循相同隔离规则进行路由。
 
 ## 联系我们
 
