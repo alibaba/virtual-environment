@@ -39,9 +39,9 @@ deploy/app.sh apply
 kubectl exec -it $(kubectl get pod -l app=sleep -o jsonpath='{.items[0].metadata.name}') /bin/sh
 ```
 
-分别在请求头加上不同的虚拟环境名称，使用`curl`工具调用`app-js`服务，已知各服务输出文本结构为`[服务名 @ 当前Pod所属虚拟环境] <- 请求标签上的虚拟环境名称`。
+分别在请求头加上不同的虚拟环境名称，使用`curl`工具调用`app-js`服务。注意该示例创建的VirtualEnvironment实例配置使用`-`作为环境层级分隔符，同时配置了传递标签Header的键名为`ali-env-mark`。
 
-观察实际响应的服务实例情况：
+已知各服务输出文本结构为`[项目名 @ 响应的Pod所属虚拟环境] <- 请求标签上的虚拟环境名称`。观察实际响应的服务实例情况：
 
 ```bash
 # 使用dev-proj1标签
@@ -63,6 +63,7 @@ kubectl exec -it $(kubectl get pod -l app=sleep -o jsonpath='{.items[0].metadata
   [node @ dev] <-dev-proj2
 
 # 不带任何标签访问
+# 由于启用了AutoInject配置，经过node服务后，请求自动加上了Pod所在虚拟环境的标签
 > curl app-js:8080/demo
   [springboot @ dev] <-dev
   [go @ dev] <-dev
