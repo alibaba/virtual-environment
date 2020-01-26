@@ -5,7 +5,7 @@ Virtual Environment Operator
 
 ![isolation](https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/diagram-zh-cn.jpg)
 
-阅读[这里](https://yq.aliyun.com/articles/700766)了解更多故事。
+详见[项目文档](https://alibaba.github.io/virtual-environment/#/zh-cn/)
 
 ## 概述
 
@@ -33,59 +33,6 @@ ProjectEnv -> ServiceA +-----+      +-----> ServiceC |
 - 由于本质是动态生成Istio规则，因此仅支持Istio可配置的通信协议，目前为HTTP
 - 由于Istio目前仅支持Kubernetes内置DNS的服务发现，因此对于自带服务发现的框架（如Bubbo、SpringCloud）暂时无法使用
 - 在应用程序中需要实现Header标签在请求之间的传递，可通过OpenTracing的baggage机制完成，也可在请求代码中直接传递
-
-## 使用
-
-**[0]** 前提：集群已经部署Istio
-
-**[1]** 部署CRD和Operator
-```bash
-kubectl apply -f deploy/crds/env.alibaba.com_virtualenvironments_crd.yaml
-kubectl apply -f deploy/operator.yaml
-```
-如果开启了RBAC，还需要部署相应的Role和ServiceAccount
-```bash
-kubectl apply -f deploy/service_account.yaml
-kubectl apply -f deploy/role.yaml
-kubectl apply -f deploy/role_binding.yaml
-```
-
-**[2]** 为应用程序添加透传标签Header的功能（默认约定Header为`X-Virtual-Env`）
-
-**[3]** 将改程序打包为镜像，并在部署到Kubernetes时，为Deployment的Pod模板增加一个表示虚拟环境名称的Label（默认约定为`virtual-env`）
-
-**[4]** 创建类型为`VirtualEnvironment`的资源定义文件（参考`deploy/crds/env.alibaba.com_v1alpha1_virtualenvironment_cr.yaml`），根据实际情况修改配置参数，使用`kubectl apply`命令添加到Kubernetes集群
-
-## VirtualEnvironment配置
-
-```yaml
-apiVersion: env.alibaba.com/v1alpha1
-kind: VirtualEnvironment
-metadata:
-  name: example-virtualenv
-spec:
-  envHeader:
-    name: X-Virtual-Env
-    autoInject: true
-  envLabel:
-    name: virtual-env
-    splitter: .
-    defaultSubset: dev
-```
-
-| 配置参数                | 默认值         | 说明  |
-| :--------              | :-----:       | :---- |
-| envHeader.name         | X-Virtual-Env | 用于记录虚拟环境名的HTTP头名称（虽然有默认值，强烈建议显性设置） |
-| envHeader.autoInject   | false         | 是否为没有虚拟环境HTTP头记录的请求自动注入HTTP头（建议开启） |
-| envLabel.name          | virtual-env   | Pod上标记虚拟环境名用的标签名称（除非确实必要，建议保留默认值） |
-| envLabel.splitter      | .             | 虚拟环境名中用于划分环境默认路由层级的字符（只能是单个字符） |
-| envLabel.defaultSubset |               | 请求未匹配到任何存在的虚拟环境时，进行兜底虚拟环境名（默认为随机路由） |
-
-## 跨集群隔离
-
-默认情况下，VirtualEnvironment实例产生的隔离规则仅对所在Namespace内的Pod有效。但从原理上说，这种隔离能力是可以跨越Namespace以及跨越集群使用的。
-
-当请求从一个Pod发送到另一个Namespace甚至另一个Kubernetes集群的Pod中，如果目标Pod所在的集群部署有VirtualEnvironment CRD，且所在的Namespace具有相同配置的VirtualEnvironment实例，则该请求依然会在目标Pod所在的Namespace内遵循相同隔离规则进行路由。
 
 ## 联系我们
 
