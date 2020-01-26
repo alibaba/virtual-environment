@@ -3,7 +3,7 @@ Virtual Environment Operator
 
 阿里测试环境服务隔离和联调机制的Kubernetes版实现，当前基于Istio。
 
-![isolation](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/static/virtualenv/20200111163437.jpg)
+![isolation](https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/diagram-zh-cn.jpg)
 
 阅读[这里](https://yq.aliyun.com/articles/700766)了解更多故事。
 
@@ -91,4 +91,4 @@ spec:
 
 请加入`kt-dev`钉钉群：
 
-![image](https://github.com/alibaba/kt-connect/raw/master/docs/_media/dingtalk-group.png)
+<img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/dingtalk-group-zh-cn.jpg" width="50%"></img>

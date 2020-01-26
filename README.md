@@ -3,7 +3,7 @@ Virtual Environment Operator
 
 Isolate kubernetes pod communication into virtual groups according to pod label, with route fallback support.
 
-![isolation](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/static/virtualenv/20200111163537.jpg)
+![isolation](https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/diagram-en-us.jpg)
 
 This practice was also mentioned at [this](https://medium.com/hackernoon/lower-cost-with-higher-stability-how-do-we-manage-test-environments-at-alibaba-f7bd444ff6d2?) article.
 
@@ -111,4 +111,4 @@ When a request is sent to a Pod in another namespace or another Kubernetes clust
 
 Contact us with DingTalk:
 
-![image](https://github.com/alibaba/kt-connect/raw/master/docs/_media/dingtalk-group.png)
+<img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/dingtalk-group-en-us.jpg" width="50%"></img>

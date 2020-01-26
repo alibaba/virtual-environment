@@ -10,7 +10,7 @@ KtVirtualEnvironment是Kt系列工具的一员，来自阿里巴巴云研发部�
 
 然而在中大型团队里，为每位开发者维护一整套专用测试服务集群，从经济成本和管理成本上考虑都并不现实。为此阿里巴巴的研发团队采用了基于路由隔离的"虚拟环境"方法。
 
-![isolation](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/static/virtualenv/20200111163437.jpg)
+![isolation](https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/diagram-zh-cn.jpg)
 
 这种方法通过在请求上携带约定标签，可以将个别需要调试或测试的特定版本服务实例与其他公共服务实例组成临时虚拟集群，形成开发者视角的专属测试环境。
 
@@ -27,4 +27,4 @@ KtVirtualEnvironment是Kt系列工具的一员，来自阿里巴巴云研发部�
 
 请加入`kt-dev`钉钉群：
 
-<img src="https://raw.githubusercontent.com/alibaba/kt-connect/master/docs/media/dingtalk-group.png" width="40%"></img>
+<img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/dingtalk-group-zh-cn.jpg" width="40%"></img>
