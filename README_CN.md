@@ -5,7 +5,7 @@ Virtual Environment Operator
 
 ![isolation](https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/diagram-zh-cn.jpg)
 
-详见[项目文档](https://alibaba.github.io/virtual-environment/#/zh-cn/)
+详见☞[项目文档](https://alibaba.github.io/virtual-environment/#/zh-cn/)☜
 
 ## 概述
 
