@@ -3,3 +3,6 @@
 * Kt系列工具
   * [KtConnect](https://alibaba.github.io/kt-connect/#/zh-cn/)
   * KtVirtualEnvironment(当前项目)
+* 语言
+  * [English](/en-us/)
+  * 中文
