@@ -32,7 +32,7 @@ kubectl apply -f https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/rel
 kubectl apply -f path-to-virtual-environment-cr.yaml
 ```
 
-实例创建后，会自动监听所在Namespace中的所有Service和Deployment对象并自动生成路由隔离规则，形成虚拟环境。
+实例创建后，会自动监听**所在Namespace中的**所有Service和Deployment对象并自动生成路由隔离规则，形成虚拟环境。
 
 资源定义文件内容请参考[配置虚拟环境](configuration.md)，根据实际情况修改配置参数。
 
