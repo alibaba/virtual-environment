@@ -1,67 +1,14 @@
-# HTTP头参数透传插件
+Java SDK Demo
+---
 
-## 简介
+A simple demo of automatically passing down HTTP header between requests via an SDK.
 
-通过HTTP头透传数据的插件演示，依赖Spring 3.0以后引入的`RestTemplate`类型（Spring Cloud框架默认支持）。
+This may not be a general environment-tag-pass-down SDK, and it has not been uploaded to any official Maven repository.
 
-## 使用方法
+The purpose of this example is to demonstrate an implementation of transparent transmission of environmental tags without three-party dependency package, and to provide a simple reference for implementing custom SDKs by your own.
 
-### 1.基于Spring Boot的应用
+使用SDK方式在上下游HTTP请求之间自动透传环境标签的演示代码。
 
-采用Spring Boot构建的应用只需加入插件依赖即可，以Maven项目的pom.xml文件为例：
+这并不是一个普遍通用的环境标签透传SDK，因此也并未被上传至任何官方Maven仓库中。
 
-```xml
-<dependency>
-	<groupId>com.alibaba.aone</groupId>
-	<artifactId>demax-trace-plugin</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
-</dependency>
-```
-
-### 2.普通Spring MVC应用
-
-若是使用了Spring MVC，但非Spring Boot的应用，首先引入插件依赖，方法同上。
-然后手工增加Bean扫描路径，可通过xml或配置类实现。
-
-xml配置方式：
-
-```xml
-<beans>  
-    <context:component-scan base-package="com.alibaba.aone.demax.trace.plugin"/>  
-</beans> 
-```
-
-配置类方式:
-
-```java
-package <任意包路径>;
-
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-
-@Configuration
-@ComponentScan("com.alibaba.aone.demax.trace.plugin")
-public class TraceConfig {
-}
-```
-
-## 功能验证
-
-创建3个通过HTTP依次串联调用的服务，分别引入`demax-trace-plugin`包，
-然后访问第一个服务服务的入口API。例如：
-
-```bash
-curl -H "X-TB-ENV-ID: FEATURE-123" "http://127.0.0.1:8081/api/trace"
-```
-
-在第三个服务的相应方法中读取`X-TB-ENV-ID`请求头，并打印读取结果。从而验证环境ID能自动沿链路进行传递。
-
-也可以创建大量并发请求，观察不同请求传递数据是否互窜：
-
-```bash
-for i in {1..1000}; do
-    curl -H "X-TB-ENV-ID: $i" "http://127.0.0.1:8081/api/trace" >>/tmp/q &
-done
-```
-
-等待所有curl进程结束，检查`/tmp/q`文件内容，请求返回的数值没有重复，从而证实每次数据透传都是独立的。
+本实例的目的在于演示一种无需三方依赖包的环境标签透传实现思路，为您自定义SDK提供参考。

@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.alibaba.kt.trace.config.RestTemplateConfig,\
+  com.alibaba.kt.trace.config.WebMvcConfig
