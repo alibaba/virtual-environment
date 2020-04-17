@@ -8,34 +8,82 @@
 # Usage: ci.sh [<name-of-temporary-image-tag>] [<name-of-temporary-namespace>]
 
 # Parameters
-operator_name="virtual-env-operator"
-image="virtualenvironment/${operator_name}"
+if [[ "${1}" =~ ^[A-Z]{1,}$ ]]; then
+    action="${1}"
+    shift
+fi
 tag="${1:-ci}"
 ns="${2:-virtual-env-ci}"
+
+# Constants
+operator_name="virtual-env-operator"
+image="virtualenvironment/${operator_name}"
+full_image_name="${image}:${tag}"
 echo "---- Begin CI Test ----"
 
+# Jump to specified code location
+function goto
+{
+    sed_cmd="sed"
+    if [[ "$(uname -s)" = "Darwin" ]]; then
+        sed_cmd="gsed"
+    fi
+    label=$1
+    cmd=$(${sed_cmd} -n "/^# >\+ $label:/{:a;n;p;ba};" $0 | grep -v ':$')
+    eval "$cmd"
+    exit
+}
+
+# Shortcuts
+if [[ ${action} = "DEPLOY" ]]; then
+    goto DEPLOY_ANCHOR
+elif [[ ${action} = "TEST" ]]; then
+    goto TEST_ANCHOR
+elif [[ ${action} = "CLEAN" ]]; then
+    goto CLEAN_UP_ANCHOR
+fi
+
+# >>>>>>> BUILD_ANCHOR:
+
 # Generate temporary operator image
-full_image_name="${image}:${tag}"
 operator-sdk build --go-build-args "-o build/_output/bin/${operator_name}" ${full_image_name}
-if [ ${?} != 0 ]; then
+if [[ ${?} != 0 ]]; then
     echo "Build failed !!!"
     exit -1
 fi
 docker push ${full_image_name}
 echo "---- Build OK ----"
 
+# >>>>>>> DEPLOY_ANCHOR:
+
 # Create temporary namespace and put operator into it
 kubectl create namespace ${ns}
 for f in deploy/*.yaml; do
     cat $f | sed "s#${image}:[^ ]*#${full_image_name}#g" | kubectl apply -n ${ns} -f -
 done
-echo "---- Operator deployment OK ----"
+echo "---- Operator deployment ready ----"
 
 # Deploy demo apps
 kubectl create -n ${ns} deployment sleep --image=virtualenvironment/sleep --dry-run -o yaml \
         | istioctl kube-inject -f - | kubectl apply -n ${ns} -f -
 examples/deploy/app.sh apply ${ns}
-echo "---- Demo apps deployment begin ----"
+
+# Wait for apps ready
+for i in `seq 50`; do
+    count=`kubectl get -n $ns pods | awk '{print $3}' | grep 'Running' | wc -l`
+    if [[ ${count} -eq 9 ]]; then
+        break
+    fi
+    echo "waiting ... ${i} (count: ${count})"
+    sleep 10s
+done
+if [[ ${count} -ne 9 ]]; then
+    echo "Apps deployment failed !!!"
+    exit -1
+fi
+echo "---- Apps deployment ready ----"
+
+# >>>>>>> TEST_ANCHOR:
 
 # Call service and format response
 function invoke_api()
@@ -59,37 +107,29 @@ function check_result()
     fi
 }
 
-# Wait for apps ready
-for i in `seq 50`; do
-    count=`kubectl get -n $ns pods | awk '{print $3}' | grep 'Running' | wc -l`
-    if [ ${count} -eq 9 ]; then
-        break
-    fi
-    echo "waiting ... ${i} (count: ${count})"
-    sleep 10s
-done
-if [ ${count} -ne 9 ]; then
-    echo "Apps deployment not ready !!!"
-    exit -1
-fi
-echo "---- Apps deployment ready ----"
-
 # Do functional check
 res=$(invoke_api dev-proj1)
 check_result "$res" "[springboot @ dev-proj1] <-dev-proj1, [go @ dev] <-dev-proj1, [node @ dev-proj1] <-dev-proj1"
+echo "passed: case 1"
 
 res=$(invoke_api dev-proj1-feature1)
 check_result "$res" "[springboot @ dev-proj1-feature1] <-dev-proj1-feature1, [go @ dev] <-dev-proj1-feature1, [node @ dev-proj1] <-dev-proj1-feature1"
+echo "passed: case 2"
 
 res=$(invoke_api dev-proj2)
 check_result "$res" "[springboot @ dev] <-dev-proj2, [go @ dev-proj2] <-dev-proj2, [node @ dev] <-dev-proj2"
+echo "passed: case 3"
 
 res=$(invoke_api dev)
 check_result "$res" "[springboot @ dev] <-dev, [go @ dev] <-dev, [node @ dev] <-dev"
+echo "passed: case 4"
 
 res=$(invoke_api)
 check_result "$res" "[springboot @ dev] <-dev, [go @ dev] <-dev, [node @ dev] <-empty"
+echo "passed: case 5"
 echo "---- Functional check OK ----"
+
+# >>>>>>> CLEAN_UP_ANCHOR:
 
 # Clean up everything
 examples/deploy/app.sh delete ${ns}
