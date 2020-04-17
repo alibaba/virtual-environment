@@ -8,21 +8,26 @@
 # Usage: ci.sh [<name-of-temporary-image-tag>] [<name-of-temporary-namespace>]
 
 # Parameters
-image="virtualenvironment/virtual-env-operator"
+operator_name="virtual-env-operator"
+image="virtualenvironment/${operator_name}"
 tag="${1:-ci}"
 ns="${2:-virtual-env-ci}"
 echo "---- Begin CI Test ----"
 
 # Generate temporary operator image
 full_image_name="${image}:${tag}"
-operator-sdk build ${full_image_name}
+operator-sdk build --go-build-args "-o build/_output/bin/${operator_name}" ${full_image_name}
+if [ ${?} != 0 ]; then
+    echo "Build failed !!!"
+    exit -1
+fi
 docker push ${full_image_name}
 echo "---- Build OK ----"
 
 # Create temporary namespace and put operator into it
 kubectl create namespace ${ns}
 for f in deploy/*.yaml; do
-    cat $f | sed "s#virtualenvironment/virtual-env-operator:[^ ]*#${full_image_name}#g" | kubectl apply -n ${ns} -f -
+    cat $f | sed "s#${image}:[^ ]*#${full_image_name}#g" | kubectl apply -n ${ns} -f -
 done
 echo "---- Operator deployment OK ----"
 
