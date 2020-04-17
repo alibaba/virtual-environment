@@ -5,6 +5,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis/istio/common/v1alpha1"
 	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
+	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
@@ -132,8 +133,10 @@ func isDestinationEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv
 
 // generate istio destination rule subset instance
 func destinationRuleMatchSubset(labelKey string, labelValue string) networkingv1alpha3.Subset {
+	re, _ := regexp.Compile("[_.]")
+	subsetName := re.ReplaceAllString(labelKey, "-")
 	return networkingv1alpha3.Subset{
-		Name: labelValue,
+		Name: subsetName,
 		Labels: map[string]string{
 			labelKey: labelValue,
 		},
