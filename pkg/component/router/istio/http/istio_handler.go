@@ -30,7 +30,7 @@ func VirtualService(namespace string, svcName string, availableLabels []string,
 			virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
 		}
 	}
-	virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, defaultRoute(svcName, defaultSubset))
+	virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, defaultRoute(svcName, toSubsetName(defaultSubset)))
 	return virtualSvc
 }
 
@@ -133,10 +133,8 @@ func isDestinationEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv
 
 // generate istio destination rule subset instance
 func destinationRuleMatchSubset(labelKey string, labelValue string) networkingv1alpha3.Subset {
-	re, _ := regexp.Compile("[_.]")
-	subsetName := re.ReplaceAllString(labelKey, "-")
 	return networkingv1alpha3.Subset{
-		Name: subsetName,
+		Name: toSubsetName(labelValue),
 		Labels: map[string]string{
 			labelKey: labelValue,
 		},
@@ -153,12 +151,18 @@ func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]
 		}
 	}
 	if len(possibleRoutes) > 0 {
-		var subset = findLongestString(possibleRoutes)
-		if defaultSubset != subset {
-			return matchRoute(serviceName, headerKey, labelVal, subset), true
+		var subsetName = toSubsetName(findLongestString(possibleRoutes))
+		if defaultSubset != subsetName {
+			return matchRoute(serviceName, headerKey, labelVal, subsetName), true
 		}
 	}
 	return networkingv1alpha3.HTTPRoute{}, false
+}
+
+// replace invalid chars in subset name
+func toSubsetName(labelValue string) string {
+	re, _ := regexp.Compile("[_.]")
+	return re.ReplaceAllString(labelValue, "-")
 }
 
 // generate default http route instance
@@ -174,12 +178,12 @@ func defaultRoute(name string, defaultSubset string) networkingv1alpha3.HTTPRout
 }
 
 // generate istio virtual service http route instance
-func matchRoute(serviceName string, headerKey string, labelVal string, matchedLabel string) networkingv1alpha3.HTTPRoute {
+func matchRoute(serviceName string, headerKey string, labelVal string, subsetName string) networkingv1alpha3.HTTPRoute {
 	return networkingv1alpha3.HTTPRoute{
 		Route: []networkingv1alpha3.HTTPRouteDestination{{
 			Destination: networkingv1alpha3.Destination{
 				Host:   serviceName,
-				Subset: matchedLabel,
+				Subset: subsetName,
 			},
 		}},
 		Match: []networkingv1alpha3.HTTPMatchRequest{{
