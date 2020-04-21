@@ -44,23 +44,23 @@ kubectl exec -it $(kubectl get pod -l app=sleep -o jsonpath='{.items[0].metadata
 已知各服务输出文本结构为`[项目名 @ 响应的Pod所属虚拟环境] <- 请求标签上的虚拟环境名称`。观察实际响应的服务实例情况：
 
 ```bash
-# 使用dev-proj1标签
-> curl -H 'ali-env-mark: dev-proj1' app-js:8080/demo
-  [springboot @ dev-proj1] <-dev-proj1
-  [go @ dev] <-dev-proj1
-  [node @ dev-proj1] <-dev-proj1
+# 使用dev.proj1标签
+> curl -H 'ali-env-mark: dev.proj1' app-js:8080/demo
+  [springboot @ dev.proj1] <-dev.proj1
+  [go @ dev] <-dev.proj1
+  [node @ dev.proj1] <-dev.proj1
 
-# 使用dev-proj1-feature1标签
-> curl -H 'ali-env-mark: dev-proj1-feature1' app-js:8080/demo
-  [springboot @ dev-proj1-feature1] <-dev-proj1-feature1
-  [go @ dev] <-dev-proj1-feature1
-  [node @ dev-proj1] <-dev-proj1-feature1
+# 使用dev.proj1.feature1标签
+> curl -H 'ali-env-mark: dev.proj1.feature1' app-js:8080/demo
+  [springboot @ dev.proj1.feature1] <-dev.proj1.feature1
+  [go @ dev] <-dev.proj1.feature1
+  [node @ dev.proj1] <-dev.proj1.feature1
 
-# 使用dev-proj2标签
-> curl -H 'ali-env-mark: dev-proj2' app-js:8080/demo
-  [springboot @ dev] <-dev-proj2
-  [go @ dev-proj2] <-dev-proj2
-  [node @ dev] <-dev-proj2
+# 使用dev.proj2标签
+> curl -H 'ali-env-mark: dev.proj2' app-js:8080/demo
+  [springboot @ dev] <-dev.proj2
+  [go @ dev.proj2] <-dev.proj2
+  [node @ dev] <-dev.proj2
 
 # 不带任何标签访问
 # 由于启用了AutoInject配置，经过node服务后，请求自动加上了Pod所在虚拟环境的标签
@@ -78,7 +78,7 @@ kubectl exec -it $(kubectl get pod -l app=sleep -o jsonpath='{.items[0].metadata
 
 ```bash
 # 注意label参数指定了加入的隔离域名称
-sudo ktctl --label virtual-env=dev-proj2 --namespace default connect
+sudo ktctl --label virtual-env=dev.proj2 --namespace default connect
 ```
 
 现在无需进入集群中的容器，本地就可以直接访问`app-js`服务了
@@ -86,9 +86,9 @@ sudo ktctl --label virtual-env=dev-proj2 --namespace default connect
 ```bash
 # 由于开启了envHeader.autoInject配置，本地发出的请求会被自动加上隔离域Header
 $ curl app-js:8080/demo
-  [springboot @ dev] <-dev-proj2
-  [go @ dev-proj2] <-dev-proj2
-  [node @ dev] <-dev-proj2
+  [springboot @ dev] <-dev.proj2
+  [go @ dev.proj2] <-dev.proj2
+  [node @ dev] <-dev.proj2
 ```
 
 - 用`ktctl mesh`实现本地服务加入隔离域
@@ -101,10 +101,10 @@ envMark=local mvn spring-boot:run
 
 # label参数指定本地服务加入的隔离域
 # app-java-dev是app-java服务在集群公共隔离域的Deployment实例名
-sudo ktctl --label virtual-env=dev-proj2 --namespace default mesh app-java-dev --expose 8080
+sudo ktctl --label virtual-env=dev.proj2 --namespace default mesh app-java-dev --expose 8080
 ```
 
-此时本地`app-java`服务在`dev-proj2`隔离域，因而新的访问途径应当为：
+此时本地`app-java`服务在`dev.proj2`隔离域，因而新的访问途径应当为：
 
 
 ```
@@ -112,7 +112,7 @@ sudo ktctl --label virtual-env=dev-proj2 --namespace default mesh app-java-dev -
 dev         |  app-js  |
             +----------+
                            +----------+   +-----------------+
-dev-proj2                  |  app-go  |   | app-java(local) |
+dev.proj2                  |  app-go  |   | app-java(local) |
                            +----------+   +-----------------+
 ```
 
@@ -120,9 +120,9 @@ dev-proj2                  |  app-go  |   | app-java(local) |
 
 ```bash
 $ curl app-js:8080/demo
-  [springboot @ local] <-dev-proj2
-  [go @ dev-proj2] <-dev-proj2
-  [node @ dev] <-dev-proj2
+  [springboot @ local] <-dev.proj2
+  [go @ dev.proj2] <-dev.proj2
+  [node @ dev] <-dev.proj2
 ```
 
 ## 清理示例资源

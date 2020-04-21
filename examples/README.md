@@ -17,15 +17,15 @@ dev                 |  app-js  |   |  app-go  |   | app-java |
                     +----------+   +----------+   +----------+
 
                     +----------+                  +----------+
-dev-proj1           |  app-js  |                  | app-java |
+dev.proj1           |  app-js  |                  | app-java |
                     +----------+                  +----------+
 
                                                   +----------+
-dev-proj1-feature1                                | app-java |
+dev.proj1.feature1                                | app-java |
                                                   +----------+
 
                                    +----------+
-dev-proj2                          |  app-go  |
+dev.proj2                          |  app-go  |
                                    +----------+
 ```
 
@@ -33,42 +33,42 @@ dev-proj2                          |  app-go  |
 
 测试`app-js`->`app-go`->`app-java`调用路径。
 
-- 来源请求包含`dev-proj1`头标签。
-由于`dev-proj1`虚拟环境中只存在`app-js`和`app-java`服务，因此访问途径为：
+- 来源请求包含`dev.proj1`头标签。
+由于`dev.proj1`虚拟环境中只存在`app-js`和`app-java`服务，因此访问途径为：
 
 ```
                                     +----------+                
 dev                                 |  app-go  |                
                                     +----------+                
                     +----------+                  +----------+
-dev-proj1           |  app-js  |                  | app-java |
+dev.proj1           |  app-js  |                  | app-java |
                     +----------+                  +----------+
 ```
 
-- 来源请求包含`dev-proj1-feature1`头标签。
-由于`dev-proj1-feature1`虚拟环境中只存在`app-java`服务，因此访问途径为：
+- 来源请求包含`dev.proj1.feature1`头标签。
+由于`dev.proj1.feature1`虚拟环境中只存在`app-java`服务，因此访问途径为：
 
 ```
                                    +----------+                
 dev                                |  app-go  |                
                                    +----------+                
                     +----------+                                
-dev-proj1           |  app-js  |                                
+dev.proj1           |  app-js  |                                
                     +----------+                                
                                                   +----------+
-dev-proj1-feature1                                | app-java |
+dev.proj1.feature1                                | app-java |
                                                   +----------+
 ```
 
-- 来源请求包含`dev-proj2`头标签。
-由于`dev-proj2`虚拟环境中只存在`app-go`服务，因此访问途径为：
+- 来源请求包含`dev.proj2`头标签。
+由于`dev.proj2`虚拟环境中只存在`app-go`服务，因此访问途径为：
 
 ```
                     +----------+                  +----------+
 dev                 |  app-js  |                  | app-java |
                     +----------+                  +----------+
                                    +----------+
-dev-proj2                          |  app-go  |
+dev.proj2                          |  app-go  |
                                    +----------+
 ```
 

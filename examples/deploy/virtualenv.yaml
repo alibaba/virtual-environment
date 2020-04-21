@@ -8,5 +8,5 @@ spec:
     autoInject: true
   envLabel:
     name: virtual-env
-    splitter: "-"
+    splitter: "."
     defaultSubset: dev

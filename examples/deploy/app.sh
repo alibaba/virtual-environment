@@ -32,15 +32,15 @@ e=dev
 for s in app-js app-go app-java; do
     apply_deployment
 done
-e=dev-proj1
+e='dev.proj1'
 for s in app-js app-java; do
     apply_deployment
 done
-e=dev-proj2
+e='dev.proj2'
 for s in app-go; do
     apply_deployment
 done
-e=dev-proj1-feature1
+e='dev.proj1.feature1'
 for s in app-java; do
     apply_deployment
 done

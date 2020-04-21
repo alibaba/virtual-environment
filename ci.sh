@@ -2,23 +2,27 @@
 
 # This is a simple automated smoke testing with assumptions:
 # 1. kubectl and istioctl has configured to kubernetes cluster properly
-# 2. user has push authority to ${image} repository (or you could change it to other name)
-# 3. VirtualEnvironment CRD has been installed to cluster (with `kubectl apply -f deploy/crds/*_crd.yaml`)
+# 2. user has push authority to the target image repository (you could change image name via parameter)
+# 3. VirtualEnvironment CRD has been installed to cluster (https://alibaba.github.io/virtual-environment/#/en-us/ve/deployment)
 #
-# Usage: ci.sh [<name-of-temporary-image-tag>] [<name-of-temporary-namespace>]
+# Usage: ci.sh [<name-of-ci-image>] [<name-of-ci-namespace>]
+
+# Constants
+operator_name="virtual-env-operator"
+default_image="virtualenvironment/${operator_name}"
+default_tag="ci"
 
 # Parameters
 if [[ "${1}" =~ ^[A-Z]{1,}$ ]]; then
     action="${1}"
     shift
 fi
-tag="${1:-ci}"
+ci_image="${1}"
+if [[ "${ci_image}" = "" ]]; then
+    ci_image="${default_image}:${default_tag}"
+fi
 ns="${2:-virtual-env-ci}"
 
-# Constants
-operator_name="virtual-env-operator"
-image="virtualenvironment/${operator_name}"
-full_image_name="${image}:${tag}"
 echo "---- Begin CI Test ----"
 
 # Jump to specified code location
@@ -46,12 +50,12 @@ fi
 # >>>>>>> BUILD_ANCHOR:
 
 # Generate temporary operator image
-operator-sdk build --go-build-args "-o build/_output/bin/${operator_name}" ${full_image_name}
+operator-sdk build --go-build-args "-o build/_output/bin/${operator_name}" ${ci_image}
 if [[ ${?} != 0 ]]; then
     echo "Build failed !!!"
     exit -1
 fi
-docker push ${full_image_name}
+docker push ${ci_image}
 echo "---- Build OK ----"
 
 # >>>>>>> DEPLOY_ANCHOR:
@@ -59,7 +63,7 @@ echo "---- Build OK ----"
 # Create temporary namespace and put operator into it
 kubectl create namespace ${ns}
 for f in deploy/*.yaml; do
-    cat $f | sed "s#${image}:[^ ]*#${full_image_name}#g" | kubectl apply -n ${ns} -f -
+    cat $f | sed "s#${default_image}:[^ ]*#${ci_image}#g" | kubectl apply -n ${ns} -f -
 done
 echo "---- Operator deployment ready ----"
 
@@ -108,16 +112,16 @@ function check_result()
 }
 
 # Do functional check
-res=$(invoke_api dev-proj1)
-check_result "$res" "[springboot @ dev-proj1] <-dev-proj1, [go @ dev] <-dev-proj1, [node @ dev-proj1] <-dev-proj1"
+res=$(invoke_api dev.proj1)
+check_result "$res" "[springboot @ dev.proj1] <-dev.proj1, [go @ dev] <-dev.proj1, [node @ dev.proj1] <-dev.proj1"
 echo "passed: case 1"
 
-res=$(invoke_api dev-proj1-feature1)
-check_result "$res" "[springboot @ dev-proj1-feature1] <-dev-proj1-feature1, [go @ dev] <-dev-proj1-feature1, [node @ dev-proj1] <-dev-proj1-feature1"
+res=$(invoke_api dev.proj1.feature1)
+check_result "$res" "[springboot @ dev.proj1.feature1] <-dev.proj1.feature1, [go @ dev] <-dev.proj1.feature1, [node @ dev.proj1] <-dev.proj1.feature1"
 echo "passed: case 2"
 
-res=$(invoke_api dev-proj2)
-check_result "$res" "[springboot @ dev] <-dev-proj2, [go @ dev-proj2] <-dev-proj2, [node @ dev] <-dev-proj2"
+res=$(invoke_api dev.proj2)
+check_result "$res" "[springboot @ dev] <-dev.proj2, [go @ dev.proj2] <-dev.proj2, [node @ dev] <-dev.proj2"
 echo "passed: case 3"
 
 res=$(invoke_api dev)

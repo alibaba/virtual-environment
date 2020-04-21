@@ -44,23 +44,23 @@ Use `curl` tool call `app-js` service with different virtual-environment name in
 All service instances would append formatted text as `[app-name @ virtual-environment-it-belongs-to] <- virtual-environment-header-on-request`. Observe the actual service instance response:
 
 ```bash
-# Use dev-proj1 header
-> curl -H 'ali-env-mark: dev-proj1' app-js:8080/demo
-  [springboot @ dev-proj1] <-dev-proj1
-  [go @ dev] <-dev-proj1
-  [node @ dev-proj1] <-dev-proj1
+# Use dev.proj1 header
+> curl -H 'ali-env-mark: dev.proj1' app-js:8080/demo
+  [springboot @ dev.proj1] <-dev.proj1
+  [go @ dev] <-dev.proj1
+  [node @ dev.proj1] <-dev.proj1
 
-# Use dev-proj1-feature1 header
-> curl -H 'ali-env-mark: dev-proj1-feature1' app-js:8080/demo
-  [springboot @ dev-proj1-feature1] <-dev-proj1-feature1
-  [go @ dev] <-dev-proj1-feature1
-  [node @ dev-proj1] <-dev-proj1-feature1
+# Use dev.proj1.feature1 header
+> curl -H 'ali-env-mark: dev.proj1.feature1' app-js:8080/demo
+  [springboot @ dev.proj1.feature1] <-dev.proj1.feature1
+  [go @ dev] <-dev.proj1.feature1
+  [node @ dev.proj1] <-dev.proj1.feature1
 
-# Use dev-proj2 header
-> curl -H 'ali-env-mark: dev-proj2' app-js:8080/demo
-  [springboot @ dev] <-dev-proj2
-  [go @ dev-proj2] <-dev-proj2
-  [node @ dev] <-dev-proj2
+# Use dev.proj2 header
+> curl -H 'ali-env-mark: dev.proj2' app-js:8080/demo
+  [springboot @ dev] <-dev.proj2
+  [go @ dev.proj2] <-dev.proj2
+  [node @ dev] <-dev.proj2
 
 # Without any header
 # As AutoInject configure item is set, when request pass app-node service,
@@ -79,7 +79,7 @@ All service instances would append formatted text as `[app-name @ virtual-enviro
 
 ```bash
 # Notice: the label parameter specified the virtual environment name to join
-sudo ktctl --label virtual-env=dev-proj2 --namespace default connect
+sudo ktctl --label virtual-env=dev.proj2 --namespace default connect
 ```
 
 Now, local shell can curl the `app-js` service inside the remote cluster directly.
@@ -87,9 +87,9 @@ Now, local shell can curl the `app-js` service inside the remote cluster directl
 ```bash
 # As envHeader.autoInject configure is enabled, request send from local is appended virtual environment header automatically
 $ curl app-js:8080/demo
-  [springboot @ dev] <-dev-proj2
-  [go @ dev-proj2] <-dev-proj2
-  [node @ dev] <-dev-proj2
+  [springboot @ dev] <-dev.proj2
+  [go @ dev.proj2] <-dev.proj2
+  [node @ dev] <-dev.proj2
 ```
 
 - Use `ktctl mesh` command let remote service able to access local port.
@@ -102,10 +102,10 @@ envMark=local mvn spring-boot:run
 
 # the label parameter specified the virtual environment name to join
 # app-java-dev is the name of app-java Deployment in shared environment
-sudo ktctl --label virtual-env=dev-proj2 --namespace default mesh app-java-dev --expose 8080
+sudo ktctl --label virtual-env=dev.proj2 --namespace default mesh app-java-dev --expose 8080
 ```
 
-Now there is a `app-java` service instance from local in the `dev-proj2` virtual environment, so the new route targets should be:
+Now there is a `app-java` service instance from local in the `dev.proj2` virtual environment, so the new route targets should be:
 
 
 ```
@@ -113,7 +113,7 @@ Now there is a `app-java` service instance from local in the `dev-proj2` virtual
 dev         |  app-js  |
             +----------+
                            +----------+   +-----------------+
-dev-proj2                  |  app-go  |   | app-java(local) |
+dev.proj2                  |  app-go  |   | app-java(local) |
                            +----------+   +-----------------+
 ```
 
@@ -121,9 +121,9 @@ Make a request again from local shell, this time the request goes through the ap
 
 ```bash
 $ curl app-js:8080/demo
-  [springboot @ local] <-dev-proj2
-  [go @ dev-proj2] <-dev-proj2
-  [node @ dev] <-dev-proj2
+  [springboot @ local] <-dev.proj2
+  [go @ dev.proj2] <-dev.proj2
+  [node @ dev] <-dev.proj2
 ```
 
 ## Clean up demo resources
