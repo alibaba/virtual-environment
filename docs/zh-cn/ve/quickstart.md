@@ -20,14 +20,14 @@ cd virtual-environment/examples
 ```bash
 # 创建一个在集群中的容器用于访问服务
 kubectl create deployment sleep --image=virtualenvironment/sleep --dry-run -o yaml \
-        | istioctl kube-inject -f - | kubectl apply -f -
+        | istioctl kube-inject -f - | kubectl apply -n default -f -
 ```
 
 使用`app.sh`脚本快速创建示例所需的VirtualEnvironment、Service和Deployment资源。
 
 ```bash
 # 启动演示的服务实例
-deploy/app.sh apply
+deploy/app.sh apply default
 ```
 
 依次使用`kubectl get virtualenvironment`、`kubectl get service`、`kubectl get deployment`命令查看各资源的创建情况，等待所有资源部署完成。
@@ -36,7 +36,7 @@ deploy/app.sh apply
 
 ```bash
 # 进入集群中的容器
-kubectl exec -it $(kubectl get pod -l app=sleep -o jsonpath='{.items[0].metadata.name}') /bin/sh
+kubectl exec -n default -it $(kubectl get -n default pod -l app=sleep -o jsonpath='{.items[0].metadata.name}') /bin/sh
 ```
 
 分别在请求头加上不同的虚拟环境名称，使用`curl`工具调用`app-js`服务。注意该示例创建的VirtualEnvironment实例配置使用`-`作为环境层级分隔符，同时配置了传递标签Header的键名为`ali-env-mark`。
@@ -129,7 +129,7 @@ $ curl app-js:8080/demo
 
 ```bash
 # 删除演示使用的服务实例
-deploy/app.sh delete
+deploy/app.sh delete default
 # 删除用于发起访问请求的临时容器
-kubectl delete deployment sleep
+kubectl delete -n default deployment sleep
 ```

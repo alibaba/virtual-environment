@@ -7,37 +7,37 @@
 
 ## 部署到集群
 
-从 [发布页面](https://github.com/alibaba/virtual-environment/releases) 下载最新的CRD文件。
+从 [发布页面](https://github.com/alibaba/virtual-environment/releases) 下载最新的CRD文件，使用`kubectl apply`命令应用到Kubernetes
 
 ```bash
 wget https://github.com/alibaba/virtual-environment/releases/download/v0.2/kt-virtual-environment-v0.2.zip
 unzip kt-virtual-environment-v0.2.zip
-cd v0.2
+cd v0.2/
+kubectl apply -f crds/env.alibaba.com_virtualenvironments_crd.yaml
 ```
 
-使用`kubectl apply`命令部署Operator到Kubernetes
+将Operator部署到每个需要使用虚拟环境的目标Namespace里，比如`default`
 
 ```bash
-kubectl apply -f env.alibaba.com_virtualenvironments_crd.yaml
-kubectl apply -f operator.yaml
+kubectl apply -n default -f operator.yaml
 ```
 
 如果集群开启了RBAC，还需要部署相应的Role和ServiceAccount
 
 ```bash
-kubectl apply -f service_account.yaml
-kubectl apply -f role.yaml
-kubectl apply -f role_binding.yaml
+kubectl apply -n default -f service_account.yaml
+kubectl apply -n default -f role.yaml
+kubectl apply -n default -f role_binding.yaml
 ```
 
 现在，Kubernetes集群就已经具备使用虚拟环境能力了。
 
 ## 创建虚拟环境
 
-创建类型为`VirtualEnvironment`的资源定义文件，使用`kubectl apply`命令添加到Kubernetes集群
+创建类型为`VirtualEnvironment`的资源定义文件，使用`kubectl apply`命令添加到Kubernetes集群的目标Namespace中
 
 ```bash
-kubectl apply -f path-to-virtual-environment-cr.yaml
+kubectl apply -n default -f path-to-virtual-environment-cr.yaml
 ```
 
 实例创建后，会自动监听**所在Namespace中的**所有Service和Deployment对象并自动生成路由隔离规则，形成虚拟环境。

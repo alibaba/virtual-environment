@@ -7,27 +7,27 @@
 
 ## Add operator to cluster
 
-Download latest CRD from [release page](https://github.com/alibaba/virtual-environment/releases).
+Download latest CRD from [release page](https://github.com/alibaba/virtual-environment/releases), use `kubectl apply` command to add the operator into Kubernetes
 
 ```bash
 wget https://github.com/alibaba/virtual-environment/releases/download/v0.2/kt-virtual-environment-v0.2.zip
 unzip kt-virtual-environment-v0.2.zip
-cd v0.2
+cd v0.2/
+kubectl apply -f crds/env.alibaba.com_virtualenvironments_crd.yaml
 ```
 
-Use `kubectl apply` command to add the operator into Kubernetes
+Put the operator into any namespaces which require virtual environment, e.g. `default`
 
 ```bash
-kubectl apply -f env.alibaba.com_virtualenvironments_crd.yaml
-kubectl apply -f operator.yaml
+kubectl apply -n default -f operator.yaml
 ```
 
 If the cluster has RBAC enabled, please also apply Role and ServiceAccount
 
 ```bash
-kubectl apply -f service_account.yaml
-kubectl apply -f role.yaml
-kubectl apply -f role_binding.yaml
+kubectl apply -n default -f service_account.yaml
+kubectl apply -n default -f role.yaml
+kubectl apply -n default -f role_binding.yaml
 ```
 
 Now, the Kubernetes cluster already has capability to empower virtual environment.
@@ -37,7 +37,7 @@ Now, the Kubernetes cluster already has capability to empower virtual environmen
 Create a resource with kind `VirtualEnvironment`, use `kubectl apply` command to take effect
 
 ```bash
-kubectl apply -f path-to-virtual-environment-cr.yaml
+kubectl apply -n default -f path-to-virtual-environment-cr.yaml
 ```
 
 After instance created, it would automatically watch all Service and Deployment resource **in the same Namespace** and generate isolation rule, thus form the virtual environment.

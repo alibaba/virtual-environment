@@ -20,14 +20,14 @@ If there is already other suitable pod in the cluster, this step can be skip.
 ```bash
 # Create a pod inside the cluster for sending request
 kubectl create deployment sleep --image=virtualenvironment/sleep --dry-run -o yaml \
-        | istioctl kube-inject -f - | kubectl apply -f -
+        | istioctl kube-inject -f - | kubectl apply -n default -f -
 ```
 
 Use `app.sh` script to quickly create all required instances of VirtualEnvironment, Service and Deployment.
 
 ```bash
 # Create demo resource instances
-deploy/app.sh apply
+deploy/app.sh apply default
 ```
 
 Use `kubectl get virtualenvironment`, `kubectl get service` and `kubectl get deployment` command to check resource creation progress, wait util all resources are ready to use.
@@ -36,7 +36,7 @@ Enter any pod in the same Namespace, e.g. the `sleep` pod created in previous st
 
 ```bash
 # Enter pod in cluster
-kubectl exec -it $(kubectl get pod -l app=sleep -o jsonpath='{.items[0].metadata.name}') /bin/sh
+kubectl exec -n default -it $(kubectl get -n default pod -l app=sleep -o jsonpath='{.items[0].metadata.name}') /bin/sh
 ```
 
 Use `curl` tool call `app-js` service with different virtual-environment name in Header. Please notice that in this example, symbol `-` is used as the environment level splitter, and the virtual-environment Header key is configured as `ali-env-mark`.
@@ -130,7 +130,7 @@ $ curl app-js:8080/demo
 
 ```bash
 # Delete related resources
-deploy/app.sh delete
+deploy/app.sh delete default
 # Delete the temporary pod
-kubectl delete deployment sleep
+kubectl delete -n default deployment sleep
 ```
