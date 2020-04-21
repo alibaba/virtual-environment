@@ -7,19 +7,27 @@
 
 ## 部署到集群
 
+从 [发布页面](https://github.com/alibaba/virtual-environment/releases) 下载最新的CRD文件。
+
+```bash
+wget https://github.com/alibaba/virtual-environment/releases/download/v0.2/kt-virtual-environment-v0.2.zip
+unzip kt-virtual-environment-v0.2.zip
+cd v0.2
+```
+
 使用`kubectl apply`命令部署Operator到Kubernetes
 
 ```bash
-kubectl apply -f https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/release/0.1/env.alibaba.com_virtualenvironments_crd.yaml
-kubectl apply -f https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/release/0.1/operator.yaml
+kubectl apply -f env.alibaba.com_virtualenvironments_crd.yaml
+kubectl apply -f operator.yaml
 ```
 
 如果集群开启了RBAC，还需要部署相应的Role和ServiceAccount
 
 ```bash
-kubectl apply -f https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/release/0.1/service_account.yaml
-kubectl apply -f https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/release/0.1/role.yaml
-kubectl apply -f https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/release/0.1/role_binding.yaml
+kubectl apply -f service_account.yaml
+kubectl apply -f role.yaml
+kubectl apply -f role_binding.yaml
 ```
 
 现在，Kubernetes集群就已经具备使用虚拟环境能力了。

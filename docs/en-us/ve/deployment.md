@@ -7,19 +7,27 @@
 
 ## Add operator to cluster
 
+Download latest CRD from [release page](https://github.com/alibaba/virtual-environment/releases).
+
+```bash
+wget https://github.com/alibaba/virtual-environment/releases/download/v0.2/kt-virtual-environment-v0.2.zip
+unzip kt-virtual-environment-v0.2.zip
+cd v0.2
+```
+
 Use `kubectl apply` command to add the operator into Kubernetes
 
 ```bash
-kubectl apply -f https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/release/0.1/env.alibaba.com_virtualenvironments_crd.yaml
-kubectl apply -f https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/release/0.1/operator.yaml
+kubectl apply -f env.alibaba.com_virtualenvironments_crd.yaml
+kubectl apply -f operator.yaml
 ```
 
 If the cluster has RBAC enabled, please also apply Role and ServiceAccount
 
 ```bash
-kubectl apply -f https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/release/0.1/service_account.yaml
-kubectl apply -f https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/release/0.1/role.yaml
-kubectl apply -f https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/release/0.1/role_binding.yaml
+kubectl apply -f service_account.yaml
+kubectl apply -f role.yaml
+kubectl apply -f role_binding.yaml
 ```
 
 Now, the Kubernetes cluster already has capability to empower virtual environment.
