@@ -173,6 +173,7 @@ func defaultRoute(name string, defaultSubset string) networkingv1alpha3.HTTPRout
 				Host:   name,
 				Subset: defaultSubset,
 			},
+			Weight: 100,
 		}},
 	}
 }
@@ -185,6 +186,7 @@ func matchRoute(serviceName string, headerKey string, labelVal string, subsetNam
 				Host:   serviceName,
 				Subset: subsetName,
 			},
+			Weight: 100,
 		}},
 		Match: []networkingv1alpha3.HTTPMatchRequest{{
 			Headers: map[string]v1alpha1.StringMatch{
