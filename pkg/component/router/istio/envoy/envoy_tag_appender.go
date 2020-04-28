@@ -20,12 +20,21 @@ func DeleteTagAppenderIfExist(client client.Client, namespace string, name strin
 	return nil
 }
 
+// check whether EnvoyFilter is different
+func IsDifferentTagAppender(tagAppender *networkingv1alpha3api.EnvoyFilter, envLabel string, envHeader string) bool {
+	return tagAppender.ObjectMeta.Labels["envLabel"] != envLabel || tagAppender.ObjectMeta.Labels["envHeader"] != envHeader
+}
+
 // generate EnvoyFilter to auto append env tag into HTTP header
 func TagAppenderFilter(namespace string, name string, envLabel string, envHeader string) *networkingv1alpha3api.EnvoyFilter {
 	return &networkingv1alpha3api.EnvoyFilter{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
+			Labels: map[string]string{
+				"envLabel":  envLabel,
+				"envHeader": envHeader,
+			},
 		},
 		Spec: networkingv1alpha3.EnvoyFilter{
 			Filters: []*networkingv1alpha3.EnvoyFilter_Filter{{

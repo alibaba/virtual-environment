@@ -2,6 +2,7 @@ package router
 
 import (
 	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1"
+	"alibaba.com/virtual-env-operator/pkg/component/router/common"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -19,8 +20,9 @@ type IsolationRouter interface {
 	// clean up dynamical route for specified service
 	CleanupRoute(client client.Client, namespace string, svcName string) error
 
-	// check whether tag appender exist
-	TagAppenderExist(client client.Client, namespace string, name string) bool
+	// check whether tag appender exist and up-to-date
+	CheckTagAppender(client client.Client, virtualEnv *envv1alpha1.VirtualEnvironment,
+		namespace string, name string) common.TagAppenderStatus
 
 	// create auto tag appender to all services in namespace
 	CreateTagAppender(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha1.VirtualEnvironment,
