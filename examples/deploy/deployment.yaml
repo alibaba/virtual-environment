@@ -14,16 +14,17 @@ spec:
     metadata:
       labels:
         app: service-name-placeholder
+        version: 1.0.0
         virtual-env: app-env-placeholder
     spec:
       containers:
         - name: service-name-placeholder
-          image: docker.io/virtualenvironment/js-demo-debug:latest
-          imagePullPolicy: IfNotPresent #Always
+          image: docker.io/virtualenvironment/app-image-placeholder:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: envMark
               value: app-env-placeholder
             - name: url
-              value: http://app-go:8080/demo
+              value: app-url-placeholder
           ports:
             - containerPort: 8080

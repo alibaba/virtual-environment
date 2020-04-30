@@ -26,8 +26,7 @@ ns="${2:-virtual-env-ci}"
 echo "---- Begin CI Test ----"
 
 # Jump to specified code location
-function goto
-{
+goto() {
     sed_cmd="sed"
     if [[ "$(uname -s)" = "Darwin" ]]; then
         sed_cmd="gsed"
@@ -74,7 +73,7 @@ examples/deploy/app.sh apply ${ns}
 
 # Wait for apps ready
 for i in `seq 50`; do
-    count=`kubectl get -n $ns pods | awk '{print $3}' | grep 'Running' | wc -l`
+    count=`kubectl get -n ${ns} pods | awk '{print $3}' | grep 'Running' | wc -l`
     if [[ ${count} -eq 9 ]]; then
         break
     fi
@@ -90,16 +89,14 @@ echo "---- Apps deployment ready ----"
 # >>>>>>> TEST_ANCHOR:
 
 # Call service and format response
-function invoke_api()
-{
+invoke_api() {
     header="${1}"
     kubectl exec -n ${ns} $(kubectl get -n ${ns} pod -l app=sleep -o jsonpath='{.items[0].metadata.name}') -c sleep \
                  -- curl -s -H "ali-env-mark: ${header}" app-js:8080/demo | sed 'N;N;s/\n/, /g'
 }
 
 # Check response with expectation
-function check_result()
-{
+check_result() {
     real="${1}"
     expect="${2}"
     if [[ "${real}" != "${expect}" ]]; then
