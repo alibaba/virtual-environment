@@ -168,26 +168,44 @@ func toSubsetName(labelValue string) string {
 // generate default http route instance
 func defaultRoute(name string, defaultSubset string) networkingv1alpha3.HTTPRoute {
 	return networkingv1alpha3.HTTPRoute{
-		Route: []networkingv1alpha3.HTTPRouteDestination{{
-			Destination: networkingv1alpha3.Destination{
-				Host:   name,
-				Subset: defaultSubset,
-			},
-			Weight: 100,
-		}},
+		Route: generateHttpRoute(name, defaultSubset),
 	}
+}
+
+// generate service port
+func getServicePort(serviceName string) []networkingv1alpha3.PortSelector {
+	portMap := shared.AvailableServicePorts[serviceName]
+	var portSelectors []networkingv1alpha3.PortSelector
+	for port, name := range portMap {
+		portSelector := networkingv1alpha3.PortSelector{}
+		portSelector.Number = port
+		portSelector.Name = name
+		portSelectors = append(portSelectors, portSelector)
+	}
+	return portSelectors
+}
+
+// generate istio route
+func generateHttpRoute(serviceName string, subsetName string) []networkingv1alpha3.HTTPRouteDestination {
+	var route []networkingv1alpha3.HTTPRouteDestination
+	portSelectors := getServicePort(serviceName)
+	for _, portSelector := range portSelectors {
+		httpRouteDestination := networkingv1alpha3.HTTPRouteDestination{}
+		httpRouteDestination.Destination = networkingv1alpha3.Destination{
+			Host:   serviceName,
+			Subset: subsetName,
+			Port: portSelector,
+		}
+		httpRouteDestination.Weight = 100
+		route = append(route, httpRouteDestination)
+	}
+	return route
 }
 
 // generate istio virtual service http route instance
 func matchRoute(serviceName string, headerKey string, labelVal string, subsetName string) networkingv1alpha3.HTTPRoute {
 	return networkingv1alpha3.HTTPRoute{
-		Route: []networkingv1alpha3.HTTPRouteDestination{{
-			Destination: networkingv1alpha3.Destination{
-				Host:   serviceName,
-				Subset: subsetName,
-			},
-			Weight: 100,
-		}},
+		Route: generateHttpRoute(serviceName, subsetName),
 		Match: []networkingv1alpha3.HTTPMatchRequest{{
 			Headers: map[string]v1alpha1.StringMatch{
 				headerKey: {
