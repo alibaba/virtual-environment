@@ -90,6 +90,12 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 	reqLogger.Info("Adding Service")
 	shared.AvailableServices[request.Name] = service.Spec.Selector
 
+	// save ports of service to shared
+	shared.AvailableServicePorts[request.Name] = make(map[uint32]string)
+	for _, port := range service.Spec.Ports {
+		shared.AvailableServicePorts[request.Name][uint32(port.Port)] = port.Name;
+	}
+
 	shared.Lock.RUnlock()
 
 	shared.ReconcileVirtualEnv(request.Namespace, reqLogger)
