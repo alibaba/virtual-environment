@@ -78,6 +78,7 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 		if errors.IsNotFound(err) {
 			reqLogger.Info("Removing Service")
 			delete(shared.AvailableServices, request.Name)
+			delete(shared.AvailableServicePorts, request.Name)
 			// delete related virtual service and destination rule
 			_ = router.GetDefaultRoute().CleanupRoute(r.client, request.Namespace, request.Name)
 			shared.Lock.RUnlock()
@@ -88,12 +89,12 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 	}
 
 	reqLogger.Info("Adding Service")
+	// save service selectors
 	shared.AvailableServices[request.Name] = service.Spec.Selector
-
-	// save ports of service to shared
-	shared.AvailableServicePorts[request.Name] = make(map[uint32]string)
+	// save service ports
+	shared.AvailableServicePorts[request.Name] = []uint32{}
 	for _, port := range service.Spec.Ports {
-		shared.AvailableServicePorts[request.Name][uint32(port.Port)] = port.Name;
+		shared.AvailableServicePorts[request.Name] = append(shared.AvailableServicePorts[request.Name], uint32(port.Port))
 	}
 
 	shared.Lock.RUnlock()

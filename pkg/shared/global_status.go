@@ -13,8 +13,8 @@ var VirtualEnvIns = ""
 // service name -> selectors
 var AvailableServices = make(map[string]map[string]string)
 
-// service name -> port
-var AvailableServicePorts = make(map[string]map[uint32]string)
+// service name -> ports
+var AvailableServicePorts = make(map[string][]uint32)
 
 // deployment name -> labels
 var AvailableDeployments = make(map[string]map[string]string)

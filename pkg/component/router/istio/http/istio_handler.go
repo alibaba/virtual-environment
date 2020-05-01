@@ -24,13 +24,16 @@ func VirtualService(namespace string, svcName string, availableLabels []string,
 			HTTP:  []networkingv1alpha3.HTTPRoute{},
 		},
 	}
-	for _, label := range availableLabels {
-		matchRoute, ok := virtualServiceMatchRoute(svcName, relatedDeployments, label, envHeader, envSplitter, defaultSubset)
-		if ok {
-			virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
+	for _, port := range shared.AvailableServicePorts[svcName] {
+		for _, label := range availableLabels {
+			matchRoute, ok := virtualServiceMatchRoute(svcName, relatedDeployments,
+				label, envHeader, envSplitter, port, defaultSubset)
+			if ok {
+				virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
+			}
 		}
+		virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, defaultRoute(svcName, port, toSubsetName(defaultSubset)))
 	}
-	virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, defaultRoute(svcName, toSubsetName(defaultSubset)))
 	return virtualSvc
 }
 
@@ -143,7 +146,7 @@ func destinationRuleMatchSubset(labelKey string, labelValue string) networkingv1
 
 // calculate and generate http route instance
 func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]string, labelVal string, headerKey string,
-	splitter string, defaultSubset string) (networkingv1alpha3.HTTPRoute, bool) {
+	splitter string, port uint32, defaultSubset string) (networkingv1alpha3.HTTPRoute, bool) {
 	var possibleRoutes []string
 	for _, v := range relatedDeployments {
 		if leveledEqual(labelVal, v, splitter) {
@@ -153,7 +156,7 @@ func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]
 	if len(possibleRoutes) > 0 {
 		var subsetName = toSubsetName(findLongestString(possibleRoutes))
 		if defaultSubset != subsetName {
-			return matchRoute(serviceName, headerKey, labelVal, subsetName), true
+			return matchRoute(serviceName, headerKey, labelVal, port, subsetName), true
 		}
 	}
 	return networkingv1alpha3.HTTPRoute{}, false
@@ -165,47 +168,30 @@ func toSubsetName(labelValue string) string {
 	return re.ReplaceAllString(labelValue, "-")
 }
 
-// generate default http route instance
-func defaultRoute(name string, defaultSubset string) networkingv1alpha3.HTTPRoute {
-	return networkingv1alpha3.HTTPRoute{
-		Route: generateHttpRoute(name, defaultSubset),
-	}
-}
-
-// generate service port
-func getServicePort(serviceName string) []networkingv1alpha3.PortSelector {
-	portMap := shared.AvailableServicePorts[serviceName]
-	var portSelectors []networkingv1alpha3.PortSelector
-	for port, name := range portMap {
-		portSelector := networkingv1alpha3.PortSelector{}
-		portSelector.Number = port
-		portSelector.Name = name
-		portSelectors = append(portSelectors, portSelector)
-	}
-	return portSelectors
-}
-
 // generate istio route
-func generateHttpRoute(serviceName string, subsetName string) []networkingv1alpha3.HTTPRouteDestination {
-	var route []networkingv1alpha3.HTTPRouteDestination
-	portSelectors := getServicePort(serviceName)
-	for _, portSelector := range portSelectors {
-		httpRouteDestination := networkingv1alpha3.HTTPRouteDestination{}
-		httpRouteDestination.Destination = networkingv1alpha3.Destination{
+func generateHttpRoute(serviceName string, port uint32, subsetName string) []networkingv1alpha3.HTTPRouteDestination {
+	return []networkingv1alpha3.HTTPRouteDestination{{
+		Destination: networkingv1alpha3.Destination{
 			Host:   serviceName,
 			Subset: subsetName,
-			Port: portSelector,
-		}
-		httpRouteDestination.Weight = 100
-		route = append(route, httpRouteDestination)
+			Port:   networkingv1alpha3.PortSelector{Number: port},
+		},
+		Weight: 100,
+	}}
+}
+
+// generate default http route instance
+func defaultRoute(name string, port uint32, defaultSubset string) networkingv1alpha3.HTTPRoute {
+	return networkingv1alpha3.HTTPRoute{
+		Route: generateHttpRoute(name, port, defaultSubset),
 	}
-	return route
 }
 
 // generate istio virtual service http route instance
-func matchRoute(serviceName string, headerKey string, labelVal string, subsetName string) networkingv1alpha3.HTTPRoute {
+func matchRoute(serviceName string, headerKey string, labelVal string, port uint32,
+	subsetName string) networkingv1alpha3.HTTPRoute {
 	return networkingv1alpha3.HTTPRoute{
-		Route: generateHttpRoute(serviceName, subsetName),
+		Route: generateHttpRoute(serviceName, port, subsetName),
 		Match: []networkingv1alpha3.HTTPMatchRequest{{
 			Headers: map[string]v1alpha1.StringMatch{
 				headerKey: {

@@ -50,7 +50,7 @@ for s in app-js app-go app-java; do
     cat ${basepath}/service.yaml | sed -e "s/service-name-placeholder/${s}/g" | kubectl ${action} -n ${namespace} -f -
 done
 
-# Create Deployment for each env mark
+# Create required Deployments for each env mark
 e='dev'
 for s in app-js app-go app-java; do
     apply_deployment
