@@ -184,6 +184,9 @@ func generateHttpRoute(serviceName string, port uint32, subsetName string) []net
 func defaultRoute(name string, port uint32, defaultSubset string) networkingv1alpha3.HTTPRoute {
 	return networkingv1alpha3.HTTPRoute{
 		Route: generateHttpRoute(name, port, defaultSubset),
+		Match: []networkingv1alpha3.HTTPMatchRequest{{
+			Port: port,
+		}},
 	}
 }
 
@@ -198,6 +201,7 @@ func matchRoute(serviceName string, headerKey string, labelVal string, port uint
 					Exact: labelVal,
 				},
 			},
+			Port: port,
 		}},
 	}
 }

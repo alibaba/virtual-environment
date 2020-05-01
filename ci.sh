@@ -42,7 +42,7 @@ if [[ ${action} = "DEPLOY" ]]; then
     goto DEPLOY_ANCHOR
 elif [[ ${action} = "TEST" ]]; then
     goto TEST_ANCHOR
-elif [[ ${action} = "CLEAN" ]]; then
+elif [[ ${action} = "CLEAN" || ${action} = "DELETE" ]]; then
     goto CLEAN_UP_ANCHOR
 fi
 
