@@ -15,9 +15,7 @@ func Start(inspectHost string, inspectPort int) {
 	e := echo.New()
 
 	// Routes
-	e.GET("/inspect/deployment", inspectDeployment)
-	e.GET("/inspect/service", inspectService)
-	e.GET("/inspect/global", inspectGlobalVariable)
+	e.GET("/inspect", inspectGlobalVariable)
 
 	// Start server
 	inspectAddr := inspectHost + ":" + strconv.Itoa(inspectPort)
@@ -32,16 +30,11 @@ func Start(inspectHost string, inspectPort int) {
 	}()
 }
 
-func inspectDeployment(c echo.Context) error {
-	return c.JSON(http.StatusOK, shared.AvailableDeployments)
-}
-
-func inspectService(c echo.Context) error {
-	return c.JSON(http.StatusOK, shared.AvailableServices)
-}
-
 func inspectGlobalVariable(c echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]string{
-		"VirtualEnvIns": shared.VirtualEnvIns,
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"VirtualEnvIns":   shared.VirtualEnvIns,
+		"ServiceSelector": shared.AvailableServices,
+		"ServicePort":     shared.AvailableServicePorts,
+		"DeploymentLabel": shared.AvailableDeployments,
 	})
 }
