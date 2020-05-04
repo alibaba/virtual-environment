@@ -150,7 +150,7 @@ func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logg
 		}
 		shared.VirtualEnvIns = request.Name
 		logger.Info("VirtualEnv added", "Spec", virtualEnv.Spec)
-		return virtualEnv, shared.VirtualEnvChangedError{}
+		return virtualEnv, shared.VirtualEnvChangeDetected{}
 	}
 	return virtualEnv, nil
 }
