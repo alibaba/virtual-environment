@@ -64,6 +64,7 @@ kubectl create namespace ${ns}
 for f in deploy/*.yaml; do
     cat $f | sed "s#${default_image}:[^ ]*#${ci_image}#g" | kubectl apply -n ${ns} -f -
 done
+kubectl label namespaces ${ns} environment-tag-injection=enabled
 echo "---- Operator deployment ready ----"
 
 # Deploy demo apps
