@@ -5,7 +5,7 @@ ADMISSION_IMAGE ?= virtualenvironment/virtual-env-admission-webhook
 .DEFAULT_GOAL := help
 .PHONY: help
 help:
-	@echo 'run "make build-operator" or "make build-admission" to build this project'
+	@echo 'use "make build-operator" or "make build-admission" to build images'
 
 .PHONY: build-operator
 build-operator:

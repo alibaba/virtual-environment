@@ -62,13 +62,28 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]patchOperation, erro
 		return nil, nil
 	}
 
+	envVarIndex := -1
+	for i, envVar := range pod.Spec.Containers[sidecarContainerIndex].Env {
+		if envVar.Name == envVarName {
+			envVarIndex = i
+		}
+	}
+
 	// Create patch operations to apply environment tag
 	var patches []patchOperation
-	patches = append(patches, patchOperation{
-		Op:    "add",
-		Path:  fmt.Sprintf("/spec/containers/%d/env/0", sidecarContainerIndex),
-		Value: corev1.EnvVar{Name: envVarName, Value: envTag},
-	})
+	if envVarIndex < 0 {
+		patches = append(patches, patchOperation{
+			Op:    "add",
+			Path:  fmt.Sprintf("/spec/containers/%d/env/0", sidecarContainerIndex),
+			Value: corev1.EnvVar{Name: envVarName, Value: envTag},
+		})
+	} else {
+		patches = append(patches, patchOperation{
+			Op:    "replace",
+			Path:  fmt.Sprintf("/spec/containers/%d/env/%d/value", sidecarContainerIndex, envVarIndex),
+			Value: envTag,
+		})
+	}
 
 	log.Printf("marked %s as %s", getPodName(pod), envTag)
 	return patches, nil
