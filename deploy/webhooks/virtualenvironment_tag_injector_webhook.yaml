@@ -64,7 +64,6 @@ metadata:
   name: virtual-environment-webhook
 webhooks:
   - name: webhook-server.kt-virtual-environment.svc
-    reinvocationPolicy: IfNeeded
     namespaceSelector:
       matchLabels:
         environment-tag-injection: enabled
