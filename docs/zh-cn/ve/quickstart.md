@@ -74,6 +74,12 @@ kubectl exec -n default -it $(kubectl get -n default pod -l app=sleep -o jsonpat
 
 通过[KtConnect](https://github.com/alibaba/kt-connect)工具可将本地网络与集群打通，并将本地服务直接加入任意指定隔离域。
 
+为了让`ktctl`命令在集群中创建的代理Pod支持隔离路由规则，需要在目标Namespace开启Sidecar容器自动注入功能：
+
+```bash
+kubectl label namespaces default istio-injection=enabled
+```
+
 - 用`ktctl connect`实现本地直接访问集群
 
 ```bash

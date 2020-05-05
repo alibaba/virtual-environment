@@ -75,6 +75,12 @@ All service instances would append formatted text as `[app-name @ virtual-enviro
 
 [KtConnect](https://github.com/alibaba/kt-connect) toolkit can setup a proxy between local and remote cluster, and add local service instance into any virtual environment in the cluster.
 
+In order to let the shadow pod created via `ktctl` command follow the isolation rules, sidecar auto injector should be enabled in the target namespace:
+
+```bash
+kubectl label namespaces default istio-injection=enabled
+```
+
 - Use `ktctl connect` command allow local instance accessing remote cluster
 
 ```bash
