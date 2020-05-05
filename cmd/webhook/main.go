@@ -11,9 +11,11 @@ import (
 )
 
 const (
-	tlsDir      = `/run/secrets/tls`
-	tlsCertFile = `tls.crt`
-	tlsKeyFile  = `tls.key`
+	tlsDir               = `/run/secrets/tls`
+	tlsCertFile          = `tls.crt`
+	tlsKeyFile           = `tls.key`
+	envVarName           = "ENVIRONMENT_TAG"
+	sidecarContainerName = "istio-proxy"
 )
 
 var (
@@ -45,11 +47,10 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]patchOperation, erro
 		envTag = value
 	}
 	if envTag == "" {
-		log.Printf("no environment tag found on pod %s:%s", pod.Namespace, pod.Name)
+		log.Printf("no environment tag found on pod %s", getPodName(pod))
 		return nil, nil
 	}
 
-	sidecarContainerName := "istio-proxy"
 	sidecarContainerIndex := -1
 	for i, container := range pod.Spec.Containers {
 		if container.Name == sidecarContainerName {
@@ -57,12 +58,11 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]patchOperation, erro
 		}
 	}
 	if sidecarContainerIndex < 0 {
-		log.Printf("no sidecar container found on pod %s:%s", pod.Namespace, pod.Name)
+		log.Printf("no sidecar container found on pod %s", getPodName(pod))
 		return nil, nil
 	}
 
 	// Create patch operations to apply environment tag
-	envVarName := "ENVIRONMENT_TAG"
 	var patches []patchOperation
 	patches = append(patches, patchOperation{
 		Op:    "add",
@@ -70,8 +70,15 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]patchOperation, erro
 		Value: corev1.EnvVar{Name: envVarName, Value: envTag},
 	})
 
-	log.Printf("injected %s:%s", pod.Namespace, pod.Name)
+	log.Printf("marked %s as %s", getPodName(pod), envTag)
 	return patches, nil
+}
+
+func getPodName(pod corev1.Pod) string {
+	if pod.Name == "" {
+		return pod.GenerateName
+	}
+	return pod.Name
 }
 
 func main() {

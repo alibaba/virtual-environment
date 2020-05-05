@@ -132,15 +132,14 @@ func doServeAdmitFunc(w http.ResponseWriter, r *http.Request, admit admitFunc) (
 
 // serveAdmitFunc is a wrapper around doServeAdmitFunc that adds error handling and logging.
 func serveAdmitFunc(w http.ResponseWriter, r *http.Request, admit admitFunc) {
-	log.Print("Handling webhook request ...")
-
+	// Begin handling webhook request
 	var writeErr error
 	if bytes, err := doServeAdmitFunc(w, r, admit); err != nil {
 		log.Printf("Error handling webhook request: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, writeErr = w.Write([]byte(err.Error()))
 	} else {
-		log.Print("Webhook request handled successfully")
+		// Webhook request handled successfully
 		_, writeErr = w.Write(bytes)
 	}
 
