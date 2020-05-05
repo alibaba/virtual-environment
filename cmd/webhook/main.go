@@ -1,0 +1,91 @@
+package main
+
+import (
+	"fmt"
+	"k8s.io/api/admission/v1beta1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"log"
+	"net/http"
+	"path/filepath"
+)
+
+const (
+	tlsDir      = `/run/secrets/tls`
+	tlsCertFile = `tls.crt`
+	tlsKeyFile  = `tls.key`
+)
+
+var (
+	podResource = metav1.GroupVersionResource{Version: "v1", Resource: "pods"}
+)
+
+// injectEnvironmentTag read the environment tag from pod label, and save to the sidecar container as an environment
+// variable named `ENVIRONMENT_TAG`
+func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]patchOperation, error) {
+	// This handler should only get called on Pod objects as per the MutatingWebhookConfiguration in the YAML file.
+	// However, if (for whatever reason) this gets invoked on an object of a different kind, issue a log message but
+	// let the object request pass through otherwise.
+	if req.Resource != podResource {
+		log.Printf("expect resource to be %s", podResource)
+		return nil, nil
+	}
+
+	// Parse the Pod object.
+	raw := req.Object.Raw
+	pod := corev1.Pod{}
+	if _, _, err := universalDeserializer.Decode(raw, nil, &pod); err != nil {
+		return nil, fmt.Errorf("could not deserialize pod object: %v", err)
+	}
+
+	// Retrieve the environment tag from pod label
+	envLabel := "virtual-env"
+	envTag := ""
+	if value, ok := pod.Labels[envLabel]; ok {
+		envTag = value
+	}
+	if envTag == "" {
+		log.Printf("no environment tag found on pod %s:%s", pod.Namespace, pod.Name)
+		return nil, nil
+	}
+
+	sidecarContainerName := "istio-proxy"
+	sidecarContainerIndex := -1
+	for i, container := range pod.Spec.Containers {
+		if container.Name == sidecarContainerName {
+			sidecarContainerIndex = i
+		}
+	}
+	if sidecarContainerIndex < 0 {
+		log.Printf("no sidecar container found on pod %s:%s", pod.Namespace, pod.Name)
+		return nil, nil
+	}
+
+	// Create patch operations to apply environment tag
+	envVarName := "ENVIRONMENT_TAG"
+	var patches []patchOperation
+	patches = append(patches, patchOperation{
+		Op:    "add",
+		Path:  fmt.Sprintf("/spec/containers/%d/env/0", sidecarContainerIndex),
+		Value: corev1.EnvVar{Name: envVarName, Value: envTag},
+	})
+
+	log.Printf("injected %s:%s", pod.Namespace, pod.Name)
+	return patches, nil
+}
+
+func main() {
+	certPath := filepath.Join(tlsDir, tlsCertFile)
+	keyPath := filepath.Join(tlsDir, tlsKeyFile)
+
+	log.Printf("sidecar environment tag injector starting")
+	mux := http.NewServeMux()
+	mux.Handle("/inject", admitFuncHandler(injectEnvironmentTag))
+	server := &http.Server{
+		// We listen on port 8443 such that we do not need root privileges or extra capabilities for this server.
+		// The Service object will take care of mapping this port to the HTTPS port 443.
+		Addr:    ":8443",
+		Handler: mux,
+	}
+	log.Fatal(server.ListenAndServeTLS(certPath, keyPath))
+}

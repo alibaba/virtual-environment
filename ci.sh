@@ -18,7 +18,7 @@ if [[ "${1}" =~ ^[A-Z]{1,}$ ]]; then
     shift
 fi
 ci_image="${1}"
-if [[ "${ci_image}" = "" ]]; then
+if [[ "${ci_image}" = "" || "${ci_image}" = "_" ]]; then
     ci_image="${default_image}:${default_tag}"
 fi
 ns="${2:-virtual-env-ci}"
