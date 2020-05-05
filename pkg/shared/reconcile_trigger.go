@@ -8,10 +8,13 @@ import (
 	"time"
 )
 
-// mutex to reduce virtual env reconcile frequency cause by deployment/service change
+// guaranteed time interval between virtual environment reconcile
+const reconcileCoolOffSeconds = 5
+
+// mutex to make sure there is only one reconcile trigger candidate
 var ReconcileTriggerLock = TriableMutex{}
 
-// another mechanism to reduce virtual env reconcile frequency
+// mechanism to reduce virtual env reconcile frequency
 var ShouldDelayRefresh = AtomBool{}
 
 // virtual env controller
@@ -19,13 +22,15 @@ var VirtualEnvController = new(controller.Controller)
 
 // trigger virtual environment reconcile
 func ReconcileVirtualEnv(namespace string, logger logr.Logger) {
+	// only the first changed resource would trigger a reconcile
 	if ReconcileTriggerLock.TryLock() {
 		logger.Info("trigger reconcile VirtualEnvironment")
 		go func() {
 			ShouldDelayRefresh.Set(true)
+			// reconcile triggered only after the cooling time of the last resource change event ends
 			for ShouldDelayRefresh.Get() {
 				ShouldDelayRefresh.Set(false)
-				time.Sleep(3 * time.Second)
+				time.Sleep(reconcileCoolOffSeconds * time.Second)
 			}
 			if VirtualEnvIns != "" {
 				_, err := (*VirtualEnvController).Reconcile(reconcile.Request{
@@ -38,6 +43,7 @@ func ReconcileVirtualEnv(namespace string, logger logr.Logger) {
 			ReconcileTriggerLock.Unlock()
 		}()
 	} else {
+		// other resource change events only delay the reconcile time
 		ShouldDelayRefresh.Set(true)
 	}
 }
