@@ -60,22 +60,26 @@ func TagAppenderFilter(namespace string, name string, envLabel string, envHeader
 // generate lua script to auto inject env tag from label to header
 func luaScript(envLabel string, envHeader string) string {
 	return `
-	  local envLabel = "` + envLabel + `"
-	  local envHeader = "` + envHeader + `"
-	  local labels = os.getenv ("ISTIO_METAJSON_LABELS")
-	  local beginPos, endPos, curEnv
-	  _, beginPos = string.find(labels, '","' .. envLabel .. '":"', nil, true)
-	  if beginPos ~= nil then
-		endPos = string.find(labels, '"', beginPos + 1)
-		if endPos ~= nil and endPos > beginPos then
-		  curEnv = string.sub(labels, beginPos + 1, endPos - 1)
-		end
-	  end
-	  function envoy_on_request(request_handle)
-		local env = request_handle:headers()[envHeader]
-		if env == nil and curEnv ~= nil then
-		  request_handle:headers():add(envHeader, curEnv)
-		end
-	  end
+      local envLabel = "` + envLabel + `"
+      local envHeader = "` + envHeader + `"
+      local labels = os.getenv("ISTIO_METAJSON_LABELS")
+      if labels ~= nil then
+        local beginPos, endPos, curEnv
+        _, beginPos = string.find(labels, '","' .. envLabel .. '":"', nil, true)
+        if beginPos ~= nil then
+          endPos = string.find(labels, '"', beginPos + 1)
+          if endPos ~= nil and endPos > beginPos then
+            curEnv = string.sub(labels, beginPos + 1, endPos - 1)
+          end
+        end
+      else
+        curEnv = os.getenv("ENVIRONMENT_TAG")
+      end
+      function envoy_on_request(request_handle)
+        local env = request_handle:headers()[envHeader]
+        if env == nil and curEnv ~= nil then
+          request_handle:headers():add(envHeader, curEnv)
+        end
+      end
 	`
 }
