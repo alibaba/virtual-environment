@@ -33,8 +33,7 @@ func Start(inspectHost string, inspectPort int) {
 func inspectGlobalVariable(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"VirtualEnvIns":   shared.VirtualEnvIns,
-		"ServiceSelector": shared.AvailableServices,
-		"ServicePort":     shared.AvailableServicePorts,
+		"Service":         shared.AvailableServices,
 		"DeploymentLabel": shared.AvailableDeployments,
 	})
 }

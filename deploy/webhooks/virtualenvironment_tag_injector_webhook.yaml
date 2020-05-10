@@ -32,7 +32,7 @@ spec:
     spec:
       containers:
       - name: server
-        image: virtualenvironment/virtual-env-admission-webhook:v0.2.2
+        image: virtualenvironment/virtual-env-admission-webhook:v0.2.3
         imagePullPolicy: Always
         ports:
         - containerPort: 8443

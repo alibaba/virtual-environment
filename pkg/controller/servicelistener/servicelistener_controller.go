@@ -14,6 +14,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"strings"
+)
+
+const (
+	ANNOTATION_GATEWAYS = "kt-virtual-environment/gateways"
+	ANNOTATION_HOSTS    = "kt-virtual-environment/hosts"
 )
 
 var log = logf.Log.WithName("controller_servicelistener")
@@ -78,7 +84,6 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 		if errors.IsNotFound(err) {
 			reqLogger.Info("Removing Service")
 			delete(shared.AvailableServices, request.Name)
-			delete(shared.AvailableServicePorts, request.Name)
 			// delete related virtual service and destination rule
 			_ = router.GetDefaultRoute().CleanupRoute(r.client, request.Namespace, request.Name)
 			shared.Lock.RUnlock()
@@ -89,13 +94,21 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 	}
 
 	reqLogger.Info("Adding Service")
-	// save service selectors
-	shared.AvailableServices[request.Name] = service.Spec.Selector
-	// save service ports
-	shared.AvailableServicePorts[request.Name] = []uint32{}
-	for _, port := range service.Spec.Ports {
-		shared.AvailableServicePorts[request.Name] = append(shared.AvailableServicePorts[request.Name], uint32(port.Port))
+	serviceInfo := shared.ServiceInfo{}
+	if value, ok := shared.AvailableServices[request.Name]; !ok {
+		serviceInfo = value
 	}
+	// save service selectors
+	serviceInfo.Selectors = service.Spec.Selector
+	// save service ports
+	serviceInfo.Ports = []uint32{}
+	for _, port := range service.Spec.Ports {
+		serviceInfo.Ports = append(serviceInfo.Ports, uint32(port.Port))
+	}
+	// fetch service gateways and hosts from annotation
+	serviceInfo.Gateways = strings.Split(service.Annotations[ANNOTATION_GATEWAYS], ",")
+	serviceInfo.Hosts = strings.Split(service.Annotations[ANNOTATION_HOSTS], ",")
+	shared.AvailableServices[request.Name] = serviceInfo
 
 	shared.Lock.RUnlock()
 

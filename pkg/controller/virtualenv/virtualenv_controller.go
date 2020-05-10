@@ -93,7 +93,8 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 
 	reqLogger.Info("Reconciling VirtualEnvironment")
 	err = r.checkTagAppender(virtualEnv, request, shared.IsVirtualEnvChanged(err), reqLogger)
-	for svc, selector := range shared.AvailableServices {
+	for svc, service := range shared.AvailableServices {
+		selector := service.Selectors
 		availableLabels := parser.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.EnvLabel.Name)
 		relatedDeployments := parser.FindAllRelatedDeployments(shared.AvailableDeployments, selector, virtualEnv.Spec.EnvLabel.Name)
 		if len(availableLabels) > 0 && len(relatedDeployments) > 0 {

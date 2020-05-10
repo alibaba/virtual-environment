@@ -24,7 +24,14 @@ func VirtualService(namespace string, svcName string, availableLabels []string,
 			HTTP:  []networkingv1alpha3.HTTPRoute{},
 		},
 	}
-	for _, port := range shared.AvailableServicePorts[svcName] {
+	serviceInfo := shared.AvailableServices[svcName]
+	if len(serviceInfo.Gateways) > 0 {
+		virtualSvc.Spec.Gateways = serviceInfo.Gateways
+	}
+	if len(serviceInfo.Hosts) > 0 {
+		virtualSvc.Spec.Hosts = serviceInfo.Hosts
+	}
+	for _, port := range serviceInfo.Ports {
 		for _, label := range availableLabels {
 			matchRoute, ok := virtualServiceMatchRoute(svcName, relatedDeployments,
 				label, envHeader, envSplitter, port, defaultSubset)
