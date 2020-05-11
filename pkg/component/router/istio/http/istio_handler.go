@@ -5,6 +5,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis/istio/common/v1alpha1"
 	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
+	"reflect"
 	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
@@ -94,6 +95,12 @@ func IsDifferentDestinationRule(spec1 *networkingv1alpha3.DestinationRuleSpec,
 // check whether VirtualService is different
 func IsDifferentVirtualService(spec1 *networkingv1alpha3.VirtualServiceSpec, spec2 *networkingv1alpha3.VirtualServiceSpec,
 	header string) bool {
+	if !reflect.DeepEqual(spec1.Gateways, spec2.Gateways) {
+		return true
+	}
+	if !reflect.DeepEqual(spec1.Hosts, spec2.Hosts) {
+		return true
+	}
 	if len(spec1.HTTP) != len(spec2.HTTP) {
 		return true
 	}
@@ -138,7 +145,8 @@ func isRouteEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv1alpha
 
 // compare whether route destination is equal
 func isDestinationEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv1alpha3.HTTPRoute) bool {
-	return route.Route[0].Destination.Subset == target.Route[0].Destination.Subset
+	return route.Route[0].Destination.Subset == target.Route[0].Destination.Subset &&
+		route.Route[0].Destination.Port.Number == target.Route[0].Destination.Port.Number
 }
 
 // generate istio destination rule subset instance
