@@ -49,7 +49,7 @@ fi
 # >>>>>>> BUILD_ANCHOR:
 
 # Generate temporary operator image
-operator-sdk build --go-build-args "-o build/_output/bin/${operator_name}" ${ci_image}
+operator-sdk build --go-build-args "-o build/_output/bin/${operator_name}" --image-build-args "--no-cache" ${ci_image}
 if [[ ${?} != 0 ]]; then
     echo "Build failed !!!"
     exit -1
