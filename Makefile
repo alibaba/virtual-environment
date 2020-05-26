@@ -1,4 +1,4 @@
-VERSION ?= v0.2.3
+VERSION ?= v0.3
 OPERATOR_IMAGE ?= virtualenvironment/virtual-env-operator
 ADMISSION_IMAGE ?= virtualenvironment/virtual-env-admission-webhook
 
