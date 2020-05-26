@@ -31,20 +31,23 @@ spec:
         app: webhook-server
     spec:
       containers:
-      - name: server
-        image: virtualenvironment/virtual-env-admission-webhook:v0.3
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8443
-          name: webhook-api
-        volumeMounts:
-        - name: webhook-tls-certs
-          mountPath: /run/secrets/tls
-          readOnly: true
+        - name: server
+          image: virtualenvironment/virtual-env-admission-webhook:v0.3
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8443
+              name: webhook-api
+          volumeMounts:
+            - name: webhook-tls-certs
+              mountPath: /run/secrets/tls
+              readOnly: true
+          env:
+            - name: envLabel
+              value: virtual-env
       volumes:
-      - name: webhook-tls-certs
-        secret:
-          secretName: webhook-server-tls
+        - name: webhook-tls-certs
+          secret:
+            secretName: webhook-server-tls
 ---
 apiVersion: v1
 kind: Service

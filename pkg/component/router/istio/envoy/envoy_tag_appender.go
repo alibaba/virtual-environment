@@ -73,7 +73,7 @@ func luaScript(envLabel string, envHeader string) string {
           end
         end
       else
-        curEnv = os.getenv("ENVIRONMENT_TAG")
+        curEnv = os.getenv("VIRTUAL_ENVIRONMENT_TAG")
       end
       function envoy_on_request(request_handle)
         local env = request_handle:headers()[envHeader]

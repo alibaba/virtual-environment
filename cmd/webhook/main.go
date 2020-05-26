@@ -7,6 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
@@ -14,7 +15,7 @@ const (
 	tlsDir               = `/run/secrets/tls`
 	tlsCertFile          = `tls.crt`
 	tlsKeyFile           = `tls.key`
-	envVarName           = "ENVIRONMENT_TAG"
+	envVarName           = "VIRTUAL_ENVIRONMENT_TAG"
 	sidecarContainerName = "istio-proxy"
 )
 
@@ -23,7 +24,7 @@ var (
 )
 
 // injectEnvironmentTag read the environment tag from pod label, and save to the sidecar container as an environment
-// variable named `ENVIRONMENT_TAG`
+// variable named `VIRTUAL_ENVIRONMENT_TAG`
 func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]patchOperation, error) {
 	// This handler should only get called on Pod objects as per the MutatingWebhookConfiguration in the YAML file.
 	// However, if (for whatever reason) this gets invoked on an object of a different kind, issue a log message but
@@ -40,8 +41,12 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]patchOperation, erro
 		return nil, fmt.Errorf("could not deserialize pod object: %v", err)
 	}
 
+	// Retrieve the environment label name from pod label
+	envLabel := os.Getenv("envLabel")
+	if envLabel == "" {
+		log.Fatalln("cannot determine env label !!")
+	}
 	// Retrieve the environment tag from pod label
-	envLabel := "virtual-env"
 	envTag := ""
 	if value, ok := pod.Labels[envLabel]; ok {
 		envTag = value
