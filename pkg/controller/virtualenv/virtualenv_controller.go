@@ -4,6 +4,7 @@ import (
 	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1"
 	"alibaba.com/virtual-env-operator/pkg/component/parser"
 	"alibaba.com/virtual-env-operator/pkg/component/router"
+	"alibaba.com/virtual-env-operator/pkg/component/router/common"
 	"alibaba.com/virtual-env-operator/pkg/shared"
 	"context"
 	"github.com/go-logr/logr"
@@ -92,7 +93,8 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 
 	reqLogger.Info("Reconciling VirtualEnvironment")
 	err = r.checkTagAppender(virtualEnv, request, shared.IsVirtualEnvChanged(err), reqLogger)
-	for svc, selector := range shared.AvailableServices {
+	for svc, service := range shared.AvailableServices {
+		selector := service.Selectors
 		availableLabels := parser.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.EnvLabel.Name)
 		relatedDeployments := parser.FindAllRelatedDeployments(shared.AvailableDeployments, selector, virtualEnv.Spec.EnvLabel.Name)
 		if len(availableLabels) > 0 && len(relatedDeployments) > 0 {
@@ -108,13 +110,14 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 // create or delete tag appender according to virtual environment configure
 func (r *ReconcileVirtualEnv) checkTagAppender(virtualEnv *envv1alpha1.VirtualEnvironment,
 	request reconcile.Request, isVirtualEnvChanged bool, logger logr.Logger) error {
-	isTagAppenderExist := router.GetDefaultRoute().TagAppenderExist(r.client, request.Namespace, request.Name)
+	tagAppenderStatus := router.GetDefaultRoute().CheckTagAppender(r.client, virtualEnv, request.Namespace, request.Name)
 	if virtualEnv.Spec.EnvHeader.AutoInject {
-		if isVirtualEnvChanged || !isTagAppenderExist {
+		if isVirtualEnvChanged || common.IsTagAppenderNeedUpdate(tagAppenderStatus) {
+			_ = router.GetDefaultRoute().DeleteTagAppender(r.client, request.Namespace, request.Name)
 			return router.GetDefaultRoute().CreateTagAppender(r.client, r.scheme, virtualEnv, request.Namespace, request.Name)
 		}
 	} else {
-		if isVirtualEnvChanged || isTagAppenderExist {
+		if isVirtualEnvChanged || common.IsTagAppenderExist(tagAppenderStatus) {
 			return router.GetDefaultRoute().DeleteTagAppender(r.client, request.Namespace, request.Name)
 		}
 	}
@@ -148,7 +151,7 @@ func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logg
 		}
 		shared.VirtualEnvIns = request.Name
 		logger.Info("VirtualEnv added", "Spec", virtualEnv.Spec)
-		return virtualEnv, shared.VirtualEnvChangedError{}
+		return virtualEnv, shared.VirtualEnvChangeDetected{}
 	}
 	return virtualEnv, nil
 }

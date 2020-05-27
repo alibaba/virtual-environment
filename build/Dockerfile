@@ -5,7 +5,7 @@ ENV OPERATOR=/usr/local/bin/virtual-env-operator \
     USER_NAME=virtual-env-operator
 
 # install operator binary
-COPY build/_output/bin/virtual-env-operator ${OPERATOR}
+COPY build/_output/operator/virtual-env-operator ${OPERATOR}
 
 COPY build/bin /usr/local/bin
 RUN  /usr/local/bin/user_setup

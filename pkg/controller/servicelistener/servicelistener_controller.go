@@ -14,6 +14,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"strings"
+)
+
+const (
+	annotationGateways = "kt-virtual-environment/gateways"
+	annotationHosts    = "kt-virtual-environment/hosts"
 )
 
 var log = logf.Log.WithName("controller_servicelistener")
@@ -88,7 +94,25 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 	}
 
 	reqLogger.Info("Adding Service")
-	shared.AvailableServices[request.Name] = service.Spec.Selector
+	serviceInfo := shared.ServiceInfo{}
+	if value, ok := shared.AvailableServices[request.Name]; ok {
+		serviceInfo = value
+	}
+	// save service selectors
+	serviceInfo.Selectors = service.Spec.Selector
+	// save service ports
+	serviceInfo.Ports = []uint32{}
+	for _, port := range service.Spec.Ports {
+		serviceInfo.Ports = append(serviceInfo.Ports, uint32(port.Port))
+	}
+	// fetch service gateways and hosts from annotation
+	if value, ok := service.Annotations[annotationGateways]; ok {
+		serviceInfo.Gateways = strings.Split(value, ",")
+	}
+	if value, ok := service.Annotations[annotationHosts]; ok {
+		serviceInfo.Hosts = strings.Split(value, ",")
+	}
+	shared.AvailableServices[request.Name] = serviceInfo
 
 	shared.Lock.RUnlock()
 

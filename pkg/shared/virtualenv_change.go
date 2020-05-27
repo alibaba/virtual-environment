@@ -1,13 +1,13 @@
 package shared
 
-type VirtualEnvChangedError struct {
+type VirtualEnvChangeDetected struct {
 }
 
-func (v VirtualEnvChangedError) Error() string {
+func (v VirtualEnvChangeDetected) Error() string {
 	return "detected virtual environment instance change"
 }
 
 func IsVirtualEnvChanged(err error) bool {
-	_, ok := err.(VirtualEnvChangedError)
+	_, ok := err.(VirtualEnvChangeDetected)
 	return ok
 }

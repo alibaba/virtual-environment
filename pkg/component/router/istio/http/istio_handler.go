@@ -5,6 +5,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis/istio/common/v1alpha1"
 	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
+	"reflect"
 	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
@@ -24,13 +25,23 @@ func VirtualService(namespace string, svcName string, availableLabels []string,
 			HTTP:  []networkingv1alpha3.HTTPRoute{},
 		},
 	}
-	for _, label := range availableLabels {
-		matchRoute, ok := virtualServiceMatchRoute(svcName, relatedDeployments, label, envHeader, envSplitter, defaultSubset)
-		if ok {
-			virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
-		}
+	serviceInfo := shared.AvailableServices[svcName]
+	if len(serviceInfo.Gateways) > 0 {
+		virtualSvc.Spec.Gateways = serviceInfo.Gateways
 	}
-	virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, defaultRoute(svcName, toSubsetName(defaultSubset)))
+	if len(serviceInfo.Hosts) > 0 {
+		virtualSvc.Spec.Hosts = serviceInfo.Hosts
+	}
+	for _, port := range serviceInfo.Ports {
+		for _, label := range availableLabels {
+			matchRoute, ok := virtualServiceMatchRoute(svcName, relatedDeployments,
+				label, envHeader, envSplitter, port, defaultSubset)
+			if ok {
+				virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
+			}
+		}
+		virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, defaultRoute(svcName, port, toSubsetName(defaultSubset)))
+	}
 	return virtualSvc
 }
 
@@ -84,6 +95,12 @@ func IsDifferentDestinationRule(spec1 *networkingv1alpha3.DestinationRuleSpec,
 // check whether VirtualService is different
 func IsDifferentVirtualService(spec1 *networkingv1alpha3.VirtualServiceSpec, spec2 *networkingv1alpha3.VirtualServiceSpec,
 	header string) bool {
+	if !reflect.DeepEqual(spec1.Gateways, spec2.Gateways) {
+		return true
+	}
+	if !reflect.DeepEqual(spec1.Hosts, spec2.Hosts) {
+		return true
+	}
 	if len(spec1.HTTP) != len(spec2.HTTP) {
 		return true
 	}
@@ -128,7 +145,8 @@ func isRouteEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv1alpha
 
 // compare whether route destination is equal
 func isDestinationEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv1alpha3.HTTPRoute) bool {
-	return route.Route[0].Destination.Subset == target.Route[0].Destination.Subset
+	return route.Route[0].Destination.Subset == target.Route[0].Destination.Subset &&
+		route.Route[0].Destination.Port.Number == target.Route[0].Destination.Port.Number
 }
 
 // generate istio destination rule subset instance
@@ -143,7 +161,7 @@ func destinationRuleMatchSubset(labelKey string, labelValue string) networkingv1
 
 // calculate and generate http route instance
 func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]string, labelVal string, headerKey string,
-	splitter string, defaultSubset string) (networkingv1alpha3.HTTPRoute, bool) {
+	splitter string, port uint32, defaultSubset string) (networkingv1alpha3.HTTPRoute, bool) {
 	var possibleRoutes []string
 	for _, v := range relatedDeployments {
 		if leveledEqual(labelVal, v, splitter) {
@@ -153,7 +171,7 @@ func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]
 	if len(possibleRoutes) > 0 {
 		var subsetName = toSubsetName(findLongestString(possibleRoutes))
 		if defaultSubset != subsetName {
-			return matchRoute(serviceName, headerKey, labelVal, subsetName), true
+			return matchRoute(serviceName, headerKey, labelVal, port, subsetName), true
 		}
 	}
 	return networkingv1alpha3.HTTPRoute{}, false
@@ -165,33 +183,40 @@ func toSubsetName(labelValue string) string {
 	return re.ReplaceAllString(labelValue, "-")
 }
 
+// generate istio route
+func generateHttpRoute(serviceName string, port uint32, subsetName string) []networkingv1alpha3.HTTPRouteDestination {
+	return []networkingv1alpha3.HTTPRouteDestination{{
+		Destination: networkingv1alpha3.Destination{
+			Host:   serviceName,
+			Subset: subsetName,
+			Port:   networkingv1alpha3.PortSelector{Number: port},
+		},
+		Weight: 100,
+	}}
+}
+
 // generate default http route instance
-func defaultRoute(name string, defaultSubset string) networkingv1alpha3.HTTPRoute {
+func defaultRoute(name string, port uint32, defaultSubset string) networkingv1alpha3.HTTPRoute {
 	return networkingv1alpha3.HTTPRoute{
-		Route: []networkingv1alpha3.HTTPRouteDestination{{
-			Destination: networkingv1alpha3.Destination{
-				Host:   name,
-				Subset: defaultSubset,
-			},
+		Route: generateHttpRoute(name, port, defaultSubset),
+		Match: []networkingv1alpha3.HTTPMatchRequest{{
+			Port: port,
 		}},
 	}
 }
 
 // generate istio virtual service http route instance
-func matchRoute(serviceName string, headerKey string, labelVal string, subsetName string) networkingv1alpha3.HTTPRoute {
+func matchRoute(serviceName string, headerKey string, labelVal string, port uint32,
+	subsetName string) networkingv1alpha3.HTTPRoute {
 	return networkingv1alpha3.HTTPRoute{
-		Route: []networkingv1alpha3.HTTPRouteDestination{{
-			Destination: networkingv1alpha3.Destination{
-				Host:   serviceName,
-				Subset: subsetName,
-			},
-		}},
+		Route: generateHttpRoute(serviceName, port, subsetName),
 		Match: []networkingv1alpha3.HTTPMatchRequest{{
 			Headers: map[string]v1alpha1.StringMatch{
 				headerKey: {
 					Exact: labelVal,
 				},
 			},
+			Port: port,
 		}},
 	}
 }
