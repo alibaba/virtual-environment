@@ -7,22 +7,28 @@
 
 ## 部署到集群
 
-从 [发布页面](https://github.com/alibaba/virtual-environment/releases) 下载最新的CRD文件，使用`kubectl apply`命令应用到Kubernetes
+从 [发布页面](https://github.com/alibaba/virtual-environment/releases) 下载最新的CRD文件，并解压。
 
 ```bash
-wget https://github.com/alibaba/virtual-environment/releases/download/v0.2/kt-virtual-environment-v0.2.zip
-unzip kt-virtual-environment-v0.2.zip
-cd v0.2/
-kubectl apply -f crds/env.alibaba.com_virtualenvironments_crd.yaml
+wget https://github.com/alibaba/virtual-environment/releases/download/v0.3/kt-virtual-environment-v0.3.zip
+unzip kt-virtual-environment-v0.3.zip
+cd v0.3/
 ```
 
-将Operator部署到每个需要使用虚拟环境的目标Namespace里，比如`default`
+使用`kubectl apply`命令将解压后目录中的CRD和Webhook配置应用到Kubernetes，其中Webhook携带了默认的自签名秘钥，可参考[Webhook配置文档](webhook.md)替换。
+
+```bash
+kubectl apply -f crds/env.alibaba.com_virtualenvironments_crd.yaml
+kubectl apply -f webhooks/virtualenvironment_tag_injector_webhook.yaml
+```
+
+将Operator部署到每个需要使用虚拟环境的目标Namespace里，比如`default`。
 
 ```bash
 kubectl apply -n default -f operator.yaml
 ```
 
-如果集群开启了RBAC，还需要部署相应的Role和ServiceAccount
+如果集群开启了RBAC，还需要部署相应的Role和ServiceAccount。
 
 ```bash
 kubectl apply -n default -f service_account.yaml
