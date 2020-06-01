@@ -34,13 +34,14 @@ func VirtualService(namespace string, svcName string, availableLabels []string,
 	}
 	for _, port := range serviceInfo.Ports {
 		for _, label := range availableLabels {
-			matchRoute, ok := virtualServiceMatchRoute(svcName, relatedDeployments,
-				label, envHeader, envSplitter, port, defaultSubset)
+			matchRoute, ok := virtualServiceMatchRoute(svcName, relatedDeployments, label, envHeader,
+				envSplitter, port, toSubsetName(defaultSubset), len(serviceInfo.Ports))
 			if ok {
 				virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
 			}
 		}
-		virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, defaultRoute(svcName, port, toSubsetName(defaultSubset)))
+		virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP,
+			defaultRoute(svcName, port, toSubsetName(defaultSubset), len(serviceInfo.Ports)))
 	}
 	return virtualSvc
 }
@@ -161,7 +162,7 @@ func destinationRuleMatchSubset(labelKey string, labelValue string) networkingv1
 
 // calculate and generate http route instance
 func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]string, labelVal string, headerKey string,
-	splitter string, port uint32, defaultSubset string) (networkingv1alpha3.HTTPRoute, bool) {
+	splitter string, port uint32, defaultSubset string, totalPortCount int) (networkingv1alpha3.HTTPRoute, bool) {
 	var possibleRoutes []string
 	for _, v := range relatedDeployments {
 		if leveledEqual(labelVal, v, splitter) {
@@ -171,7 +172,7 @@ func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]
 	if len(possibleRoutes) > 0 {
 		var subsetName = toSubsetName(findLongestString(possibleRoutes))
 		if defaultSubset != subsetName {
-			return matchRoute(serviceName, headerKey, labelVal, port, subsetName), true
+			return matchRoute(serviceName, headerKey, labelVal, port, subsetName, totalPortCount), true
 		}
 	}
 	return networkingv1alpha3.HTTPRoute{}, false
@@ -196,19 +197,22 @@ func generateHttpRoute(serviceName string, port uint32, subsetName string) []net
 }
 
 // generate default http route instance
-func defaultRoute(name string, port uint32, defaultSubset string) networkingv1alpha3.HTTPRoute {
-	return networkingv1alpha3.HTTPRoute{
+func defaultRoute(name string, port uint32, defaultSubset string, totalPortCount int) networkingv1alpha3.HTTPRoute {
+	route := networkingv1alpha3.HTTPRoute{
 		Route: generateHttpRoute(name, port, defaultSubset),
-		Match: []networkingv1alpha3.HTTPMatchRequest{{
-			Port: port,
-		}},
 	}
+	if totalPortCount > 1 {
+		route.Match = []networkingv1alpha3.HTTPMatchRequest{{
+			Port: port,
+		}}
+	}
+	return route
 }
 
 // generate istio virtual service http route instance
 func matchRoute(serviceName string, headerKey string, labelVal string, port uint32,
-	subsetName string) networkingv1alpha3.HTTPRoute {
-	return networkingv1alpha3.HTTPRoute{
+	subsetName string, totalPortCount int) networkingv1alpha3.HTTPRoute {
+	route := networkingv1alpha3.HTTPRoute{
 		Route: generateHttpRoute(serviceName, port, subsetName),
 		Match: []networkingv1alpha3.HTTPMatchRequest{{
 			Headers: map[string]v1alpha1.StringMatch{
@@ -216,9 +220,12 @@ func matchRoute(serviceName string, headerKey string, labelVal string, port uint
 					Exact: labelVal,
 				},
 			},
-			Port: port,
 		}},
 	}
+	if totalPortCount > 1 {
+		route.Match[0].Port = port
+	}
+	return route
 }
 
 // get the longest string in list

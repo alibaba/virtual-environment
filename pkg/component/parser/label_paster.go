@@ -28,11 +28,11 @@ func FindAllVirtualEnvLabelValues(deployments map[string]map[string]string, envL
 			labelSet[labelVal] = true
 		}
 	}
-	return getKeys(labelSet)
+	return GetKeys(labelSet)
 }
 
 // get all keys of a map as array
-func getKeys(kv map[string]bool) []string {
+func GetKeys(kv map[string]bool) []string {
 	keys := make([]string, 0, len(kv))
 	for k, _ := range kv {
 		keys = append(keys, k)
