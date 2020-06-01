@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -25,7 +26,7 @@ var (
 
 // injectEnvironmentTag read the environment tag from pod label, and save to the sidecar container as an environment
 // variable named `VIRTUAL_ENVIRONMENT_TAG`
-func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]patchOperation, error) {
+func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, error) {
 	// This handler should only get called on Pod objects as per the MutatingWebhookConfiguration in the YAML file.
 	// However, if (for whatever reason) this gets invoked on an object of a different kind, issue a log message but
 	// let the object request pass through otherwise.
@@ -42,14 +43,18 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]patchOperation, erro
 	}
 
 	// Retrieve the environment label name from pod label
-	envLabel := os.Getenv("envLabel")
-	if envLabel == "" {
+	envLabels := os.Getenv("envLabel")
+	if envLabels == "" {
 		log.Fatalln("cannot determine env label !!")
 	}
 	// Retrieve the environment tag from pod label
+	envLabelList := strings.Split(envLabels, ",")
 	envTag := ""
-	if value, ok := pod.Labels[envLabel]; ok {
-		envTag = value
+	for _, label := range envLabelList {
+		if value, ok := pod.Labels[label]; ok {
+			envTag = value
+			break
+		}
 	}
 	if envTag == "" {
 		log.Printf("no environment tag found on pod %s", getPodName(pod))
@@ -75,15 +80,15 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]patchOperation, erro
 	}
 
 	// Create patch operations to apply environment tag
-	var patches []patchOperation
+	var patches []PatchOperation
 	if envVarIndex < 0 {
-		patches = append(patches, patchOperation{
+		patches = append(patches, PatchOperation{
 			Op:    "add",
 			Path:  fmt.Sprintf("/spec/containers/%d/env/0", sidecarContainerIndex),
 			Value: corev1.EnvVar{Name: envVarName, Value: envTag},
 		})
 	} else {
-		patches = append(patches, patchOperation{
+		patches = append(patches, PatchOperation{
 			Op:    "replace",
 			Path:  fmt.Sprintf("/spec/containers/%d/env/%d/value", sidecarContainerIndex, envVarIndex),
 			Value: envTag,

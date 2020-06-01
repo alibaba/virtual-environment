@@ -39,8 +39,8 @@ var (
 	universalDeserializer = serializer.NewCodecFactory(runtime.NewScheme()).UniversalDeserializer()
 )
 
-// patchOperation is an operation of a JSON patch, see https://tools.ietf.org/html/rfc6902 .
-type patchOperation struct {
+// PatchOperation is an operation of a JSON patch, see https://tools.ietf.org/html/rfc6902 .
+type PatchOperation struct {
 	Op    string      `json:"op"`
 	Path  string      `json:"path"`
 	Value interface{} `json:"value,omitempty"`
@@ -48,7 +48,7 @@ type patchOperation struct {
 
 // admitFunc is a callback for admission controller logic. Given an AdmissionRequest, it returns the sequence of patch
 // operations to be applied in case of success, or the error that will be shown when the operation is rejected.
-type admitFunc func(*v1beta1.AdmissionRequest) ([]patchOperation, error)
+type admitFunc func(*v1beta1.AdmissionRequest) ([]PatchOperation, error)
 
 // isKubeNamespace checks if the given namespace is a Kubernetes-owned namespace.
 func isKubeNamespace(ns string) bool {
@@ -97,7 +97,7 @@ func doServeAdmitFunc(w http.ResponseWriter, r *http.Request, admit admitFunc) (
 		},
 	}
 
-	var patchOps []patchOperation
+	var patchOps []PatchOperation
 	// Apply the admit() function only for non-Kubernetes namespaces. For objects in Kubernetes namespaces, return
 	// an empty set of patch operations.
 	if !isKubeNamespace(admissionReviewReq.Request.Namespace) {
