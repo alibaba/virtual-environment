@@ -23,7 +23,7 @@ if [[ "${ci_image}" = "" || "${ci_image}" = "_" ]]; then
 fi
 ns="${2:-virtual-env-ci}"
 
-echo "---- Begin CI Test ----"
+echo "---- Begin CI Task ----"
 
 # Jump to specified code location
 goto() {
@@ -49,7 +49,7 @@ fi
 # >>>>>>> BUILD_ANCHOR:
 
 # Generate temporary operator image
-operator-sdk build --go-build-args "-o build/_output/bin/${operator_name}" --image-build-args "--no-cache" ${ci_image}
+operator-sdk build --go-build-args "-o build/_output/operator/${operator_name}" --image-build-args "--no-cache" ${ci_image}
 if [[ ${?} != 0 ]]; then
     echo "Build failed !!!"
     exit -1
