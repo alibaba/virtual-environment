@@ -27,4 +27,4 @@ The parameter are shown in below table:
 | envLabel.splitter      | .             | Symbol to split virtual environment levels (single symbol only) |
 | envLabel.defaultSubset |               | Default subset to route when env header matches nothing (default means random) |
 
-A VirtualEnvironment instance is only valid for the namespace it is in. If needed, you can create instances with the same configuration in multiple namespaces to achieve [isolation across namespaces and clusters](cross-cluster.md).
+A VirtualEnvironment instance is only valid for the namespace it is in. If needed, you can create instances with the same configuration in multiple namespaces to achieve [isolation across namespaces and clusters](en-us/ve/cross-cluster.md).

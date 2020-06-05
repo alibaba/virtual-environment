@@ -2,7 +2,7 @@
 
 KtVirtualEnvironment is a member of KT-series projects, supported by cloud development department of Alibaba Inc.
 
-This project implement an isolation mechanism named virtual environment based on traffic tagging, fit for Kubernetes clusters. It can be used independently or combined with [KtConnect](https://alibaba.github.io/kt-connect/) tools to implement local-to-cluster traffic routing control, discussed at [typical scenario](ve/typical-scenario.md) in detail.
+This project implement an isolation mechanism named virtual environment based on traffic tagging, fit for Kubernetes clusters. It can be used independently or combined with [KtConnect](https://alibaba.github.io/kt-connect/) tools to implement local-to-cluster traffic routing control, discussed at [typical scenario](en-us/ve/typical-scenario.md) in detail.
 
 ## Intention
 

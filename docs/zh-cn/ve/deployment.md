@@ -15,7 +15,7 @@ unzip kt-virtual-environment-v0.3.zip
 cd v0.3/
 ```
 
-使用`kubectl apply`命令将解压后目录中的CRD和Webhook配置应用到Kubernetes，其中Webhook携带了默认的自签名秘钥，可参考[Webhook配置文档](webhook.md)替换。
+使用`kubectl apply`命令将解压后目录中的CRD和Webhook配置应用到Kubernetes，其中Webhook携带了默认的自签名秘钥，可参考[Webhook配置文档](zh-cn/ve/webhook.md)替换。
 
 ```bash
 kubectl apply -f crds/env.alibaba.com_virtualenvironments_crd.yaml
@@ -48,7 +48,7 @@ kubectl apply -n default -f path-to-virtual-environment-cr.yaml
 
 实例创建后，会自动监听**所在Namespace中的**所有Service和Deployment对象并自动生成路由隔离规则，形成虚拟环境。
 
-资源定义文件内容请参考[配置虚拟环境](configuration.md)，根据实际情况修改配置参数。
+资源定义文件内容请参考[配置虚拟环境](zh-cn/ve/configuration.md)，根据实际情况修改配置参数。
 
 ## 应用程序适配
 
@@ -58,4 +58,4 @@ kubectl apply -n default -f path-to-virtual-environment-cr.yaml
 
 - 为应用程序添加透传标签Header的功能（默认约定的请求头键为`X-Virtual-Env`）
 
-完整示例请参考[快速开始](quickstart.md)。
+完整示例请参考[快速开始](zh-cn/ve/quickstart.md)。

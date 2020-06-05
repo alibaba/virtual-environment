@@ -45,4 +45,4 @@
 
 总结而言，虚拟环境是通过在服务实例（以及从这些实例发出的请求）上携带约定标签，将个别需要调试或测试的特定版本服务实例与其他公共服务实例组成临时虚拟集群的一种环境管理实践。
 
-KtVirtualEnvironment适用于Kubernetes集群。可独立使用，或结合[KtConnect](https://alibaba.github.io/kt-connect/)工具实现本地到集群的流量路由控制，详见[典型场景](ve/typical-scenario.md)。
+KtVirtualEnvironment适用于Kubernetes集群。可独立使用，或结合[KtConnect](https://alibaba.github.io/kt-connect/)工具实现本地到集群的流量路由控制，详见[典型场景](zh-cn/ve/typical-scenario.md)。

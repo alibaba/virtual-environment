@@ -8,7 +8,7 @@ KtVirtualEnvironment是一种基于ServiceMesh的微服务环境复用工具，�
 
 ![isolation](https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/diagram-zh-cn.jpg)
 
-在[原理与概念](ve/concept.md)小节将对这种路由规则进行更详细的介绍。
+在[原理与概念](zh-cn/ve/concept.md)小节将对这种路由规则进行更详细的介绍。
 
 ## 特性
 

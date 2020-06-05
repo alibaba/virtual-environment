@@ -45,7 +45,7 @@ tls_key_b64="$(openssl base64 -A < webhook-server-tls.key)"
 ca_pem_b64="$(openssl base64 -A < ca.crt)"
 ```
 
-进入部署包中的`webhooks`目录（见[部署文档](deployment.md)），然后使用以下命令替换配置文件中的相应属性值。
+进入部署包中的`webhooks`目录（见[部署文档](zh-cn/ve/deployment.md)），然后使用以下命令替换配置文件中的相应属性值。
 
 ```bash
 cd webhooks
