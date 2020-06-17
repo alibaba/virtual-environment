@@ -32,6 +32,12 @@ kubectl -n $NS get VirtualService <实例名称> -o yaml
 
 路由的可靠性由Istio保障，若生成的Istio资源配置无误，则需结合Istio本身功能进一步排查原因。
 
+以下是几种比较常见的错误原因：
+
+- Service端口命名不规范。Istio要求服务端口名称只能是`<协议>[-<后缀>-]`格式，对于虚拟环境的场景，协议部分应为`http`
+- 同一个Pod被多个Service选中。当前Istio不支持一个Pod同时属于多个Service的情况
+- Istio规则生效有延迟（参考 [Istio文档](https://istio.io/latest/zh/docs/ops/common-problems/network-issues/#route-rules-don't-seem-to-affect-traffic-flow) ）
+
 ## 流量未自动加环境标
 
 首先查看Envoy容器日志，若是注入脚本出错，这里会看到报错信息
