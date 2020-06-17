@@ -3,12 +3,14 @@ package envoy
 import (
 	"alibaba.com/virtual-env-operator/pkg/shared"
 	"context"
-	protobuftypes "github.com/gogo/protobuf/types"
+	"github.com/gogo/protobuf/jsonpb"
+	pbtypes "github.com/gogo/protobuf/types"
 	networkingv1alpha3 "istio.io/api/networking/v1alpha3"
 	networkingv1alpha3api "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 // delete EnvoyFilter instance if it already exist
@@ -37,50 +39,61 @@ func TagAppenderFilter(namespace string, name string, envLabel string, envHeader
 			},
 		},
 		Spec: networkingv1alpha3.EnvoyFilter{
-			Filters: []*networkingv1alpha3.EnvoyFilter_Filter{{
-				ListenerMatch: &networkingv1alpha3.EnvoyFilter_DeprecatedListenerMatch{
-					ListenerType: networkingv1alpha3.EnvoyFilter_DeprecatedListenerMatch_SIDECAR_OUTBOUND,
+			ConfigPatches: []*networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{{
+				ApplyTo: networkingv1alpha3.EnvoyFilter_HTTP_FILTER,
+				Match: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
+					Context: networkingv1alpha3.EnvoyFilter_SIDECAR_OUTBOUND,
 				},
-				FilterName: "envoy.lua",
-				FilterType: networkingv1alpha3.EnvoyFilter_Filter_HTTP,
-				FilterConfig: &protobuftypes.Struct{
-					Fields: map[string]*protobuftypes.Value{
-						"inlineCode": {
-							Kind: &protobuftypes.Value_StringValue{
-								StringValue: luaScript(envLabel, envHeader),
-							},
-						},
-					},
+				Patch: &networkingv1alpha3.EnvoyFilter_Patch{
+					Operation: networkingv1alpha3.EnvoyFilter_Patch_INSERT_BEFORE,
+					Value:     buildPatchStruct(envLabel, envHeader),
 				},
 			}},
 		},
 	}
 }
 
+func buildPatchStruct(envLabel string, envHeader string) *pbtypes.Struct {
+	config := `{
+        "name": "virtual.environment.lua",
+        "typed_config": {
+            "@type": "type.googleapis.com/envoy.config.filter.http.lua.v2.Lua",
+            "inline_code": "` + toOneLine(luaScript(envLabel, envHeader)) + `"
+        }
+    }`
+	val := &pbtypes.Struct{}
+	_ = jsonpb.Unmarshal(strings.NewReader(config), val)
+	return val
+}
+
+func toOneLine(text string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(text, "\n", "\\n"), "\"", "\\\"")
+}
+
 // generate lua script to auto inject env tag from label to header
 func luaScript(envLabel string, envHeader string) string {
-	return `
-      local envLabel = "` + envLabel + `"
-      local envHeader = "` + envHeader + `"
-      local labels = os.getenv("ISTIO_METAJSON_LABELS")
-      local curEnv
-      if labels ~= nil then
-        local beginPos, endPos
-        _, beginPos = string.find(labels, '","' .. envLabel .. '":"', nil, true)
-        if beginPos ~= nil then
-          endPos = string.find(labels, '"', beginPos + 1)
-          if endPos ~= nil and endPos > beginPos then
-            curEnv = string.sub(labels, beginPos + 1, endPos - 1)
-          end
-        end
-      else
-        curEnv = os.getenv("VIRTUAL_ENVIRONMENT_TAG")
-      end
-      function envoy_on_request(request_handle)
-        local env = request_handle:headers()[envHeader]
-        if env == nil and curEnv ~= nil then
-          request_handle:headers():add(envHeader, curEnv)
-        end
-      end
-	`
+	return strings.Trim(`
+local envLabel = "`+envLabel+`"
+local envHeader = "`+envHeader+`"
+local labels = os.getenv("ISTIO_METAJSON_LABELS")
+local curEnv
+if labels ~= nil then
+  local beginPos, endPos
+  _, beginPos = string.find(labels, '","' .. envLabel .. '":"', nil, true)
+  if beginPos ~= nil then
+    endPos = string.find(labels, '"', beginPos + 1)
+    if endPos ~= nil and endPos > beginPos then
+      curEnv = string.sub(labels, beginPos + 1, endPos - 1)
+    end
+  end
+else
+  curEnv = os.getenv("VIRTUAL_ENVIRONMENT_TAG")
+end
+function envoy_on_request(request_handle)
+  local env = request_handle:headers()[envHeader]
+  if env == nil and curEnv ~= nil then
+    request_handle:headers():add(envHeader, curEnv)
+  end
+end
+    `, " \n")
 }
