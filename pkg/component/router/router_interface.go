@@ -1,7 +1,7 @@
 package router
 
 import (
-	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha2"
+	envv1alpha2 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha2"
 	"alibaba.com/virtual-env-operator/pkg/component/router/common"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -14,18 +14,18 @@ type IsolationRouter interface {
 	RegisterReconcileWatcher(c controller.Controller) error
 
 	// generate dynamical route for specified service, according to cluster information
-	GenerateRoute(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha1.VirtualEnvironment,
+	GenerateRoute(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
 		namespace string, svcName string, availableLabels []string, relatedDeployments map[string]string) error
 
 	// clean up dynamical route for specified service
 	CleanupRoute(client client.Client, namespace string, svcName string) error
 
 	// check whether tag appender exist and up-to-date
-	CheckTagAppender(client client.Client, virtualEnv *envv1alpha1.VirtualEnvironment,
+	CheckTagAppender(client client.Client, virtualEnv *envv1alpha2.VirtualEnvironment,
 		namespace string, name string) common.TagAppenderStatus
 
 	// create auto tag appender to all services in namespace
-	CreateTagAppender(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha1.VirtualEnvironment,
+	CreateTagAppender(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
 		namespace string, name string) error
 
 	// delete auto tag appender from namespace

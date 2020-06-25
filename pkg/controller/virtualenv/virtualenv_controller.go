@@ -1,7 +1,7 @@
 package virtualenv
 
 import (
-	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha2"
+	envv1alpha2 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha2"
 	"alibaba.com/virtual-env-operator/pkg/component/parser"
 	"alibaba.com/virtual-env-operator/pkg/component/router"
 	"alibaba.com/virtual-env-operator/pkg/component/router/common"
@@ -45,7 +45,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// Watch for changes to primary resource VirtualEnv
-	err = c.Watch(&source.Kind{Type: &envv1alpha1.VirtualEnvironment{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &envv1alpha2.VirtualEnvironment{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 }
 
 // create or delete tag appender according to virtual environment configure
-func (r *ReconcileVirtualEnv) checkTagAppender(virtualEnv *envv1alpha1.VirtualEnvironment,
+func (r *ReconcileVirtualEnv) checkTagAppender(virtualEnv *envv1alpha2.VirtualEnvironment,
 	request reconcile.Request, isVirtualEnvChanged bool, logger logr.Logger) error {
 	tagAppenderStatus := router.GetDefaultRoute().CheckTagAppender(r.client, virtualEnv, request.Namespace, request.Name)
 	if virtualEnv.Spec.EnvHeader.AutoInject {
@@ -125,8 +125,8 @@ func (r *ReconcileVirtualEnv) checkTagAppender(virtualEnv *envv1alpha1.VirtualEn
 }
 
 // fetch the VirtualEnv instance from request
-func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logger logr.Logger) (*envv1alpha1.VirtualEnvironment, error) {
-	virtualEnv := &envv1alpha1.VirtualEnvironment{}
+func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logger logr.Logger) (*envv1alpha2.VirtualEnvironment, error) {
+	virtualEnv := &envv1alpha2.VirtualEnvironment{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, virtualEnv)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -158,7 +158,7 @@ func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logg
 
 // delete specified virtual env instance
 func (r *ReconcileVirtualEnv) deleteVirtualEnv(namespace string, name string, logger logr.Logger) {
-	err := shared.DeleteIns(r.client, namespace, name, &envv1alpha1.VirtualEnvironment{})
+	err := shared.DeleteIns(r.client, namespace, name, &envv1alpha2.VirtualEnvironment{})
 	if err != nil {
 		logger.Error(err, "Failed to remove VirtualEnv instance "+name)
 	} else {
@@ -167,7 +167,7 @@ func (r *ReconcileVirtualEnv) deleteVirtualEnv(namespace string, name string, lo
 }
 
 // handle empty virtual env configure item with default value
-func (r *ReconcileVirtualEnv) handleDefaultConfig(virtualEnv *envv1alpha1.VirtualEnvironment) {
+func (r *ReconcileVirtualEnv) handleDefaultConfig(virtualEnv *envv1alpha2.VirtualEnvironment) {
 	if virtualEnv.Spec.EnvHeader.Name == "" {
 		virtualEnv.Spec.EnvHeader.Name = defaultEnvHeader
 	}

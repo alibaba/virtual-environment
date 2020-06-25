@@ -1,7 +1,7 @@
 package istio
 
 import (
-	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha2"
+	envv1alpha2 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha2"
 	"alibaba.com/virtual-env-operator/pkg/component/router/common"
 	"alibaba.com/virtual-env-operator/pkg/component/router/istio/envoy"
 	"alibaba.com/virtual-env-operator/pkg/component/router/istio/http"
@@ -25,7 +25,7 @@ type HttpRouter struct {
 }
 
 // generate virtual services and destination rules
-func (r *HttpRouter) GenerateRoute(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha1.VirtualEnvironment,
+func (r *HttpRouter) GenerateRoute(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
 	namespace string, svcName string, availableLabels []string, relatedDeployments map[string]string) error {
 	err := r.reconcileVirtualService(client, scheme, virtualEnv, namespace, svcName, availableLabels, relatedDeployments)
 	if err != nil {
@@ -55,21 +55,21 @@ func (r *HttpRouter) CleanupRoute(client client.Client, namespace string, svcNam
 func (r *HttpRouter) RegisterReconcileWatcher(c controller.Controller) error {
 	err := c.Watch(&source.Kind{Type: &networkingv1alpha3.VirtualService{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &envv1alpha1.VirtualEnvironment{},
+		OwnerType:    &envv1alpha2.VirtualEnvironment{},
 	})
 	if err != nil {
 		return err
 	}
 	err = c.Watch(&source.Kind{Type: &networkingv1alpha3.DestinationRule{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &envv1alpha1.VirtualEnvironment{},
+		OwnerType:    &envv1alpha2.VirtualEnvironment{},
 	})
 	if err != nil {
 		return err
 	}
 	err = c.Watch(&source.Kind{Type: &networkingv1alpha3api.EnvoyFilter{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &envv1alpha1.VirtualEnvironment{},
+		OwnerType:    &envv1alpha2.VirtualEnvironment{},
 	})
 	if err != nil {
 		return err
@@ -78,7 +78,7 @@ func (r *HttpRouter) RegisterReconcileWatcher(c controller.Controller) error {
 }
 
 // look for envoy filter instance in namespace
-func (r *HttpRouter) CheckTagAppender(client client.Client, virtualEnv *envv1alpha1.VirtualEnvironment,
+func (r *HttpRouter) CheckTagAppender(client client.Client, virtualEnv *envv1alpha2.VirtualEnvironment,
 	namespace string, name string) common.TagAppenderStatus {
 	envoyFilter := &networkingv1alpha3api.EnvoyFilter{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, envoyFilter)
@@ -94,7 +94,7 @@ func (r *HttpRouter) CheckTagAppender(client client.Client, virtualEnv *envv1alp
 }
 
 // create envoy filter to automatically append tag to service
-func (r *HttpRouter) CreateTagAppender(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha1.VirtualEnvironment,
+func (r *HttpRouter) CreateTagAppender(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
 	namespace string, name string) error {
 	tagAppender := envoy.TagAppenderFilter(namespace, name, virtualEnv.Spec.EnvLabel.Name, virtualEnv.Spec.EnvHeader.Name)
 	// set VirtualEnv instance as the owner and controller
@@ -120,7 +120,7 @@ func (r *HttpRouter) DeleteTagAppender(client client.Client, namespace string, n
 }
 
 // reconcile virtual service according to related deployments and available labels
-func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha1.VirtualEnvironment,
+func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
 	namespace string, svcName string, availableLabels []string, relatedDeployments map[string]string) error {
 	virtualSvc := http.VirtualService(namespace, svcName, availableLabels, relatedDeployments, virtualEnv.Spec)
 	foundVirtualSvc := &networkingv1alpha3.VirtualService{}
@@ -151,7 +151,7 @@ func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runti
 }
 
 // reconcile destination rule according to related deployments
-func (r *HttpRouter) reconcileDestinationRule(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha1.VirtualEnvironment,
+func (r *HttpRouter) reconcileDestinationRule(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
 	namespace string, svcName string, relatedDeployments map[string]string) error {
 	destRule := http.DestinationRule(namespace, svcName, relatedDeployments, virtualEnv.Spec.EnvLabel.Name)
 	foundDestRule := &networkingv1alpha3.DestinationRule{}
@@ -183,7 +183,7 @@ func (r *HttpRouter) reconcileDestinationRule(client client.Client, scheme *runt
 
 // create virtual service instance
 func (r *HttpRouter) createVirtualService(client client.Client, scheme *runtime.Scheme,
-	virtualEnv *envv1alpha1.VirtualEnvironment, virtualSvc *networkingv1alpha3.VirtualService) error {
+	virtualEnv *envv1alpha2.VirtualEnvironment, virtualSvc *networkingv1alpha3.VirtualService) error {
 	// set VirtualEnv instance as the owner and controller
 	err := controllerutil.SetControllerReference(virtualEnv, virtualSvc, scheme)
 	if err != nil {
@@ -201,7 +201,7 @@ func (r *HttpRouter) createVirtualService(client client.Client, scheme *runtime.
 
 // create destination rule instance
 func (r *HttpRouter) createDestinationRule(client client.Client, scheme *runtime.Scheme,
-	virtualEnv *envv1alpha1.VirtualEnvironment, destRule *networkingv1alpha3.DestinationRule) error {
+	virtualEnv *envv1alpha2.VirtualEnvironment, destRule *networkingv1alpha3.DestinationRule) error {
 	// set VirtualEnv instance as the owner and controller
 	err := controllerutil.SetControllerReference(virtualEnv, destRule, scheme)
 	if err != nil {

@@ -1,7 +1,7 @@
 package http
 
 import (
-	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha2"
+	envv1alpha2 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha2"
 	"alibaba.com/virtual-env-operator/pkg/shared"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis/istio/common/v1alpha1"
@@ -13,7 +13,7 @@ import (
 
 // generate istio virtual service instance
 func VirtualService(namespace string, svcName string, availableLabels []string, relatedDeployments map[string]string,
-	spec envv1alpha1.VirtualEnvironmentSpec) *networkingv1alpha3.VirtualService {
+	spec envv1alpha2.VirtualEnvironmentSpec) *networkingv1alpha3.VirtualService {
 	envHeaderName := spec.EnvHeader.Name
 	envHeaderAliases := spec.EnvHeader.Aliases
 	envSplitter := spec.EnvLabel.Splitter
@@ -105,7 +105,7 @@ func isDestinationEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv
 
 // calculate and generate http route instance
 func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]string, labelVal string,
-	headerKeyName string, headerKeyAlias []envv1alpha1.EnvHeaderAliasSpec, splitter string, port uint32,
+	headerKeyName string, headerKeyAlias []envv1alpha2.EnvHeaderAliasSpec, splitter string, port uint32,
 	defaultSubset string, totalPortCount int) ([]networkingv1alpha3.HTTPRoute, bool) {
 	possibleRoutes := getPossibleRoutes(relatedDeployments, labelVal, splitter)
 	if len(possibleRoutes) > 0 {
