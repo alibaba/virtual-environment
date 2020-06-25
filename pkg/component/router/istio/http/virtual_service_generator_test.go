@@ -6,18 +6,22 @@ import (
 
 func TestVirtualServiceMatchRoute(t *testing.T) {
 	deployments := map[string]string{"dep1": "a.b.c", "dep2": "a.b", "dep3": "a", "dep4": "a.d", "dep5": "a.d.e.f.g"}
-	route, ok := virtualServiceMatchRoute("testSvc", deployments, "a.b", "test", ".", 0, "dev", 1)
+	routes, ok := virtualServiceMatchRoute("testSvc", deployments, "a.b", "test",
+		nil, ".", 0, "dev", 1)
+	route := routes[0]
 	println(ok)
 	println(route.Match[0].Headers["test"].Exact)
 	println(route.Route[0].Destination.Subset)
 	if !ok || route.Match[0].Headers["test"].Exact != "a.b" || route.Route[0].Destination.Subset != "a-b" {
 		t.Fail()
 	}
-	route, ok = virtualServiceMatchRoute("testSvc", deployments, "a.d.e.f", "test", ".", 0, "dev", 1)
+	routes, ok = virtualServiceMatchRoute("testSvc", deployments, "a.d.e.f", "test",
+		nil, ".", 0, "dev", 1)
 	if !ok || route.Match[0].Headers["test"].Exact != "a.d.e.f" || route.Route[0].Destination.Subset != "a-d" {
 		t.Fail()
 	}
-	route, ok = virtualServiceMatchRoute("testSvc", deployments, "b.x", "test", ".", 0, "dev", 1)
+	routes, ok = virtualServiceMatchRoute("testSvc", deployments, "b.x", "test",
+		nil, ".", 0, "dev", 1)
 	if ok {
 		t.Fail()
 	}

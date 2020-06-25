@@ -37,15 +37,10 @@ func VirtualService(namespace string, svcName string, availableLabels []string, 
 	}
 	for _, port := range serviceInfo.Ports {
 		for _, label := range availableLabels {
-			matchRoute, ok := virtualServiceMatchRoute(svcName, relatedDeployments, label, envHeaderName,
-				envSplitter, port, toSubsetName(defaultSubset), len(serviceInfo.Ports))
+			matchRoutes, ok := virtualServiceMatchRoute(svcName, relatedDeployments, label, envHeaderName,
+				envHeaderAliases, envSplitter, port, toSubsetName(defaultSubset), len(serviceInfo.Ports))
 			if ok {
-				virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
-			}
-			for _, alias := range envHeaderAliases {
-				matchRoute, ok := virtualServiceMatchRoute(svcName, relatedDeployments, label, alias.Name,
-					envSplitter, port, toSubsetName(defaultSubset), len(serviceInfo.Ports))
-				if ok {
+				for _, matchRoute := range matchRoutes {
 					virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
 				}
 			}
@@ -109,16 +104,25 @@ func isDestinationEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv
 }
 
 // calculate and generate http route instance
-func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]string, labelVal string, headerKey string,
-	splitter string, port uint32, defaultSubset string, totalPortCount int) (networkingv1alpha3.HTTPRoute, bool) {
+func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]string, labelVal string,
+	headerKeyName string, headerKeyAlias []envv1alpha1.EnvHeaderAliasSpec, splitter string, port uint32,
+	defaultSubset string, totalPortCount int) ([]networkingv1alpha3.HTTPRoute, bool) {
 	possibleRoutes := getPossibleRoutes(relatedDeployments, labelVal, splitter)
 	if len(possibleRoutes) > 0 {
 		var subsetName = toSubsetName(findLongestString(possibleRoutes))
 		if defaultSubset != subsetName {
-			return matchRoute(serviceName, headerKey, labelVal, port, subsetName, totalPortCount), true
+			var routes = []networkingv1alpha3.HTTPRoute{
+				matchRoute(serviceName, headerKeyName, labelVal, port, subsetName, totalPortCount),
+			}
+			if headerKeyAlias != nil {
+				for _, alias := range headerKeyAlias {
+					routes = append(routes, matchRoute(serviceName, alias.Name, labelVal, port, subsetName, totalPortCount))
+				}
+			}
+			return routes, true
 		}
 	}
-	return networkingv1alpha3.HTTPRoute{}, false
+	return []networkingv1alpha3.HTTPRoute{}, false
 }
 
 // fetch all route rule for specified label
