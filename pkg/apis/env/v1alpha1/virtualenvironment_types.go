@@ -33,8 +33,18 @@ type EnvHeaderSpec struct {
 	// Name of the header
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name,omitempty"`
+	// Other Names which also can be used for match env
+	Aliases []EnvHeaderAliasSpec `json:"aliases,omitempty"`
 	// Whether auto inject env header via sidecar
 	AutoInject bool `json:"autoInject,omitempty"`
+}
+
+type EnvHeaderAliasSpec struct {
+	// Alias name of the header
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name,omitempty"`
+	// Regular expression to extract env tag from header value
+	Pattern string `json:"pattern,omitempty"`
 }
 
 // VirtualEnvironmentStatus defines the observed state of VirtualEnvironment
