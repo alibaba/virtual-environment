@@ -122,8 +122,7 @@ func (r *HttpRouter) DeleteTagAppender(client client.Client, namespace string, n
 // reconcile virtual service according to related deployments and available labels
 func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha1.VirtualEnvironment,
 	namespace string, svcName string, availableLabels []string, relatedDeployments map[string]string) error {
-	virtualSvc := http.VirtualService(namespace, svcName, availableLabels, relatedDeployments,
-		virtualEnv.Spec.EnvHeader.Name, virtualEnv.Spec.EnvLabel.Splitter, virtualEnv.Spec.EnvLabel.DefaultSubset)
+	virtualSvc := http.VirtualService(namespace, svcName, availableLabels, relatedDeployments, virtualEnv.Spec)
 	foundVirtualSvc := &networkingv1alpha3.VirtualService{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: svcName, Namespace: namespace}, foundVirtualSvc)
 	if err != nil {

@@ -1,26 +1,8 @@
 package http
 
 import (
-	"alibaba.com/virtual-env-operator/pkg/component/parser"
 	"testing"
 )
-
-func TestDestinationRuleMatchSubset(t *testing.T) {
-	rule := destinationRuleMatchSubset("test", "demo")
-	if rule.Name != "demo" || rule.Labels["test"] != "demo" {
-		t.Fail()
-	}
-}
-
-func TestGetKeys(t *testing.T) {
-	keys := parser.GetKeys(map[string]bool{"a": true, "c": false, "e": true})
-	if len(keys) != 3 {
-		t.Fail()
-	}
-	if keys[0] != "a" || keys[1] != "c" || keys[2] != "e" {
-		t.Fail()
-	}
-}
 
 func TestVirtualServiceMatchRoute(t *testing.T) {
 	deployments := map[string]string{"dep1": "a.b.c", "dep2": "a.b", "dep3": "a", "dep4": "a.d", "dep5": "a.d.e.f.g"}

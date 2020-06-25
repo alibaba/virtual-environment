@@ -1,20 +1,23 @@
 package http
 
 import (
+	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha2"
 	"alibaba.com/virtual-env-operator/pkg/shared"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis/istio/common/v1alpha1"
 	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
 	"reflect"
-	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
 
 // generate istio virtual service instance
-func VirtualService(namespace string, svcName string, availableLabels []string,
-	relatedDeployments map[string]string, envHeader string, envSplitter string,
-	defaultSubset string) *networkingv1alpha3.VirtualService {
+func VirtualService(namespace string, svcName string, availableLabels []string, relatedDeployments map[string]string,
+	spec envv1alpha1.VirtualEnvironmentSpec) *networkingv1alpha3.VirtualService {
+	envHeaderName := spec.EnvHeader.Name
+	envHeaderAliases := spec.EnvHeader.Aliases
+	envSplitter := spec.EnvLabel.Splitter
+	defaultSubset := spec.EnvLabel.DefaultSubset
 	virtualSvc := &networkingv1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      svcName,
@@ -34,10 +37,17 @@ func VirtualService(namespace string, svcName string, availableLabels []string,
 	}
 	for _, port := range serviceInfo.Ports {
 		for _, label := range availableLabels {
-			matchRoute, ok := virtualServiceMatchRoute(svcName, relatedDeployments, label, envHeader,
+			matchRoute, ok := virtualServiceMatchRoute(svcName, relatedDeployments, label, envHeaderName,
 				envSplitter, port, toSubsetName(defaultSubset), len(serviceInfo.Ports))
 			if ok {
 				virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
+			}
+			for _, alias := range envHeaderAliases {
+				matchRoute, ok := virtualServiceMatchRoute(svcName, relatedDeployments, label, alias.Name,
+					envSplitter, port, toSubsetName(defaultSubset), len(serviceInfo.Ports))
+				if ok {
+					virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
+				}
 			}
 		}
 		virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP,
@@ -46,51 +56,9 @@ func VirtualService(namespace string, svcName string, availableLabels []string,
 	return virtualSvc
 }
 
-// generate istio destination rule instance
-func DestinationRule(namespace string, svcName string, relatedDeployments map[string]string,
-	envLabel string) *networkingv1alpha3.DestinationRule {
-	destRule := &networkingv1alpha3.DestinationRule{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      svcName,
-			Namespace: namespace,
-		},
-		Spec: networkingv1alpha3.DestinationRuleSpec{
-			Host:    svcName,
-			Subsets: []networkingv1alpha3.Subset{},
-		},
-	}
-	for _, label := range relatedDeployments {
-		destRule.Spec.Subsets = append(destRule.Spec.Subsets, destinationRuleMatchSubset(envLabel, label))
-	}
-	return destRule
-}
-
 // delete VirtualService
 func DeleteVirtualService(client client.Client, namespace string, name string) error {
 	return shared.DeleteIns(client, namespace, name, &networkingv1alpha3.VirtualService{})
-}
-
-// delete DestinationRule
-func DeleteDestinationRule(client client.Client, namespace string, name string) error {
-	return shared.DeleteIns(client, namespace, name, &networkingv1alpha3.DestinationRule{})
-}
-
-// check whether DestinationRule is different
-func IsDifferentDestinationRule(spec1 *networkingv1alpha3.DestinationRuleSpec,
-	spec2 *networkingv1alpha3.DestinationRuleSpec, label string) bool {
-	if len(spec1.Subsets) != len(spec2.Subsets) {
-		return true
-	}
-	for _, subset1 := range spec1.Subsets {
-		subset2 := findSubsetByName(spec2.Subsets, subset1.Name)
-		if subset2 == nil {
-			return true
-		}
-		if subset1.Labels[label] != subset2.Labels[label] {
-			return true
-		}
-	}
-	return false
 }
 
 // check whether VirtualService is different
@@ -111,16 +79,6 @@ func IsDifferentVirtualService(spec1 *networkingv1alpha3.VirtualServiceSpec, spe
 		}
 	}
 	return false
-}
-
-// find subset from list
-func findSubsetByName(subsets []networkingv1alpha3.Subset, name string) *networkingv1alpha3.Subset {
-	for _, subset := range subsets {
-		if subset.Name == name {
-			return &subset
-		}
-	}
-	return nil
 }
 
 // check whether HTTPRoute exist in list
@@ -150,25 +108,10 @@ func isDestinationEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv
 		route.Route[0].Destination.Port.Number == target.Route[0].Destination.Port.Number
 }
 
-// generate istio destination rule subset instance
-func destinationRuleMatchSubset(labelKey string, labelValue string) networkingv1alpha3.Subset {
-	return networkingv1alpha3.Subset{
-		Name: toSubsetName(labelValue),
-		Labels: map[string]string{
-			labelKey: labelValue,
-		},
-	}
-}
-
 // calculate and generate http route instance
 func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]string, labelVal string, headerKey string,
 	splitter string, port uint32, defaultSubset string, totalPortCount int) (networkingv1alpha3.HTTPRoute, bool) {
-	var possibleRoutes []string
-	for _, v := range relatedDeployments {
-		if leveledEqual(labelVal, v, splitter) {
-			possibleRoutes = append(possibleRoutes, v)
-		}
-	}
+	possibleRoutes := getPossibleRoutes(relatedDeployments, labelVal, splitter)
 	if len(possibleRoutes) > 0 {
 		var subsetName = toSubsetName(findLongestString(possibleRoutes))
 		if defaultSubset != subsetName {
@@ -178,22 +121,15 @@ func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]
 	return networkingv1alpha3.HTTPRoute{}, false
 }
 
-// replace invalid chars in subset name
-func toSubsetName(labelValue string) string {
-	re, _ := regexp.Compile("[_.]")
-	return re.ReplaceAllString(labelValue, "-")
-}
-
-// generate istio route
-func generateHttpRoute(serviceName string, port uint32, subsetName string) []networkingv1alpha3.HTTPRouteDestination {
-	return []networkingv1alpha3.HTTPRouteDestination{{
-		Destination: networkingv1alpha3.Destination{
-			Host:   serviceName,
-			Subset: subsetName,
-			Port:   networkingv1alpha3.PortSelector{Number: port},
-		},
-		Weight: 100,
-	}}
+// fetch all route rule for specified label
+func getPossibleRoutes(relatedDeployments map[string]string, labelVal string, splitter string) []string {
+	var possibleRoutes []string
+	for _, v := range relatedDeployments {
+		if leveledEqual(labelVal, v, splitter) {
+			possibleRoutes = append(possibleRoutes, v)
+		}
+	}
+	return possibleRoutes
 }
 
 // generate default http route instance
@@ -226,6 +162,18 @@ func matchRoute(serviceName string, headerKey string, labelVal string, port uint
 		route.Match[0].Port = port
 	}
 	return route
+}
+
+// generate istio route
+func generateHttpRoute(serviceName string, port uint32, subsetName string) []networkingv1alpha3.HTTPRouteDestination {
+	return []networkingv1alpha3.HTTPRouteDestination{{
+		Destination: networkingv1alpha3.Destination{
+			Host:   serviceName,
+			Subset: subsetName,
+			Port:   networkingv1alpha3.PortSelector{Number: port},
+		},
+		Weight: 100,
+	}}
 }
 
 // get the longest string in list
