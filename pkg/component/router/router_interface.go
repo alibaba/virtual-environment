@@ -1,7 +1,7 @@
 package router
 
 import (
-	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1"
+	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha2"
 	"alibaba.com/virtual-env-operator/pkg/component/router/common"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"

@@ -3,7 +3,7 @@
 Virtual environment instances are defined through Kubernetes resources of `VirtualEnvironment` kind. This is an example of its content structure (from [env.alibaba.com_v1alpha1_virtualenvironment_cr.yaml](https://github.com/alibaba/virtual-environment/blob/master/deploy/crds/env.alibaba.com_v1alpha1_virtualenvironment_cr.yaml))
 
 ```yaml
-apiVersion: env.alibaba.com/v1alpha1
+apiVersion: env.alibaba.com/v1alpha2
 kind: VirtualEnvironment
 metadata:
   name: example-virtualenv

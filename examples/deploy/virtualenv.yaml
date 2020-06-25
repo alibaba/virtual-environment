@@ -1,4 +1,4 @@
-apiVersion: env.alibaba.com/v1alpha1
+apiVersion: env.alibaba.com/v1alpha2
 kind: VirtualEnvironment
 metadata:
   name: demo-virtualenv

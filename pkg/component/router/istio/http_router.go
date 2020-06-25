@@ -1,7 +1,7 @@
 package istio
 
 import (
-	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha1"
+	envv1alpha1 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha2"
 	"alibaba.com/virtual-env-operator/pkg/component/router/common"
 	"alibaba.com/virtual-env-operator/pkg/component/router/istio/envoy"
 	"alibaba.com/virtual-env-operator/pkg/component/router/istio/http"

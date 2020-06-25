@@ -3,7 +3,7 @@
 虚拟环境实例通过`VirtualEnvironment`类型的Kubernetes资源定义。其内容结构示例如下（来自[env.alibaba.com_v1alpha1_virtualenvironment_cr.yaml](https://github.com/alibaba/virtual-environment/blob/master/deploy/crds/env.alibaba.com_v1alpha1_virtualenvironment_cr.yaml)）：
 
 ```yaml
-apiVersion: env.alibaba.com/v1alpha1
+apiVersion: env.alibaba.com/v1alpha2
 kind: VirtualEnvironment
 metadata:
   name: example-virtualenv
