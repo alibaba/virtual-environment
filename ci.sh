@@ -22,6 +22,8 @@ if [[ "${ci_image}" = "" || "${ci_image}" = "_" ]]; then
     ci_image="${default_image}:${default_tag}"
 fi
 ns="${2:-virtual-env-ci}"
+
+echo "Using image $ci_image"
 echo "Using namespace $ns"
 
 echo "---- Begin CI Task ----"

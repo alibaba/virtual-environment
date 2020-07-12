@@ -19,7 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_virtualenv")
+var log = logf.Log.WithName("virtualenv-listener")
 
 const defaultEnvHeader = "X-Virtual-Env"
 const defaultEnvLabel = "virtual-env"

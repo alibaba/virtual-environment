@@ -2,7 +2,10 @@ package statefulset
 
 import (
 	"alibaba.com/virtual-env-operator/pkg/controller/util"
+	"alibaba.com/virtual-env-operator/pkg/shared"
+	"context"
 	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -13,7 +16,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_statefulset")
+var log = logf.Log.WithName("statefulset-listener")
 
 // Add creates a new StatefulSet Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -60,10 +63,29 @@ type ReconcileStatefulSet struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileStatefulSet) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	return util.Reconcile(r.client, request, &appsv1.StatefulSet{}, getLabels)
-}
+	reqLogger := log.WithValues("Ref", request.Namespace+":"+request.Name)
 
-// Get label from StatefulSet instance
-func getLabels(statefulset interface{}) map[string]string {
-	return statefulset.(appsv1.StatefulSet).Spec.Template.Labels
+	shared.Lock.RLock()
+
+	statefulset := &appsv1.StatefulSet{}
+	err := r.client.Get(context.TODO(), request.NamespacedName, statefulset)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			reqLogger.Info("Removing StatefulSet")
+			delete(shared.AvailableLabels, util.LabelMark("StatefulSet", request.Name))
+			shared.Lock.RUnlock()
+			shared.ReconcileVirtualEnv(request.Namespace, reqLogger)
+			return reconcile.Result{}, nil
+		}
+		shared.Lock.RUnlock()
+		return reconcile.Result{}, err
+	}
+
+	reqLogger.Info("Adding StatefulSet")
+	shared.AvailableLabels[util.LabelMark("StatefulSet", request.Name)] = statefulset.Spec.Template.Labels
+
+	shared.Lock.RUnlock()
+
+	shared.ReconcileVirtualEnv(request.Namespace, reqLogger)
+	return reconcile.Result{}, nil
 }

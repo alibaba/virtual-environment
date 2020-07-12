@@ -119,7 +119,7 @@ func (r *HttpRouter) DeleteTagAppender(client client.Client, namespace string, n
 	return err
 }
 
-// reconcile virtual service according to related deployments and available labels
+// reconcile virtual service according to related pod-resources and available labels
 func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
 	namespace string, svcName string, availableLabels []string, relatedDeployments map[string]string) error {
 	virtualSvc := http.VirtualService(namespace, svcName, availableLabels, relatedDeployments, virtualEnv.Spec)
@@ -150,7 +150,7 @@ func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runti
 	return nil
 }
 
-// reconcile destination rule according to related deployments
+// reconcile destination rule according to related pod-resources
 func (r *HttpRouter) reconcileDestinationRule(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
 	namespace string, svcName string, relatedDeployments map[string]string) error {
 	destRule := http.DestinationRule(namespace, svcName, relatedDeployments, virtualEnv.Spec.EnvLabel.Name)

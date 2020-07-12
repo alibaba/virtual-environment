@@ -22,7 +22,7 @@ const (
 	annotationHosts    = "kt-virtual-environment/hosts"
 )
 
-var log = logf.Log.WithName("controller_servicelistener")
+var log = logf.Log.WithName("service-listener")
 
 // Add creates a new ServiceListener Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
