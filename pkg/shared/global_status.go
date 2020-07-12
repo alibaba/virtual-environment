@@ -20,5 +20,5 @@ var VirtualEnvIns = ""
 // service name -> service info
 var AvailableServices = make(map[string]ServiceInfo)
 
-// deployment name -> labels
-var AvailableDeployments = make(map[string]map[string]string)
+// "resource type # name" -> labels
+var AvailableLabels = make(map[string]map[string]string)

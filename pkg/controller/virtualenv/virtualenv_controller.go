@@ -95,8 +95,8 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 	err = r.checkTagAppender(virtualEnv, request, shared.IsVirtualEnvChanged(err), reqLogger)
 	for svc, service := range shared.AvailableServices {
 		selector := service.Selectors
-		availableLabels := parser.FindAllVirtualEnvLabelValues(shared.AvailableDeployments, virtualEnv.Spec.EnvLabel.Name)
-		relatedDeployments := parser.FindAllRelatedDeployments(shared.AvailableDeployments, selector, virtualEnv.Spec.EnvLabel.Name)
+		availableLabels := parser.FindAllVirtualEnvLabelValues(shared.AvailableLabels, virtualEnv.Spec.EnvLabel.Name)
+		relatedDeployments := parser.FindAllRelatedLabels(shared.AvailableLabels, selector, virtualEnv.Spec.EnvLabel.Name)
 		if len(availableLabels) > 0 && len(relatedDeployments) > 0 {
 			// update mesh controller panel configure
 			err = router.GetDefaultRoute().GenerateRoute(r.client, r.scheme, virtualEnv, request.Namespace, svc, availableLabels, relatedDeployments)
