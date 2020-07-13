@@ -12,7 +12,7 @@ import (
 )
 
 // generate istio virtual service instance
-func VirtualService(namespace string, svcName string, availableLabels []string, relatedDeployments map[string]string,
+func VirtualService(namespace string, svcName string, availableLabels []string, relatedDeployments []string,
 	spec envv1alpha2.VirtualEnvironmentSpec) *networkingv1alpha3.VirtualService {
 	envHeaderName := spec.EnvHeader.Name
 	envHeaderAliases := spec.EnvHeader.Aliases
@@ -104,7 +104,7 @@ func isDestinationEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv
 }
 
 // calculate and generate http route instance
-func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]string, labelVal string,
+func virtualServiceMatchRoute(serviceName string, relatedDeployments []string, labelVal string,
 	headerKeyName string, headerKeyAlias []envv1alpha2.EnvHeaderAliasSpec, splitter string, port uint32,
 	defaultSubset string, totalPortCount int) ([]networkingv1alpha3.HTTPRoute, bool) {
 	possibleRoutes := getPossibleRoutes(relatedDeployments, labelVal, splitter)
@@ -126,7 +126,7 @@ func virtualServiceMatchRoute(serviceName string, relatedDeployments map[string]
 }
 
 // fetch all route rule for specified label
-func getPossibleRoutes(relatedDeployments map[string]string, labelVal string, splitter string) []string {
+func getPossibleRoutes(relatedDeployments []string, labelVal string, splitter string) []string {
 	var possibleRoutes []string
 	for _, v := range relatedDeployments {
 		if leveledEqual(labelVal, v, splitter) {

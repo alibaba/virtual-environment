@@ -8,7 +8,7 @@ import (
 )
 
 // generate istio destination rule instance
-func DestinationRule(namespace string, svcName string, relatedDeployments map[string]string,
+func DestinationRule(namespace string, svcName string, relatedDeployments []string,
 	envLabel string) *networkingv1alpha3.DestinationRule {
 	destRule := &networkingv1alpha3.DestinationRule{
 		ObjectMeta: metav1.ObjectMeta{

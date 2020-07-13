@@ -15,7 +15,7 @@ type IsolationRouter interface {
 
 	// generate dynamical route for specified service, according to cluster information
 	GenerateRoute(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
-		namespace string, svcName string, availableLabels []string, relatedDeployments map[string]string) error
+		namespace string, svcName string, availableLabels []string, relatedDeployments []string) error
 
 	// clean up dynamical route for specified service
 	CleanupRoute(client client.Client, namespace string, svcName string) error

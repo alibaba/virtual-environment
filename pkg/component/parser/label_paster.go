@@ -2,9 +2,9 @@ package parser
 
 // return map of deployment name to virtual label value
 func FindAllRelatedLabels(availableLabels map[string]map[string]string, selector map[string]string,
-	envLabel string) map[string]string {
-	relatedDeployments := make(map[string]string)
-	for dep, labels := range availableLabels {
+	envLabel string) []string {
+	var relatedDeployments []string
+	for _, labels := range availableLabels {
 		match := true
 		for k, v := range selector {
 			if labels[k] != v {
@@ -12,8 +12,8 @@ func FindAllRelatedLabels(availableLabels map[string]map[string]string, selector
 				break
 			}
 		}
-		if _, exist := labels[envLabel]; match && exist {
-			relatedDeployments[dep] = labels[envLabel]
+		if labelVal, exist := labels[envLabel]; match && exist {
+			relatedDeployments = append(relatedDeployments, labelVal)
 		}
 	}
 	return relatedDeployments

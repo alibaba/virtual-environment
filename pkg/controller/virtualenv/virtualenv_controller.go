@@ -99,7 +99,8 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 		relatedDeployments := parser.FindAllRelatedLabels(shared.AvailableLabels, selector, virtualEnv.Spec.EnvLabel.Name)
 		if len(availableLabels) > 0 && len(relatedDeployments) > 0 {
 			// update mesh controller panel configure
-			err = router.GetDefaultRoute().GenerateRoute(r.client, r.scheme, virtualEnv, request.Namespace, svc, availableLabels, relatedDeployments)
+			err = router.GetDefaultRoute().GenerateRoute(r.client, r.scheme, virtualEnv, request.Namespace, svc,
+				availableLabels, relatedDeployments)
 		}
 	}
 

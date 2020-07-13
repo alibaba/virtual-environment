@@ -26,7 +26,7 @@ type HttpRouter struct {
 
 // generate virtual services and destination rules
 func (r *HttpRouter) GenerateRoute(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
-	namespace string, svcName string, availableLabels []string, relatedDeployments map[string]string) error {
+	namespace string, svcName string, availableLabels []string, relatedDeployments []string) error {
 	err := r.reconcileVirtualService(client, scheme, virtualEnv, namespace, svcName, availableLabels, relatedDeployments)
 	if err != nil {
 		return err
@@ -121,7 +121,7 @@ func (r *HttpRouter) DeleteTagAppender(client client.Client, namespace string, n
 
 // reconcile virtual service according to related pod-resources and available labels
 func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
-	namespace string, svcName string, availableLabels []string, relatedDeployments map[string]string) error {
+	namespace string, svcName string, availableLabels []string, relatedDeployments []string) error {
 	virtualSvc := http.VirtualService(namespace, svcName, availableLabels, relatedDeployments, virtualEnv.Spec)
 	foundVirtualSvc := &networkingv1alpha3.VirtualService{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: svcName, Namespace: namespace}, foundVirtualSvc)
@@ -152,7 +152,7 @@ func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runti
 
 // reconcile destination rule according to related pod-resources
 func (r *HttpRouter) reconcileDestinationRule(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
-	namespace string, svcName string, relatedDeployments map[string]string) error {
+	namespace string, svcName string, relatedDeployments []string) error {
 	destRule := http.DestinationRule(namespace, svcName, relatedDeployments, virtualEnv.Spec.EnvLabel.Name)
 	foundDestRule := &networkingv1alpha3.DestinationRule{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: svcName, Namespace: namespace}, foundDestRule)
