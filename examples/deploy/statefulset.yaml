@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: service-name-env-placeholder
+  labels:
+    app: service-name-placeholder
+    version: 1.0.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-name-placeholder
+  template:
+    metadata:
+      labels:
+        app: service-name-placeholder
+        version: 1.0.0
+        virtual-env: app-env-placeholder  # here is the environment tag affect routing result
+    spec:
+      containers:
+        - name: service-name-placeholder
+          image: docker.io/virtualenvironment/app-image-placeholder:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: envMark  # this variable only used for api response text, not for routing
+              value: app-env-placeholder
+            - name: url
+              value: app-url-placeholder
+          ports:
+            - containerPort: 8080

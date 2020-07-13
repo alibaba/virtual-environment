@@ -26,7 +26,17 @@ hget() {
 }
 
 apply_deployment() {
-    cat ${basepath}/deployment.yaml | sed -e "s/service-name-env-placeholder/${s}-${e}/g" \
+    apply_pods "deployment"
+}
+
+apply_statefulset() {
+    apply_pods "statefulset"
+}
+
+apply_pods() {
+    type=${1}
+    ee=`echo ${e} | sed -e "s/\./-/g"`
+    cat ${basepath}/${type}.yaml | sed -e "s/service-name-env-placeholder/${s}-${ee}/g" \
                         -e "s/service-name-placeholder/${s}/g" \
                         -e "s/app-env-placeholder/${e}/g" \
                         -e "s/app-image-placeholder/`hget images ${s}`/g" \
@@ -51,21 +61,19 @@ for s in app-js app-go app-java; do
 done
 
 # Create required Deployments for each env mark
-e='dev'
-for s in app-js app-go app-java; do
+s='app-js'
+for e in 'dev' 'dev.proj1'; do
     apply_deployment
 done
-e='dev.proj1'
-for s in app-js app-java; do
+s='app-go'
+for e in 'dev' 'dev.proj2'; do
     apply_deployment
 done
-e='dev.proj2'
-for s in app-go; do
-    apply_deployment
-done
-e='dev.proj1.feature1'
-for s in app-java; do
-    apply_deployment
+
+# Create required Deployments for each env mark
+s='app-java'
+for e in 'dev' 'dev.proj1' 'dev.proj1.feature1'; do
+    apply_statefulset
 done
 
 # Create a VirtualEnvironment
