@@ -4,7 +4,7 @@
 
 主要包括：
 
-- 无法支持采用非Kubernetes原生服务发现机制的框架，目前Istio路由规则对Dubbo和SpringCloud等自己实现服务发现的框架无效
-- 无法支持非HTTP协议的通信，目前非HTTP协议在Istio中不能进行精细路由管控
+- 无法支持框架自带的非Kubernetes原始服务发现机制，如Dubbo和SpringCloud等需要[进行适配](zh-cn/ve/spring-cloud.md)
+- 无法支持非HTTP协议的通信，目前普通四层TCP流量在Istio中不能进行精细路由管控
 
 此外，由于Sidecar机制不会侵入应用程序内部逻辑，因而需要在应用程序中自行实现Header标签在请求之间的传递。若项目已经在使用OpenTracing SDK，可复用其baggage机制完成标签透传。也可[使用SDK](zh-cn/ve/use-sdk.md)或直接在代码中实现传递。

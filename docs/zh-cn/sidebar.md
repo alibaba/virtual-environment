@@ -15,6 +15,7 @@
 
 - 开发参考
   - [其他方案对比](zh-cn/ve/comparation.md)
+  - [适配SpringCloud](zh-cn/ve/spring-cloud.md)
   - [内部原理](zh-cn/ve/principle.md)
   - [问题排查](zh-cn/ve/trouble-shooting.md)
   - [扩展](zh-cn/ve/extension.md)
