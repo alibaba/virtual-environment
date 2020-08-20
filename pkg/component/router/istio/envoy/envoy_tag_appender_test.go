@@ -1,17 +1,18 @@
 package envoy
 
 import (
+	"strconv"
 	"testing"
 )
 
 func TestTagAppenderFilter(t *testing.T) {
-	patchStruct := buildPatchStruct("envLabel", "envHeader")
+	patchStruct := buildPatchStruct("envHeader")
 	if len(patchStruct.Fields) != 2 {
-		t.Fail()
+		t.Fatalf("patch fields count should not be " + strconv.Itoa(len(patchStruct.Fields)))
 	}
 	code := patchStruct.Fields["typed_config"].GetStructValue().Fields["inline_code"].GetStringValue()
-	if len(code) != 692 {
-		t.Fail()
+	if len(code) != 248 {
+		t.Fatalf("code len should not be " + strconv.Itoa(len(code)))
 	}
 
 }

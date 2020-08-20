@@ -46,19 +46,19 @@ func TagAppenderFilter(namespace string, name string, envLabel string, envHeader
 				},
 				Patch: &networkingv1alpha3.EnvoyFilter_Patch{
 					Operation: networkingv1alpha3.EnvoyFilter_Patch_INSERT_BEFORE,
-					Value:     buildPatchStruct(envLabel, envHeader),
+					Value:     buildPatchStruct(envHeader),
 				},
 			}},
 		},
 	}
 }
 
-func buildPatchStruct(envLabel string, envHeader string) *pbtypes.Struct {
+func buildPatchStruct(envHeader string) *pbtypes.Struct {
 	config := `{
         "name": "virtual.environment.lua",
         "typed_config": {
             "@type": "type.googleapis.com/envoy.config.filter.http.lua.v2.Lua",
-            "inline_code": "` + toOneLine(luaScript(envLabel, envHeader)) + `"
+            "inline_code": "` + toOneLine(luaScript(envHeader)) + `"
         }
     }`
 	val := &pbtypes.Struct{}
@@ -71,28 +71,13 @@ func toOneLine(text string) string {
 }
 
 // generate lua script to auto inject env tag from label to header
-func luaScript(envLabel string, envHeader string) string {
+func luaScript(envHeader string) string {
 	return strings.Trim(`
-local envLabel = "`+envLabel+`"
-local envHeader = "`+envHeader+`"
-local labels = os.getenv("ISTIO_METAJSON_LABELS")
-local curEnv
-if labels ~= nil then
-  local beginPos, endPos
-  _, beginPos = string.find(labels, '","' .. envLabel .. '":"', nil, true)
-  if beginPos ~= nil then
-    endPos = string.find(labels, '"', beginPos + 1)
-    if endPos ~= nil and endPos > beginPos then
-      curEnv = string.sub(labels, beginPos + 1, endPos - 1)
-    end
-  end
-else
-  curEnv = os.getenv("VIRTUAL_ENVIRONMENT_TAG")
-end
+local curEnv = os.getenv("VIRTUAL_ENVIRONMENT_TAG")
 function envoy_on_request(request_handle)
-  local env = request_handle:headers()[envHeader]
+  local env = request_handle:headers()["`+envHeader+`"]
   if env == nil and curEnv ~= nil then
-    request_handle:headers():add(envHeader, curEnv)
+    request_handle:headers():add("`+envHeader+`", curEnv)
   end
 end
     `, " \n")
