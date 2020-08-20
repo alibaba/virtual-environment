@@ -1,14 +1,15 @@
 package http
 
 import (
+	"reflect"
+	"strings"
+
 	envv1alpha2 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha2"
 	"alibaba.com/virtual-env-operator/pkg/shared"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis/istio/common/v1alpha1"
 	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 // generate istio virtual service instance
@@ -112,12 +113,7 @@ func virtualServiceMatchRoute(serviceName string, relatedDeployments []string, l
 		var subsetName = toSubsetName(findLongestString(possibleRoutes))
 		if defaultSubset != subsetName {
 			var routes = []networkingv1alpha3.HTTPRoute{
-				matchRoute(serviceName, headerKeyName, labelVal, port, subsetName, totalPortCount),
-			}
-			if headerKeyAlias != nil {
-				for _, alias := range headerKeyAlias {
-					routes = append(routes, matchRoute(serviceName, alias.Name, labelVal, port, subsetName, totalPortCount))
-				}
+				matchRoute(serviceName, headerKeyName, headerKeyAlias, labelVal, port, subsetName, totalPortCount),
 			}
 			return routes, true
 		}
@@ -150,17 +146,31 @@ func defaultRoute(name string, port uint32, defaultSubset string, totalPortCount
 }
 
 // generate istio virtual service http route instance
-func matchRoute(serviceName string, headerKey string, labelVal string, port uint32,
+func matchRoute(serviceName string, headerKey string, headerKeyAlias []envv1alpha2.EnvHeaderAliasSpec, labelVal string, port uint32,
 	subsetName string, totalPortCount int) networkingv1alpha3.HTTPRoute {
+
+	httpMatchRequests := []networkingv1alpha3.HTTPMatchRequest{{
+		Headers: map[string]v1alpha1.StringMatch{
+			headerKey: {
+				Exact: labelVal,
+			},
+		},
+	}}
+	if headerKeyAlias != nil {
+		for _, alias := range headerKeyAlias {
+			aliasHttpMatchRequest := networkingv1alpha3.HTTPMatchRequest{
+				Headers: map[string]v1alpha1.StringMatch{
+					alias.Name: {
+						Regex: alias.Pattern,
+					},
+				},
+			}
+			httpMatchRequests = append(httpMatchRequests, aliasHttpMatchRequest)
+		}
+	}
 	route := networkingv1alpha3.HTTPRoute{
 		Route: generateHttpRoute(serviceName, port, subsetName),
-		Match: []networkingv1alpha3.HTTPMatchRequest{{
-			Headers: map[string]v1alpha1.StringMatch{
-				headerKey: {
-					Exact: labelVal,
-				},
-			},
-		}},
+		Match: httpMatchRequests,
 	}
 	if totalPortCount > 1 {
 		route.Match[0].Port = port
