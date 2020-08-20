@@ -60,20 +60,18 @@ for s in app-js app-go app-java; do
     cat ${basepath}/service.yaml | sed -e "s/service-name-placeholder/${s}/g" | kubectl ${action} -n ${namespace} -f -
 done
 
-# Create required Deployments for each env mark
+# Create required Deployments or StatefulSet for each env mark
 s='app-js'
 for e in 'dev' 'dev.proj1'; do
     apply_deployment
 done
 s='app-go'
 for e in 'dev' 'dev.proj2'; do
-    apply_deployment
+    apply_statefulset
 done
-
-# Create required Deployments for each env mark
 s='app-java'
 for e in 'dev' 'dev.proj1' 'dev.proj1.feature1'; do
-    apply_statefulset
+    apply_deployment
 done
 
 # Create a VirtualEnvironment

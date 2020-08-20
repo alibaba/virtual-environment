@@ -23,14 +23,16 @@ kubectl create deployment sleep --image=virtualenvironment/sleep --dry-run -o ya
         | istioctl kube-inject -f - | kubectl apply -n default -f -
 ```
 
-使用`app.sh`脚本快速创建示例所需的VirtualEnvironment、Service和Deployment资源。
+KtEnv支持`Deployment`和`StatefulSet`对象的路由隔离，在这个例子中将部署3种不同语言实现的示例应用，其中`app-js`和`app-java`被部署为`Deployment`，而`app-go`被部署为`StatefulSet`，详见[app.sh文件](https://github.com/alibaba/virtual-environment/blob/master/examples/deploy/app.sh)内容。
+
+使用`app.sh`脚本快速创建示例所需的VirtualEnvironment、Deployment、StatefulSet和Service资源。
 
 ```bash
 # 启动演示的服务实例
 deploy/app.sh apply default
 ```
 
-依次使用`kubectl get virtualenvironment`、`kubectl get service`、`kubectl get deployment`命令查看各资源的创建情况，等待所有资源部署完成。
+依次使用`kubectl get virtualenvironment`、`kubectl get deployment`、`kubectl get statefulset`、`kubectl get service`命令查看各资源的创建情况，等待所有资源部署完成。
 
 进入同Namespace的任意一个Pod，例如前面步骤创建的sleep容器。
 
@@ -106,7 +108,8 @@ cd examples/springboot
 envMark=local mvn spring-boot:run
 
 # label参数指定本地服务加入的隔离域
-# app-java-dev是app-java服务在集群公共隔离域的Deployment实例名
+# app-java-dev是app-java服务在集群公共隔离域（即dev域）的Deployment实例名
+# 注意当前kt-connect仅支持Deployment对象，暂时无法将StatefulSet对象的流量导回本地
 sudo ktctl --label virtual-env=dev.proj2 --namespace default mesh app-java-dev --expose 8080
 ```
 
@@ -130,6 +133,8 @@ $ curl app-js:8080/demo
   [go @ dev.proj2] <-dev.proj2
   [node @ dev] <-dev.proj2
 ```
+
+PS：`ktctl`用于本地联调时所需的参数较多，实际使用时建议自行做一下封装哦~
 
 ## 清理示例资源
 

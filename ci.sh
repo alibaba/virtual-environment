@@ -76,15 +76,16 @@ kubectl create -n ${ns} deployment sleep --image=virtualenvironment/sleep --dry-
 examples/deploy/app.sh apply ${ns}
 
 # Wait for apps ready
+declare -i expect_count=9
 for i in `seq 50`; do
     count=`kubectl get -n ${ns} pods | awk '{print $3}' | grep 'Running' | wc -l`
-    if [[ ${count} -eq 9 ]]; then
+    if [[ ${count} -eq ${expect_count} ]]; then
         break
     fi
-    echo "waiting ... ${i} (count: ${count})"
+    echo "waiting ... ${i} (count: ${count}/${expect_count})"
     sleep 10s
 done
-if [[ ${count} -ne 9 ]]; then
+if [[ ${count} -ne ${expect_count} ]]; then
     echo "Apps deployment failed !!!"
     exit -1
 fi
