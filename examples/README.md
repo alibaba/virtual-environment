@@ -76,4 +76,4 @@ dev.proj2                          |  app-go  |
 
 ### 功能验证
 
-见[快速开始](https://alibaba.github.io/virtual-environment/#/zh-cn/ve/quickstart)文档。
+见[快速开始](https://alibaba.github.io/virtual-environment/#/zh-cn/doc/quickstart)文档。

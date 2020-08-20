@@ -1,4 +1,4 @@
-Virtual Environment Operator
+KtEnv (Virtual Environment Operator)
 ===========
 
 阿里测试环境服务隔离和联调机制的Kubernetes版实现，当前基于Istio。

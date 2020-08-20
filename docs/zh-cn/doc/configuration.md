@@ -27,4 +27,4 @@ spec:
 | envLabel.splitter      | .             | 虚拟环境名中用于划分环境默认路由层级的字符（只能是单个字符） |
 | envLabel.defaultSubset |               | 请求未匹配到任何存在的虚拟环境时，进行兜底虚拟环境名（默认为随机路由） |
 
-**注意**：VirtualEnvironment实例只对其所在的Namespace有效。如有需要，可以通过在多个Namespace分别创建相同配置的实例，实现[跨Namespace和跨集群的隔离](zh-cn/ve/cross-cluster.md)。
+**注意**：VirtualEnvironment实例只对其所在的Namespace有效。如有需要，可以通过在多个Namespace分别创建相同配置的实例，实现[跨Namespace和跨集群的隔离](zh-cn/doc/cross-cluster.md)。

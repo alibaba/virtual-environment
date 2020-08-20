@@ -42,7 +42,7 @@ kubectl apply -n default -f path-to-virtual-environment-cr.yaml
 
 After instance created, it would automatically watch all Service and Deployment resource **in the same Namespace** and generate isolation rule, thus form the virtual environment.
 
-Please refer to [configuration guide](en-us/ve/configuration.md) for the detail of the resource definition file, and modify the parameters according to the actual situation.
+Please refer to [configuration guide](en-us/doc/configuration.md) for the detail of the resource definition file, and modify the parameters according to the actual situation.
 
 ## Application adaptation
 
@@ -52,4 +52,4 @@ According to the virtual environment configuration, add a virtual environment la
 
 - Add mechanism for passing down environment name header in application (the default header key is `X-Virtual-Env`)
 
-Check [quick start](en-us/ve/quickstart.md) for a completed demonstrate.
+Check [quick start](en-us/doc/quickstart.md) for a completed demonstrate.

@@ -1,6 +1,6 @@
 # 配置Webhook组件
 
-VirtualEnvironment产品中包含一个全局的Admission Webhook组件，他的主要作用是将Pod上的`环境标`信息通过环境变量注入到Sidecar容器里，便于Sidecar为出口流量的Header添加恰当的环境标。倘若集群中无需使用流量自动染色功能（即创建VirtualEnvironment资源时，`envHeader.autoInject`值始终为`false`），则可以无需部署此组件。
+KtEnv产品中包含一个全局的Admission Webhook组件，他的主要作用是将Pod上的`环境标`信息通过环境变量注入到Sidecar容器里，便于Sidecar为出口流量的Header添加恰当的环境标。倘若集群中无需使用流量自动染色功能（即创建VirtualEnvironment资源时，`envHeader.autoInject`值始终为`false`），则可以无需部署此组件。
 
 Webhook的配置位于发布包的`webhooks`子目录内，名称是`virtualenvironment_tag_injector_webhook.yaml`，其中包含两项可配置内容。
 
@@ -45,7 +45,7 @@ tls_key_b64="$(openssl base64 -A < webhook-server-tls.key)"
 ca_pem_b64="$(openssl base64 -A < ca.crt)"
 ```
 
-进入部署包中的`webhooks`目录（见[部署文档](zh-cn/ve/deployment.md)），然后使用以下命令替换配置文件中的相应属性值。
+进入部署包中的`webhooks`目录（见[部署文档](zh-cn/doc/deployment.md)），然后使用以下命令替换配置文件中的相应属性值。
 
 ```bash
 cd webhooks

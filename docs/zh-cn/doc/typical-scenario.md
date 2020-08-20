@@ -10,7 +10,7 @@
 
 #### 2. 多服务联调
 
-在团队开发的场景下，结合kt-connect工具可使多个开发者共享相同的流量标签，形成可以相互调用的联调小圈子，个人还可以基于这个标签再创建子级标签，用来本地单步调试，同时不会影响其他未进入该虚拟环境的开发者的正常流量。为此我们总结了一种更普适的[最佳实践模式](https://alibaba.github.io/virtual-environment/#/zh-cn/ve/best-practice)。
+在团队开发的场景下，结合kt-connect工具可使多个开发者共享相同的流量标签，形成可以相互调用的联调小圈子，个人还可以基于这个标签再创建子级标签，用来本地单步调试，同时不会影响其他未进入该虚拟环境的开发者的正常流量。为此我们总结了一种更普适的[最佳实践模式](https://alibaba.github.io/virtual-environment/#/zh-cn/doc/best-practice)。
 
 <img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/typical-scenario-2.jpg" height="300px"/>
 

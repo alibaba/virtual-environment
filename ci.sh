@@ -3,7 +3,7 @@
 # This is a simple automated smoke testing with assumptions:
 # 1. kubectl and istioctl has configured to kubernetes cluster properly
 # 2. user has push authority to the target image repository (you could change image name via parameter)
-# 3. VirtualEnvironment CRD has been installed to cluster (https://alibaba.github.io/virtual-environment/#/en-us/ve/deployment)
+# 3. VirtualEnvironment CRD has been installed to cluster (https://alibaba.github.io/virtual-environment/#/en-us/doc/deployment)
 #
 # Usage: ci.sh [<name-of-ci-image>] [<name-of-ci-namespace>]
 
