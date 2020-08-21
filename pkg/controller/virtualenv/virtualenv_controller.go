@@ -24,6 +24,7 @@ var log = logf.Log.WithName("virtualenv-listener")
 const defaultEnvHeader = "X-Virtual-Env"
 const defaultEnvLabel = "virtual-env"
 const defaultEnvSplitter = "."
+const defaultEnvHeaderAliasPlaceholder = "(@)"
 
 // Add creates a new VirtualEnv Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -171,6 +172,13 @@ func (r *ReconcileVirtualEnv) deleteVirtualEnv(namespace string, name string, lo
 func (r *ReconcileVirtualEnv) handleDefaultConfig(virtualEnv *envv1alpha2.VirtualEnvironment) {
 	if virtualEnv.Spec.EnvHeader.Name == "" {
 		virtualEnv.Spec.EnvHeader.Name = defaultEnvHeader
+	}
+	if virtualEnv.Spec.EnvHeader.Aliases != nil {
+		for _, alias := range virtualEnv.Spec.EnvHeader.Aliases {
+			if alias.Placeholder == "" {
+				alias.Placeholder = defaultEnvHeaderAliasPlaceholder
+			}
+		}
 	}
 	if virtualEnv.Spec.EnvLabel.Name == "" {
 		virtualEnv.Spec.EnvLabel.Name = defaultEnvLabel
