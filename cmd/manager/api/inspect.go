@@ -2,6 +2,7 @@ package api
 
 import (
 	"alibaba.com/virtual-env-operator/pkg/shared"
+	"alibaba.com/virtual-env-operator/version"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -16,6 +17,7 @@ func Start(inspectHost string, inspectPort int) {
 
 	// Routes
 	e.GET("/inspect", inspectGlobalVariable)
+	e.GET("/version", inspectBuildVersion)
 
 	// Start server
 	inspectAddr := inspectHost + ":" + strconv.Itoa(inspectPort)
@@ -35,5 +37,12 @@ func inspectGlobalVariable(c echo.Context) error {
 		"VirtualEnv": shared.VirtualEnvIns,
 		"Services":   shared.AvailableServices,
 		"Labels":     shared.AvailableLabels,
+	})
+}
+
+func inspectBuildVersion(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"Version":   version.Version,
+		"BuildTime": version.BuildTime,
 	})
 }

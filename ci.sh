@@ -4,15 +4,40 @@
 # 1. kubectl and istioctl has configured to kubernetes cluster properly
 # 2. user has push authority to the target image repository (you could change image name via parameter)
 # 3. VirtualEnvironment CRD has been installed to cluster (https://alibaba.github.io/virtual-environment/#/en-us/doc/deployment)
-#
-# Usage: ci.sh [<name-of-ci-image>] [<name-of-ci-namespace>]
+
+usage() {
+    cat <<EOF
+Usage: ci.sh [flags] [tag] [<name-of-ci-image>] [<name-of-ci-namespace>]
+  supported flags:
+    --no-cleanup     keep test pod running after all case finish
+    --help           show this message
+  supported tags:
+    DEPLOY           run from deploy step
+    TEST             run from test step
+    CLEAN or DELETE  run from clean up step
+EOF
+}
 
 # Constants
 operator_name="virtual-env-operator"
 default_image="virtualenvironment/${operator_name}"
 default_tag="ci"
 
+# Configure
+skip_cleanup="N"
+
 # Parameters
+for p in ${@}; do
+    if [[ "${p}" =~ ^--.*$ ]]; then
+        if [ "${p}" = "--no-cleanup" ]; then
+            skip_cleanup="Y"
+        elif [ "${p}" = "--help" ]; then
+            usage
+            exit 0
+        fi
+        shift
+    fi
+done
 if [[ "${1}" =~ ^[A-Z]{1,}$ ]]; then
     action="${1}"
     shift
@@ -52,7 +77,9 @@ fi
 # >>>>>>> BUILD_ANCHOR:
 
 # Generate temporary operator image
-operator-sdk build --go-build-args "-o build/_output/operator/${operator_name}" --image-build-args "--no-cache" ${ci_image}
+operator-sdk build \
+    --go-build-args "-ldflags -X=alibaba.com/virtual-env-operator/version.BuildTime=`date +%Y-%m-%d_%H:%M` -o build/_output/operator/virtual-env-operator" \
+    --image-build-args "--no-cache" ${ci_image}
 if [[ ${?} != 0 ]]; then
     echo "Build failed !!!"
     exit -1
@@ -138,8 +165,10 @@ echo "---- Functional check OK ----"
 # >>>>>>> CLEAN_UP_ANCHOR:
 
 # Clean up everything
-examples/deploy/app.sh delete ${ns}
-kubectl delete -n ${ns} deployment sleep
-for f in deploy/*.yaml; do kubectl delete -n ${ns} -f ${f}; done
-kubectl delete namespace ${ns}
-echo "---- Clean up OK ----"
+if [ "${skip_cleanup}" != "Y" ]; then
+    examples/deploy/app.sh delete ${ns}
+    kubectl delete -n ${ns} deployment sleep
+    for f in deploy/*.yaml; do kubectl delete -n ${ns} -f ${f}; done
+    kubectl delete namespace ${ns}
+    echo "---- Clean up OK ----"
+fi

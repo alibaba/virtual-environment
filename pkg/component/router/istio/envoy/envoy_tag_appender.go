@@ -79,6 +79,5 @@ function envoy_on_request(request_handle)
   if env == nil and curEnv ~= nil then
     request_handle:headers():add("`+envHeader+`", curEnv)
   end
-end
-    `, " \n")
+end`, " \n")
 }

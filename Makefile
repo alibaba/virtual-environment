@@ -9,7 +9,8 @@ help:
 
 .PHONY: build-operator
 build-operator:
-	operator-sdk build --go-build-args "-o build/_output/operator/virtual-env-operator" \
+	operator-sdk build \
+		--go-build-args "-ldflags -X=alibaba.com/virtual-env-operator/version.BuildTime=`date +%Y-%m-%d_%H:%M` -o build/_output/operator/virtual-env-operator" \
 		--image-build-args "--no-cache" $(OPERATOR_IMAGE):$(VERSION)
 
 .PHONY: build-admission
@@ -22,3 +23,8 @@ clean:
 	rm -fr build/_output/
 	docker rmi -f $(OPERATOR_IMAGE):$(VERSION)
 	docker rmi -f $(ADMISSION_IMAGE):$(VERSION)
+
+.PHONY: clean-image
+clean-image:
+	for i in `docker images | grep $(OPERATOR_IMAGE) | awk '{print $$3}'`; do docker rmi -f $$i; done
+	for i in `docker images | grep $(ADMISSION_IMAGE) | awk '{print $$3}'`; do docker rmi -f $$i; done
