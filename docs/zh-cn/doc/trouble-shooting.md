@@ -40,25 +40,37 @@ kubectl -n $NS get VirtualService <实例名称> -o yaml
 
 ## 流量未自动加环境标
 
-首先查看Envoy容器日志，若是注入脚本出错，这里会看到报错信息
+流量自动加标的过程分为两步，首先在Pod创建时通过全局Admission Webhook组件将记录在Pod label上的环境名称写入Pod的`VIRTUAL_ENVIRONMENT_TAG`环境变量，然后在流量出口处通过Envoy Sidecar读取上下文环境变量的内容，将环境标最终写到HTTP请求的Header里。
+
+首先检查Webhook是否成功的将环境标写入Pod环境变量：
+
+```bash
+kubectl -n $NS get pod <任意一个Pod名字> -o yaml -o yaml | grep -A 1 'VIRTUAL_ENVIRONMENT_TAG'
+```
+
+如果没有输出任何内容，说明环境变量未注入，请检查Admission Webhook组件是否正确部署。
+
+若有输出Pod所处的环境标名称，则问题出在Envoy Sidecar上。
+
+接下来查看Envoy容器日志，若是注入脚本出错，这里会看到报错信息：
 
 ```bash
 kubectl -n $NS logs <任意一个Pod名字> istio-proxy --tail 100
 ```
 
-同时检查生成的EnvoyFilter对象
+同时检查生成的EnvoyFilter对象：
 
 ```bash
 kubectl -n $NS get EnvoyFilter <与VirtualEnvironment实例同名> -o yaml
 ```
 
-若该对象存在且内容正常，可导出Envoy的配置，检查注入脚本是否正确添加
+若该对象存在且内容正常，可导出Envoy的配置，检查注入脚本是否正确添加：
 
 ```bash
 kubectl -n $NS exec <任意一个Pod名字> -c istio-proxy curl http://localhost:15000/config_dump | less
 ```
 
-搜索`virtual.environment.lua`文本
+搜索`virtual.environment.lua`文本，其上下文位置应该在`configs.dynamic_listeners.active_state`区块内，若是出现在`configs.dynamic_listeners.error_state`区块，请检查是否与其他Operator生成的路由规则存在冲突。
 
 ## Sidecar容器始终未就绪
 
@@ -68,7 +80,7 @@ kubectl -n $NS exec <任意一个Pod名字> -c istio-proxy curl http://localhost
 Envoy proxy is NOT ready: config not received from Pilot
 ```
 
-可先登录到Envoy容器中
+可先登录到Envoy容器中：
 
 ```bash
 kubectl -n $NS exec -it <任意一个Pod名字> -c istio-proxy /bin/bash
