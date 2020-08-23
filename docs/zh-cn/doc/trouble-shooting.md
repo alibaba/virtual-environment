@@ -2,6 +2,8 @@
 
 - 说明：以下示例中，假设虚拟环境实例所在的Namespace已经存在环境变量`$NS`中
 
+在排查各类问题前，请按照[检查部署结果](zh-cn/doc/deployment.md?id=检查部署结果)小节验证KtEnv的CRD和Webhook组件已正确安装到集群中。
+
 ## 路由规则不符合预期
 
 首先检查目标Namespace中是否正确创建了VirtualEnvironment实例
@@ -40,7 +42,7 @@ kubectl -n $NS get VirtualService <实例名称> -o yaml
 
 ## 流量未自动加环境标
 
-流量自动加标的过程分为两步，首先在Pod创建时通过全局Admission Webhook组件将记录在Pod label上的环境名称写入Pod的`VIRTUAL_ENVIRONMENT_TAG`环境变量，然后在流量出口处通过Envoy Sidecar读取上下文环境变量的内容，将环境标最终写到HTTP请求的Header里。
+流量自动加标的过程分为两步，首先在Pod创建时通过全局Webhook组件将记录在Pod label上的环境名称写入其Sidecar容器的`VIRTUAL_ENVIRONMENT_TAG`环境变量，然后在流量出口处通过Envoy Sidecar读取上下文环境变量的内容，将环境标最终写到HTTP请求的Header里。
 
 首先检查Webhook是否成功的将环境标写入Pod环境变量：
 

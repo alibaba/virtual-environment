@@ -7,7 +7,7 @@
 
 ## 部署到集群
 
-从 [发布页面](https://github.com/alibaba/virtual-environment/releases) 下载最新的CRD文件，并解压。
+从 [发布页面](https://github.com/alibaba/virtual-environment/releases) 下载最新的部署文件包，并解压。
 
 ```bash
 wget https://github.com/alibaba/virtual-environment/releases/download/v0.3.1/kt-virtual-environment-v0.3.1.zip
@@ -15,7 +15,7 @@ unzip kt-virtual-environment-v0.3.1.zip
 cd v0.3.1/
 ```
 
-使用`kubectl apply`命令将解压后目录中的CRD和Webhook配置应用到Kubernetes，其中Webhook携带了默认的自签名秘钥，可参考[Webhook配置文档](zh-cn/doc/webhook.md)替换。
+使用`kubectl apply`命令将解压后目录中的CRD和Webhook组件应用到Kubernetes，其中Webhook组件携带了默认的自签名秘钥，可参考[Webhook配置文档](zh-cn/doc/webhook.md)替换。
 
 ```bash
 kubectl apply -f crds/env.alibaba.com_virtualenvironments_crd.yaml
@@ -37,6 +37,49 @@ kubectl apply -n default -f role_binding.yaml
 ```
 
 现在，Kubernetes集群就已经具备使用虚拟环境能力了。
+
+## 检查部署结果
+
+KtEnv系统包含Operator CRD和Admission Webhook两个组件。Webhook组件用于将Pod的虚拟环境标写入到其Sidecar容器的运行时环境变量内；CRD组件用于创建监听集群服务变化并动态生成路由规则的VirtualEnvironment资源实例。
+
+Webhook组件默认被部署到名为`kt-virtual-environment`的Namespace中，包含一个Service和一个Deployment对象，以及它们创建的子资源对象，可用以下命令查看：
+
+```bash
+kubectl -n kt-virtual-environment get all
+```
+
+若输出类似以下信息，则表明KtEnv的Webhook组件已经部署且正常运行。
+
+```
+NAME                                  READY   STATUS    RESTARTS   AGE
+pod/webhook-server-5dd55c79b5-rf6dl   1/1     Running   0          86s
+
+NAME                     TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/webhook-server   ClusterIP   172.21.0.254   <none>        443/TCP   109s
+
+NAME                             READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/webhook-server   1/1     1            1           109s
+
+NAME                                        DESIRED   CURRENT   READY   AGE
+replicaset.apps/webhook-server-5dd55c79b5   1         1         1       86s
+```
+
+检查上述输出中各资源对象的`AGE`属性（从创建到现在已经过的时间），可确定该对象是否为刚刚新部署的Webhook组件所创建。
+
+CRD组件会在Kubernetes集群内新增一种名为`VirtualEnvironment`的资源类型，在下一步我们将会用到它。可通过以下命令验证其安装状态：
+
+```bash
+kubectl get crd virtualenvironments.env.alibaba.com
+```
+
+若输出类似以下信息，则表明KtEnv的CRD组件已经正确部署。
+
+```
+NAME                                  CREATED AT
+virtualenvironments.env.alibaba.com   2020-04-21T13:20:35Z
+```
+
+检查输出中`CREATED AT`属性（资源创建时间），可确定该对象是否为刚刚新部署的CRD组件。
 
 ## 创建虚拟环境
 
