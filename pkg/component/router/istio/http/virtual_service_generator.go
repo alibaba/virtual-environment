@@ -3,13 +3,17 @@ package http
 import (
 	envv1alpha2 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha2"
 	"alibaba.com/virtual-env-operator/pkg/shared"
+	"encoding/json"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis/istio/common/v1alpha1"
 	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"strings"
 )
+
+var logger = logf.Log.WithName("istio_virtual_service")
 
 // generate istio virtual service instance
 func VirtualService(namespace string, svcName string, availableLabels []string, relatedDeployments []string,
@@ -34,6 +38,14 @@ func VirtualService(namespace string, svcName string, availableLabels []string, 
 	}
 	if len(serviceInfo.Hosts) > 0 {
 		virtualSvc.Spec.Hosts = serviceInfo.Hosts
+	}
+	var httpRoute *networkingv1alpha3.HTTPRoute = nil
+	if serviceInfo.CustomRule != "" {
+		if err := json.Unmarshal([]byte(serviceInfo.CustomRule), &httpRoute); err == nil {
+			logger.Info("Unmarshal route rule successful: " + httpRoute.Rewrite.URI)
+		} else {
+			logger.Error(err, "Failed to unmarshal route rule annotation")
+		}
 	}
 	for _, port := range serviceInfo.Ports {
 		for _, label := range availableLabels {
@@ -160,7 +172,7 @@ func defaultRoute(name string, port uint32, defaultSubset string, totalPortCount
 func matchRouteRegex(serviceName string, headerKey string, labelVal string, port uint32,
 	subsetName string, totalPortCount int) networkingv1alpha3.HTTPRoute {
 	route := matchRoute(serviceName, port, subsetName, totalPortCount)
-	route.Match[0].Headers[headerKey] = v1alpha1.StringMatch{ Regex: labelVal }
+	route.Match[0].Headers[headerKey] = v1alpha1.StringMatch{Regex: labelVal}
 	return route
 }
 
@@ -168,7 +180,7 @@ func matchRouteRegex(serviceName string, headerKey string, labelVal string, port
 func matchRouteExact(serviceName string, headerKey string, labelVal string, port uint32,
 	subsetName string, totalPortCount int) networkingv1alpha3.HTTPRoute {
 	route := matchRoute(serviceName, port, subsetName, totalPortCount)
-	route.Match[0].Headers[headerKey] = v1alpha1.StringMatch{ Exact: labelVal }
+	route.Match[0].Headers[headerKey] = v1alpha1.StringMatch{Exact: labelVal}
 	return route
 }
 

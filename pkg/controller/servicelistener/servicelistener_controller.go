@@ -20,6 +20,7 @@ import (
 const (
 	annotationGateways = "kt-virtual-environment/gateways"
 	annotationHosts    = "kt-virtual-environment/hosts"
+	annotationRule     = "kt-virtual-environment/rule"
 )
 
 var log = logf.Log.WithName("service-listener")
@@ -111,6 +112,9 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 	}
 	if value, ok := service.Annotations[annotationHosts]; ok {
 		serviceInfo.Hosts = strings.Split(value, ",")
+	}
+	if value, ok := service.Annotations[annotationRule]; ok {
+		serviceInfo.CustomRule = value
 	}
 	shared.AvailableServices[request.Name] = serviceInfo
 

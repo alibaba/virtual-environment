@@ -5,10 +5,11 @@ import (
 )
 
 type ServiceInfo struct {
-	Selectors map[string]string
-	Ports     []uint32
-	Gateways  []string
-	Hosts     []string
+	Selectors  map[string]string
+	Ports      []uint32
+	Gateways   []string
+	Hosts      []string
+	CustomRule string
 }
 
 // mutex to avoid controllers conflict
