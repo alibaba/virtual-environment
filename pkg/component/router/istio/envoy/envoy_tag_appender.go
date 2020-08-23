@@ -43,6 +43,15 @@ func TagAppenderFilter(namespace string, name string, envLabel string, envHeader
 				ApplyTo: networkingv1alpha3.EnvoyFilter_HTTP_FILTER,
 				Match: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
 					Context: networkingv1alpha3.EnvoyFilter_SIDECAR_OUTBOUND,
+					ObjectTypes: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
+						Listener: &networkingv1alpha3.EnvoyFilter_ListenerMatch{
+							FilterChain: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
+								Filter: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
+									Name: "envoy.http_connection_manager",
+								},
+							},
+						},
+					},
 				},
 				Patch: &networkingv1alpha3.EnvoyFilter_Patch{
 					Operation: networkingv1alpha3.EnvoyFilter_Patch_INSERT_BEFORE,
