@@ -1,6 +1,6 @@
 # 配置虚拟环境
 
-虚拟环境实例通过`VirtualEnvironment`类型的Kubernetes资源定义。其内容结构示例如下（来自[env.alibaba.com_v1alpha1_virtualenvironment_cr.yaml](https://github.com/alibaba/virtual-environment/blob/master/deploy/crds/env.alibaba.com_v1alpha1_virtualenvironment_cr.yaml)）：
+虚拟环境实例通过`VirtualEnvironment`类型的Kubernetes资源定义。其内容结构示例如下：
 
 ```yaml
 apiVersion: env.alibaba.com/v1alpha2
@@ -20,6 +20,8 @@ spec:
     splitter: .
     defaultSubset: dev
 ```
+
+> 注意：以上内容仅做配置结构参考，请根据实际情况设置各参数的值
 
 参数作用如下表所示：
 

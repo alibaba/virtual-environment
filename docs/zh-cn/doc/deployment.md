@@ -89,9 +89,9 @@ virtualenvironments.env.alibaba.com   2020-04-21T13:20:35Z
 kubectl apply -n default -f path-to-virtual-environment-cr.yaml
 ```
 
-实例创建后，会自动监听**所在Namespace中的**所有Service和Deployment对象并自动生成路由隔离规则，形成虚拟环境。
+实例创建后，会自动监听**所在Namespace中的**所有Service、Deployment和StatefulSet对象并自动生成路由隔离规则，形成虚拟环境。
 
-资源定义文件内容请参考[配置虚拟环境](zh-cn/doc/configuration.md)，根据实际情况修改配置参数。
+资源定义文件内容可参考[virtualenv.yaml](https://github.com/alibaba/virtual-environment/blob/master/examples/deploy/virtualenv.yaml)，在[配置虚拟环境](zh-cn/doc/configuration.md)文档中列举了所有可用的配置参数，请根据实际情况进行修改。
 
 ## 应用程序适配
 
