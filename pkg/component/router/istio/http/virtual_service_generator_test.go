@@ -1,29 +1,30 @@
 package http
 
 import (
+	"strconv"
 	"testing"
 )
 
 func TestVirtualServiceMatchRoute(t *testing.T) {
-	deployments := map[string]string{"dep1": "a.b.c", "dep2": "a.b", "dep3": "a", "dep4": "a.d", "dep5": "a.d.e.f.g"}
+	deployments := []string{"a.b.c", "a.b", "a", "a.d", "a.d.e.f.g"}
 	routes, ok := virtualServiceMatchRoute("testSvc", deployments, "a.b", "test",
 		nil, ".", 0, "dev", 1)
 	route := routes[0]
-	println(ok)
-	println(route.Match[0].Headers["test"].Exact)
-	println(route.Route[0].Destination.Subset)
 	if !ok || route.Match[0].Headers["test"].Exact != "a.b" || route.Route[0].Destination.Subset != "a-b" {
-		t.Fail()
+		t.Errorf("Match failed 1 : " + strconv.FormatBool(ok) + ", match: " + route.Match[0].Headers["test"].Exact +
+			", subset: " + route.Route[0].Destination.Subset)
 	}
 	routes, ok = virtualServiceMatchRoute("testSvc", deployments, "a.d.e.f", "test",
 		nil, ".", 0, "dev", 1)
+	route = routes[0]
 	if !ok || route.Match[0].Headers["test"].Exact != "a.d.e.f" || route.Route[0].Destination.Subset != "a-d" {
-		t.Fail()
+		t.Errorf("Match failed 2 : " + strconv.FormatBool(ok) + ", match: " + route.Match[0].Headers["test"].Exact +
+			", subset: " + route.Route[0].Destination.Subset)
 	}
 	routes, ok = virtualServiceMatchRoute("testSvc", deployments, "b.x", "test",
 		nil, ".", 0, "dev", 1)
 	if ok {
-		t.Fail()
+		t.Errorf("Match failed 3")
 	}
 }
 

@@ -41,7 +41,10 @@ func VirtualService(namespace string, svcName string, availableLabels []string, 
 	}
 	var httpRoute *networkingv1alpha3.HTTPRoute = nil
 	if serviceInfo.CustomRule != "" {
-		if err := json.Unmarshal([]byte(serviceInfo.CustomRule), &httpRoute); err == nil {
+		// This is a workaround:
+		// knative sdk and istio sdk has different 'uri' field naming
+		customRule := strings.ReplaceAll(serviceInfo.CustomRule, "\"Uri\"", "\"URI\"")
+		if err := json.Unmarshal([]byte(customRule), &httpRoute); err == nil {
 			logger.Info("Unmarshal route rule successful: " + httpRoute.Rewrite.URI)
 		} else {
 			logger.Error(err, "Failed to unmarshal route rule annotation")
@@ -53,12 +56,22 @@ func VirtualService(namespace string, svcName string, availableLabels []string, 
 				envHeaderAliases, envSplitter, port, toSubsetName(defaultSubset), len(serviceInfo.Ports))
 			if ok {
 				for _, matchRoute := range matchRoutes {
-					virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, matchRoute)
+					mergedRoute, err := mergeRoute(httpRoute, &matchRoute)
+					if mergedRoute != nil {
+						virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, *mergedRoute)
+					} else {
+						logger.Error(err, "Failed to merge route")
+					}
 				}
 			}
 		}
-		virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP,
-			defaultRoute(svcName, port, toSubsetName(defaultSubset), len(serviceInfo.Ports)))
+		route := defaultRoute(svcName, port, toSubsetName(defaultSubset), len(serviceInfo.Ports))
+		mergedRoute, err := mergeRoute(httpRoute, &route)
+		if mergedRoute != nil {
+			virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, *mergedRoute)
+		} else {
+			logger.Error(err, "Failed to merge default route")
+		}
 	}
 	return virtualSvc
 }
