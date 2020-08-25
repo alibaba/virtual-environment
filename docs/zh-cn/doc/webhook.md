@@ -29,12 +29,12 @@ cd keys
 
 ```bash
 # Generate the CA cert and private key
-openssl req -nodes -new -x509 -keyout ca.key -out ca.crt -subj "/CN=Virtual Environment Admission Controller Webhook CA"
+openssl req -nodes -new -x509 -days 3650 -keyout ca.key -out ca.crt -subj "/CN=Virtual Environment Admission Controller Webhook CA"
 # Generate the private key for the webhook server
 openssl genrsa -out webhook-server-tls.key 2048
 # Generate a Certificate Signing Request (CSR) for the private key, and sign it with the private key of the CA.
 openssl req -new -key webhook-server-tls.key -subj "/CN=webhook-server.kt-virtual-environment.svc" \
-    | openssl x509 -req -CA ca.crt -CAkey ca.key -CAcreateserial -out webhook-server-tls.crt
+    | openssl x509 -req -days 3650 -CA ca.crt -CAkey ca.key -CAcreateserial -out webhook-server-tls.crt
 ```
 
 将证书和秘钥的内容经过bash64编码后保存到环境变量中待用。
