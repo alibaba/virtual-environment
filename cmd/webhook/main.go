@@ -21,7 +21,7 @@ const (
 
 var (
 	podResource = metav1.GroupVersionResource{Version: "v1", Resource: "pods"}
-	buildTime string
+	buildTime   string
 )
 
 // injectEnvironmentTag read the environment tag from pod label, and save to the sidecar container as an environment
@@ -33,7 +33,7 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, erro
 	// However, if (for whatever reason) this gets invoked on an object of a different kind, issue a log message but
 	// let the object request pass through otherwise.
 	if req.Resource != podResource {
-		logError("expect resource to be %s", podResource)
+		logError("expect resource to be", podResource)
 		return nil, nil
 	}
 
@@ -59,7 +59,7 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, erro
 		}
 	}
 	if envTag == "" {
-		logError("no environment tag found on pod %s", getPodName(pod))
+		logError("no environment tag found on pod", getPodName(pod))
 		return nil, nil
 	}
 
@@ -70,7 +70,7 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, erro
 		}
 	}
 	if sidecarContainerIndex < 0 {
-		logError("no sidecar container found on pod %s", getPodName(pod))
+		logError("no sidecar container found on pod", getPodName(pod))
 		return nil, nil
 	}
 
@@ -97,7 +97,7 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, erro
 		})
 	}
 
-	logInfo("marked %s as %s", getPodName(pod), envTag)
+	logInfo("marked", getPodName(pod), "as", envTag)
 	return patches, nil
 }
 
