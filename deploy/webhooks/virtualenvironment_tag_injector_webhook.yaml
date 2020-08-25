@@ -30,10 +30,8 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: virtual-environment-webhook
 webhooks:
-  - name: webhook-server.kt-virtual-environment.svc
-    namespaceSelector:
-      matchLabels:
-        environment-tag-injection: enabled
+  - name: tag-injector.kt-virtual-environment.hook
+    failurePolicy: Fail
     clientConfig:
       service:
         name: webhook-server
@@ -41,10 +39,13 @@ webhooks:
         path: "/inject"
       caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURYVENDQWtXZ0F3SUJBZ0lVSERob3pwYVlBd0NBMzZaM3VxeE1RSnZNSU5Vd0RRWUpLb1pJaHZjTkFRRUwKQlFBd1BqRThNRG9HQTFVRUF3d3pWbWx5ZEhWaGJDQkZiblpwY205dWJXVnVkQ0JCWkcxcGMzTnBiMjRnUTI5dQpkSEp2Ykd4bGNpQlhaV0pvYjI5cklFTkJNQjRYRFRJd01EVXhOekExTVRBek5Wb1hEVEl3TURZeE5qQTFNVEF6Ck5Wb3dQakU4TURvR0ExVUVBd3d6Vm1seWRIVmhiQ0JGYm5acGNtOXViV1Z1ZENCQlpHMXBjM05wYjI0Z1EyOXUKZEhKdmJHeGxjaUJYWldKb2IyOXJJRU5CTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQwpBUUVBM09GSnd4enV1K2crd3VjMzBROG9Gb0dtQU1LV2FqN0QyUDEzL2NrWjFPQ1l1eExWS3lzZDI1dW5DbzNtCmVGSlR1SWZ1YUo1Y09Uc2w2NXpWb0VjL2E5b0gzVm1RYm9Sd3cyVndETndSdDNaeTU0VmZBd1pQUlJETWxjbWMKTUIyM3Bmd2VzTGNVUENENjRKUXNRcnp3MU9ybVY5VXVNNStiOURqWEk0M2ZuczkvUFBxRHo1Q2dmdkp6dldIRApWRmVxbG5pakluUVhVWWpQb0RVbkpTTU1LM2thZk44c0YydGdjd09ZK0pJa1JzN1YrcVF4Y0dIbXVvVjE3M3pMCi9KODMrU1F0dVRORU9OWnZuSkU2cWpkZ3Y2d3kvZ0RaVEsvdkpYSnhiNlJJYlB3K3JkQ3ZlRHFrNWs0WXlBZlYKYUpiQWlBMGJ3cXE4RmFybkxLbDRjZHduOXdJREFRQUJvMU13VVRBZEJnTlZIUTRFRmdRVXpCOHZUcHJNVTIxVAo3Nnk0cWxtY3Z4OGFudjB3SHdZRFZSMGpCQmd3Rm9BVXpCOHZUcHJNVTIxVDc2eTRxbG1jdng4YW52MHdEd1lEClZSMFRBUUgvQkFVd0F3RUIvekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBQlZvSXZNSW9oNnlRWVdUUzFYVzAKZTZNWWYwY29nZGVIaDBDSkFYYk1hNWFBcG5VWUR2Wko4dURyblBjeUVucTNjV3B2UGo2aCt4Um0wVzJrOURRNApJR0xTK1VxczBiT21PdGZIUUJlV25sSW1YYSthTWJWa1dKUkkzb1dhT09ObCs4c0dVTElaeS81YWFCd2xqMFU1CjJEYi9tNEJEUjRDT3FZeGFHWExkWGUxR3o1NlB4bzE5VjE5VkM4MDN2OW1LWjVhVjBhbUdvalZrcEQ0bGYrNXIKUElGdmZGSkdqb3ZpdmlQRzZBN012NXRLQlR2cGt2VTh3VW50VFhnTHRWbWs5V3Y1THVkM0p0VlNYVG9EYW0vRwpzMGNRZjJOZVhtTWYwSHBiOU44ZThPbWc5eHBIbG92ZnVwaW9BTnJSY0puSDduT3d6aHk3aGx5RnYwb1Y1TWNsCmlnPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
     rules:
-      - operations: [ "CREATE" ]
+      - operations: ["CREATE"]
         apiGroups: [""]
         apiVersions: ["v1"]
         resources: ["pods"]
+    namespaceSelector:
+      matchLabels:
+        environment-tag-injection: enabled
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -69,7 +70,7 @@ spec:
             secretName: webhook-server-tls
       containers:
         - name: server
-          image: virtualenvironment/virtual-env-admission-webhook:v0.3.1
+          image: virtualenvironment/virtual-env-admission-webhook:v0.3.2
           imagePullPolicy: Always
           ports:
             - containerPort: 8443

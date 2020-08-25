@@ -10,9 +10,9 @@
 从 [发布页面](https://github.com/alibaba/virtual-environment/releases) 下载最新的部署文件包，并解压。
 
 ```bash
-wget https://github.com/alibaba/virtual-environment/releases/download/v0.3.1/kt-virtual-environment-v0.3.1.zip
-unzip kt-virtual-environment-v0.3.1.zip
-cd v0.3.1/
+wget https://github.com/alibaba/virtual-environment/releases/download/v0.3.2/kt-virtual-environment-v0.3.2.zip
+unzip kt-virtual-environment-v0.3.2.zip
+cd v0.3.2/
 ```
 
 使用`kubectl apply`命令将解压后目录中的CRD和Webhook组件应用到Kubernetes，其中Webhook组件携带了默认的自签名秘钥，可参考[Webhook配置文档](zh-cn/doc/webhook.md)替换。

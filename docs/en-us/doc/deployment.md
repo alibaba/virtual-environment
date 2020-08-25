@@ -7,13 +7,14 @@
 
 ## Add operator to cluster
 
-Download latest CRD from [release page](https://github.com/alibaba/virtual-environment/releases), use `kubectl apply` command to add the operator into Kubernetes
+Download latest ZIP archive from [release page](https://github.com/alibaba/virtual-environment/releases), use `kubectl apply` command to add operator CRD and webhook component into Kubernetes
 
 ```bash
-wget https://github.com/alibaba/virtual-environment/releases/download/v0.2/kt-virtual-environment-v0.2.zip
-unzip kt-virtual-environment-v0.2.zip
-cd v0.2/
+wget https://github.com/alibaba/virtual-environment/releases/download/v0.3.2/kt-virtual-environment-v0.3.2.zip
+unzip kt-virtual-environment-v0.3.2.zip
+cd v0.3.2/
 kubectl apply -f crds/env.alibaba.com_virtualenvironments_crd.yaml
+kubectl apply -f webhooks/virtualenvironment_tag_injector_webhook.yaml
 ```
 
 Put the operator into any namespaces which require virtual environment, e.g. `default`
