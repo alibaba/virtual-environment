@@ -27,7 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"log"
 	"net/http"
 )
 
@@ -135,7 +134,7 @@ func serveAdmitFunc(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 	// Begin handling webhook request
 	var writeErr error
 	if bytes, err := doServeAdmitFunc(w, r, admit); err != nil {
-		log.Printf("Error handling webhook request: %v", err)
+		logError("error handling webhook request: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, writeErr = w.Write([]byte(err.Error()))
 	} else {
@@ -144,13 +143,14 @@ func serveAdmitFunc(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 	}
 
 	if writeErr != nil {
-		log.Printf("Could not write response: %v", writeErr)
+		logError("could not write response: ", writeErr)
 	}
 }
 
 // admitFuncHandler takes an admitFunc and wraps it into a http.Handler by means of calling serveAdmitFunc.
 func admitFuncHandler(admit admitFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logDebug("receive request from", r.Host)
 		serveAdmitFunc(w, r, admit)
 	})
 }
