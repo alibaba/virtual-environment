@@ -43,7 +43,7 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, erro
 	}
 
 	// Retrieve the environment label name from pod label
-	envLabels := os.Getenv("envLabel")
+	envLabels := os.Getenv(CONF_ENV_LABEL)
 	if envLabels == "" {
 		log.Fatalln("cannot determine env label !!")
 	}
@@ -111,6 +111,7 @@ func main() {
 	keyPath := filepath.Join(tlsDir, tlsKeyFile)
 
 	log.Printf("sidecar environment tag injector starting")
+	initLogger()
 	mux := http.NewServeMux()
 	mux.Handle("/inject", admitFuncHandler(injectEnvironmentTag))
 	server := &http.Server{

@@ -13,42 +13,6 @@ data:
   tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMrVENDQWVFQ0ZISEdlKzhSR0dlWS91d3dmU0c2ckw2L0docXJNQTBHQ1NxR1NJYjNEUUVCQ3dVQU1ENHgKUERBNkJnTlZCQU1NTTFacGNuUjFZV3dnUlc1MmFYSnZibTFsYm5RZ1FXUnRhWE56YVc5dUlFTnZiblJ5YjJ4cwpaWElnVjJWaWFHOXZheUJEUVRBZUZ3MHlNREExTVRjd05URXdNelZhRncweU1EQTJNVFl3TlRFd016VmFNRFF4Ck1qQXdCZ05WQkFNTUtYZGxZbWh2YjJzdGMyVnlkbVZ5TG10MExYWnBjblIxWVd3dFpXNTJhWEp2Ym0xbGJuUXUKYzNaak1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBdzZOTytxUzQrVndGVTNIYwpYbUk3RHA1UnUrc0JJb1MvV1c4U2xxTVlzdDRPcHRUSjRxdllzaTI5Nkt5N1ZJNVRmWU9sQzlBOE1OSGR1SHJhCnVUaGZramRIRUVYeDJJQlRVaTVZL0dvTEgwbFF0ZEJhZS9ZQWJRdnNrZC8vMjdBbjV4ekFpMGUyZ1RJU1FDUnAKWjVWdHRSVUdVZS9SNU9hQ1lNeXdQM28zQlFRNzF0YnZsaUhjTVJEZmdvQmhxclo3YUVLcWEyUUZJSGpVeEgzZgpRQjNkdnNEdEZKK25uRHBNTjJ3ci9YLzc2Q0kvRXo2N3hoU0NzclNnNlpWNGRFY0hoREQ3SXNyVnZOZzRoRHdWClpFTnBqMU5CK0lsNU1NM2hob2xmVWRtL2R2N0dZa0tQRnBXandZQ0VwemgzZy9OUHJZTEtDOUNpN0xoMXpFR1UKaWFOOXlRSURBUUFCTUEwR0NTcUdTSWIzRFFFQkN3VUFBNElCQVFDUEgzMDNONWRPa2JUSkdob1FMcndWSzUzMgp3Ly9FWCszdnIrWTVlU2pNZTB3Uk5CT3BuSlVxQVlTK1Y1SWR3ZWRFbm1TUWQvVkRRcEk1WHVzd2djeHN2dURVCnA5VCtNZXU1Q1p2dlBLaHMyMFBDMTExdy83VW1xejRCcjVmWjJqSnZ3S3ZwL0lVazFoVlRqeWpWU3g2cldhdXgKOFdRSGNHZVp5aFRkQU1lY2FDd2p1eVQ2T2J5NSs0UEtzVmVrb0trRVBUVktKbzZmaG1XcjJaSXRUUzh5REJCVwpEeDlsWFVFRlAwSWdCbmZKU3JZb0RqaTBYZ2RUYTdiK3h2WDlUV3pKYjFCbVRzRVhjODFIVmJOUFRVdkZZUUxlCmNJM0RwZ0k3UzYvZWxsWDZqNERyL0Q3MG1VWjhPSW56QVl0ZkoyT3hHZ0oyaXI0bkdQVWM3OU5wRUIzcAotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
   tls.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFb3dJQkFBS0NBUUVBdzZOTytxUzQrVndGVTNIY1htSTdEcDVSdStzQklvUy9XVzhTbHFNWXN0NE9wdFRKCjRxdllzaTI5Nkt5N1ZJNVRmWU9sQzlBOE1OSGR1SHJhdVRoZmtqZEhFRVh4MklCVFVpNVkvR29MSDBsUXRkQmEKZS9ZQWJRdnNrZC8vMjdBbjV4ekFpMGUyZ1RJU1FDUnBaNVZ0dFJVR1VlL1I1T2FDWU15d1AzbzNCUVE3MXRidgpsaUhjTVJEZmdvQmhxclo3YUVLcWEyUUZJSGpVeEgzZlFCM2R2c0R0Rkorbm5EcE1OMndyL1gvNzZDSS9FejY3CnhoU0NzclNnNlpWNGRFY0hoREQ3SXNyVnZOZzRoRHdWWkVOcGoxTkIrSWw1TU0zaGhvbGZVZG0vZHY3R1lrS1AKRnBXandZQ0VwemgzZy9OUHJZTEtDOUNpN0xoMXpFR1VpYU45eVFJREFRQUJBb0lCQUhMYWprUnhyaktleG5XdApzODBwYURoMTA5QTU4RW1lbTJQYTVKUFJIbS9zRTdmMzFxb2ZiekZ6enprcEp6VkY5VmdMa0RxMlBvLyt0V2RYCm9NNzZmSWt2c0tXcUdvaWJGYzk2YkQyTDJBbS9GZ1lYVXZmUmZZQ0hicFJaYURGR1lyYTQxNFV0VGNUZGEzK0MKb09yeC9CMUNRWnFhNjZPeGZEdHVEODdFWmthbnBJOHNHRFo4VnBteGhjWGtmMzZ3WWpUZGRveWJ1b3JobjdRUwo0YkJJWXR5eEtoam5TQUV3TlVoUlhtUEJRbTZJVEdrQnB0VzhRTWg3cWtJdUVDOHFud1U3Vm1mY0lLU0pjeTEzClAyZ3BKbU9wQ2krWVFITFFyVkJQb2t0NkxyNDRrQ2FFUGlnZjRaTU95WjhUcHdKVmI0QlpWSmMwV3NUVVlydUUKRVlKemlmRUNnWUVBOTEwMjFrYmZrN3A4UGsxdlVUYUp5TUhxRzlqR2FybWZvWklDdklIL3dCdnNCNXBRK0YxUwpnd1RWdTluZGhtdUovSWlvWjFYL0c2SU1OelJJbUVremo3WHpSWFAxSTBsaURzNWpsc1VUNDJWdWxqWVEyTk1rCkl3VWgrTXVUNXl5N1daZCtIOGVPbWN1MWlrOUZRRWw5a0lHV1ZheUxwWE5nQUg5ZmdHdVdvdlVDZ1lFQXluZk0KUlNCM2RXaVdTL04zWUF6cEVoVHM3S1JRQTMvRDdKK3Jwaks1Qk5nTjNkVU41RWR0WnQyOFZ0eHZuZkwxYm9HOAp5RThXWS9yQjlVVWVCS0Q4cjBCc0hXUjAyeS9oTHJibW1ldExGSFhYa0hFdUxaOTBKNVpGS2M4YmZpZ2llVGg0CmJwMUJKQWxKSlo2MEVLOEpOTjZyUXliQTZqbEZDRXM3L1U0ZHN3VUNnWUVBcjdiZGIxVWxHTEdOOUV2WldWMWUKZnVlUXYzczdaekM0dm5NVDBvaWQvZjlYcVFicm9hSFpMUXpRTHdMU0k5eGNSckZrdnhNTmhybVQ1OXNSL210eApYeEttM3AxQ2MzQjdZWDBtclVFTm9haTU1Nlk4VFdtZTcrbURlbEpTbkJMZ2V3SHNLL0w3enpBdm96SXdSVHh2Ckg2bU4rd240b096V00wUkh1TmUwUjhrQ2dZQnBPVkdFSzVkcUFXejdGQkZhYmR0RGRuU2JsOW10dDkwUFFQeG8KWjd3WWRHRGdoVFd2Q2lBbGNkL01GTXc5Zm1Obmh5Mmh2TmlhSlZ4Z0tBZXR5QzBLdDZSNHNoaTVRV3o2Wmp2NgppbnArcTYvWWRibldKQ1N0M2o4YnQzTkdZWDFwR3B3Y2dNVzJBTTF2SzhmUlUrYW8vNEJxYWQyZzNScXZjTXBBCm56UjRNUUtCZ0EzTkhLRUROK0RKWk1ITG1rMHh4ZHdnaWFubmV2QlluVVpJSUljYndTOUJrVksvU3U0MHh4UjYKWWRveHJuQnM3NmJISjhzVk1DcWtrQ0ljWTMxcGFZU1l2b2p5ZGwrTW1HSzhkLzJkQkdySTlpRG9PaEYyUVlRTwpISUpON1JiRUg4T3BDcU9pMHFOTWQ1UXhPWDVUR2J6UjBYQWJTaExtNCtrSFl1Vit4MW5KCi0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0tCg==
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: webhook-server
-  namespace: kt-virtual-environment
-  labels:
-    app: webhook-server
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: webhook-server
-  template:
-    metadata:
-      labels:
-        app: webhook-server
-    spec:
-      containers:
-        - name: server
-          image: virtualenvironment/virtual-env-admission-webhook:v0.3.1
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8443
-              name: webhook-api
-          volumeMounts:
-            - name: webhook-tls-certs
-              mountPath: /run/secrets/tls
-              readOnly: true
-          env:
-            - name: envLabel
-              value: virtual-env
-      volumes:
-        - name: webhook-tls-certs
-          secret:
-            secretName: webhook-server-tls
----
 apiVersion: v1
 kind: Service
 metadata:
@@ -81,3 +45,41 @@ webhooks:
         apiGroups: [""]
         apiVersions: ["v1"]
         resources: ["pods"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-server
+  namespace: kt-virtual-environment
+  labels:
+    app: webhook-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webhook-server
+  template:
+    metadata:
+      labels:
+        app: webhook-server
+    spec:
+      volumes:
+        - name: webhook-tls-certs
+          secret:
+            secretName: webhook-server-tls
+      containers:
+        - name: server
+          image: virtualenvironment/virtual-env-admission-webhook:v0.3.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8443
+              name: webhook-api
+          volumeMounts:
+            - name: webhook-tls-certs
+              mountPath: /run/secrets/tls
+              readOnly: true
+          env:
+            - name: envLabel
+              value: virtual-env  # Comma separated names
+            - name: logLevel
+              value: INFO         # ERROR | INFO | DEBUG
