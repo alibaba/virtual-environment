@@ -85,6 +85,11 @@ if [[ ${?} != 0 ]]; then
     exit -1
 fi
 docker push ${ci_image}
+if [[ ${?} != 0 ]]; then
+    echo "Image push failed !!!"
+    exit -1
+fi
+
 echo "---- Build OK ----"
 
 # >>>>>>> DEPLOY_ANCHOR:
