@@ -15,7 +15,8 @@ build-operator:
 
 .PHONY: build-admission
 build-admission: $(shell find cmd/webhook -name '*.go')
-	CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o "build/_output/admission/webhook-server" ./cmd/webhook
+	CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w -X=main.buildTime=`date +%Y-%m-%d_%H:%M`" \
+		-o "build/_output/admission/webhook-server" ./cmd/webhook
 	docker build -t $(ADMISSION_IMAGE):$(VERSION) -f build/Dockerfile_webhook build/_output/admission/
 
 .PHONY: clean

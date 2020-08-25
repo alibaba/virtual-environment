@@ -21,6 +21,7 @@ const (
 
 var (
 	podResource = metav1.GroupVersionResource{Version: "v1", Resource: "pods"}
+	buildTime string
 )
 
 // injectEnvironmentTag read the environment tag from pod label, and save to the sidecar container as an environment
@@ -113,6 +114,10 @@ func main() {
 
 	initLogger()
 	logInfo("sidecar environment tag injector starting")
+	logInfo("build version: " + buildTime)
+	logInfo("environment labels: " + os.Getenv(CONF_ENV_LABEL))
+	logInfo("log level: " + os.Getenv(CONF_LOG_LEVEL))
+
 	mux := http.NewServeMux()
 	mux.Handle("/inject", admitFuncHandler(injectEnvironmentTag))
 	server := &http.Server{
