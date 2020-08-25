@@ -1,4 +1,4 @@
-package servicelistener
+package service
 
 import (
 	"alibaba.com/virtual-env-operator/pkg/component/router"

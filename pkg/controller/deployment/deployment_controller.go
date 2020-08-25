@@ -1,4 +1,4 @@
-package deploymentlistener
+package deployment
 
 import (
 	"alibaba.com/virtual-env-operator/pkg/controller/util"
