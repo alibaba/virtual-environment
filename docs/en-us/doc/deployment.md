@@ -5,7 +5,11 @@
 - Istio：https://istio.io/docs/setup/install
 - kubectl：https://kubernetes.io/docs/tasks/tools/install-kubectl
 
-## Add operator to cluster
+## Deploy components to cluster
+
+KtEnv project contents two components as `Operator CRD` and `Admission Webhook`.
+The `Webhook` component is used to write pod's virtual environment label into the runtime environment variable of its sidecar container.
+The `CRD` component would listener to VirtualEnvironment resource instance created and dynamically generates routing rules according to the service status in the cluster.
 
 Download latest ZIP archive from [release page](https://github.com/alibaba/virtual-environment/releases), use `kubectl apply` command to add operator CRD and webhook component into Kubernetes
 
@@ -17,27 +21,8 @@ kubectl apply -f crds/env.alibaba.com_virtualenvironments_crd.yaml
 kubectl apply -f webhooks/virtualenvironment_tag_injector_webhook.yaml
 ```
 
-Put the operator into any namespaces which require virtual environment, e.g. `default`
-
-```bash
-kubectl apply -n default -f operator.yaml
-```
-
-If the cluster has RBAC enabled, please also apply Role and ServiceAccount
-
-```bash
-kubectl apply -n default -f service_account.yaml
-kubectl apply -n default -f role.yaml
-kubectl apply -n default -f role_binding.yaml
-```
-
-Now, the Kubernetes cluster already has capability to empower virtual environment.
-
 ## Check deployment result
 
-KtEnv project contents two components as `Operator CRD` and `Admission Webhook`.
-The `Webhook` component is used to write pod's virtual environment label into the runtime environment variable of its sidecar container.
-The `CRD` component would listener to VirtualEnvironment resource instance created and dynamically generates routing rules according to the service status in the cluster.
 
 The `Webhook` component is deployed in `kt-virtual-environment` namespace by default, contents a `Service`, a `Deployment` instance and other sub-resources created by them.
 You could check the deployment status by below command:
@@ -78,6 +63,27 @@ virtualenvironments.env.alibaba.com   2020-04-21T13:20:35Z
 ```
 
 Check the `CREATED AT` attribute (resource creation time) in the output to determine whether the object is a newly deployed CRD component.
+
+## Deploy operator in namespace
+
+Put the operator into *ALL* namespaces which require virtual environment, and put `environment-tag-injection=enabled` label on them.
+
+Here we use `default` namespace as an example.
+
+```bash
+kubectl apply -n default -f operator.yaml
+kubectl label namespace default environment-tag-injection=enabled
+```
+
+If the cluster has RBAC enabled, please also apply Role and ServiceAccount
+
+```bash
+kubectl apply -n default -f service_account.yaml
+kubectl apply -n default -f role.yaml
+kubectl apply -n default -f role_binding.yaml
+```
+
+Now, the Kubernetes cluster already has capability to empower virtual environment.
 
 ## Create VirtualEnvironment instance
 

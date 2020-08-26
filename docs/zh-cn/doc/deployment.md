@@ -5,7 +5,9 @@
 - Istio：https://istio.io/docs/setup/install
 - kubectl：https://kubernetes.io/docs/tasks/tools/install-kubectl
 
-## 部署到集群
+## 部署KtEnv组件
+
+KtEnv系统包含Operator CRD和Admission Webhook两个组件。Webhook组件用于将Pod的虚拟环境标写入到其Sidecar容器的运行时环境变量内；CRD组件用于创建监听集群服务变化并动态生成路由规则的VirtualEnvironment资源实例。
 
 从 [发布页面](https://github.com/alibaba/virtual-environment/releases) 下载最新的部署文件包，并解压。
 
@@ -15,32 +17,14 @@ unzip kt-virtual-environment-v0.3.2.zip
 cd v0.3.2/
 ```
 
-使用`kubectl apply`命令将解压后目录中的CRD和Webhook组件应用到Kubernetes，其中Webhook组件携带了默认的自签名秘钥，可参考[Webhook配置文档](zh-cn/doc/webhook.md)替换。
+将目录中的CRD和Webhook组件添加到Kubernetes（其中Webhook组件携带了默认的自签名秘钥，可参考[Webhook配置文档](zh-cn/doc/webhook.md)替换）。
 
 ```bash
 kubectl apply -f crds/env.alibaba.com_virtualenvironments_crd.yaml
 kubectl apply -f webhooks/virtualenvironment_tag_injector_webhook.yaml
 ```
 
-将Operator部署到每个需要使用虚拟环境的目标Namespace里，比如`default`。
-
-```bash
-kubectl apply -n default -f operator.yaml
-```
-
-如果集群开启了RBAC，还需要部署相应的Role和ServiceAccount。
-
-```bash
-kubectl apply -n default -f service_account.yaml
-kubectl apply -n default -f role.yaml
-kubectl apply -n default -f role_binding.yaml
-```
-
-现在，Kubernetes集群就已经具备使用虚拟环境能力了。
-
 ## 检查部署结果
-
-KtEnv系统包含Operator CRD和Admission Webhook两个组件。Webhook组件用于将Pod的虚拟环境标写入到其Sidecar容器的运行时环境变量内；CRD组件用于创建监听集群服务变化并动态生成路由规则的VirtualEnvironment资源实例。
 
 Webhook组件默认被部署到名为`kt-virtual-environment`的Namespace中，包含一个Service和一个Deployment对象，以及它们创建的子资源对象，可用以下命令查看：
 
@@ -80,6 +64,27 @@ virtualenvironments.env.alibaba.com   2020-04-21T13:20:35Z
 ```
 
 检查输出中`CREATED AT`属性（资源创建时间），可确定该对象是否为刚刚新部署的CRD组件。
+
+## 部署KtEnv Operator
+
+Operator是由CRD组件定义的虚拟环境管理器实例，需要在**每个**使用虚拟环境的Namespace里单独部署。同时为了让Webhook组件对目标Namespace起作用，还应该为其添加值为`enabled`的`environment-tag-injection`标签。
+
+以使用`default` Namespace为例，通过以下命令完成部署。
+
+```bash
+kubectl apply -n default -f operator.yaml
+kubectl label namespace default environment-tag-injection=enabled
+```
+
+如果集群开启了RBAC，还需要部署相应的Role和ServiceAccount。
+
+```bash
+kubectl apply -n default -f service_account.yaml
+kubectl apply -n default -f role.yaml
+kubectl apply -n default -f role_binding.yaml
+```
+
+现在，Kubernetes集群就已经具备使用虚拟环境能力了。
 
 ## 创建虚拟环境
 
