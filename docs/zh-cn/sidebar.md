@@ -9,7 +9,7 @@
   - [典型场景](zh-cn/doc/typical-scenario.md)
   - [最佳实践模式](zh-cn/doc/best-practice.md)
   - [使用SDK](zh-cn/doc/use-sdk.md)
-  - [使用IstioGateway](zh-cn/doc/istio-gateway.md)
+  - [使用IstioGateway](zh-cn/doc/custom-rule.md)
   - [跨集群隔离](zh-cn/doc/cross-cluster.md)
   - [局限性](zh-cn/doc/limitation.md)
 
