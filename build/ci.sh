@@ -5,33 +5,44 @@
 # 2. user has push authority to the target image repository (you could change image name via parameter)
 # 3. VirtualEnvironment CRD has been installed to cluster (https://alibaba.github.io/virtual-environment/#/en-us/doc/deployment)
 
+# Constants
+ci_tag="ci"
+operator_name="virtual-env-operator"
+webhook_name="virtual-env-admission-webhook"
+default_operator_image="virtualenvironment/${operator_name}"
+default_webhook_image="virtualenvironment/${webhook_name}"
+default_ci_namespace="virtual-env-ci"
+
 usage() {
     cat <<EOF
-Usage: ci.sh [flags] [tag] [<name-of-ci-image>] [<name-of-ci-namespace>]
+Usage: ci.sh [flags] [tag] [<name-of-ci-namespace>] [<name-of-operator-image>] [<name-of-webhook-image>]
   supported flags:
-    --no-cleanup     keep test pod running after all case finish
-    --help           show this message
+    --no-cleanup        keep test pod running after all case finish
+    --include-webhook   also build and deploy webhook component
+    --help              show this message
   supported tags:
-    DEPLOY           run from deploy step
-    TEST             run from test step
-    CLEAN or DELETE  run from clean up step
+    DEPLOY            run from deploy step
+    TEST              run from test step
+    CLEAN or DELETE   run from clean up step
+  default config:
+    ci namespace: ${default_ci_namespace}
+    operator image: ${default_operator_image}:${ci_tag}
+    webhook image: ${default_webhook_image}:${ci_tag}
 EOF
 }
 
-# Constants
-operator_name="virtual-env-operator"
-default_image="virtualenvironment/${operator_name}"
-default_tag="ci"
-
 # Configure
 skip_cleanup="N"
+with_webhook="N"
 
 # Parameters
 for p in ${@}; do
     if [[ "${p}" =~ ^--.*$ ]]; then
-        if [ "${p}" = "--no-cleanup" ]; then
+        if [[ "${p}" = "--no-cleanup" ]]; then
             skip_cleanup="Y"
-        elif [ "${p}" = "--help" ]; then
+        elif [[ "${p}" = "--include-webhook" ]]; then
+            with_webhook="Y"
+        elif [[ "${p}" = "--help" ]]; then
             usage
             exit 0
         fi
@@ -42,14 +53,25 @@ if [[ "${1}" =~ ^[A-Z]{1,}$ ]]; then
     action="${1}"
     shift
 fi
-ci_image="${1}"
-if [[ "${ci_image}" = "" || "${ci_image}" = "_" ]]; then
-    ci_image="${default_image}:${default_tag}"
+ns="${1}"
+if [[ "${ns}" = "" || "${ns}" = "_" ]]; then
+    ns="${default_ci_namespace}"
 fi
-ns="${2:-virtual-env-ci}"
+ci_operator_image="${2}"
+if [[ "${ci_operator_image}" = "" || "${ci_operator_image}" = "_" ]]; then
+    ci_operator_image="${default_operator_image}:${ci_tag}"
+fi
+ci_webhook_image="${3}"
+if [[ "${ci_webhook_image}" = "" ]]; then
+    ci_webhook_image="${default_webhook_image}:${ci_tag}"
+fi
 
-echo "> Using image $ci_image"
-echo "> Using namespace $ns"
+# Print context
+echo "> Using namespace ${ns}"
+echo "> Using operator image ${ci_operator_image}"
+if [[ "${with_webhook}" = "Y" ]]; then
+    echo "> Using webhook image ${ci_webhook_image}"
+fi
 
 echo "---- Begin CI Task ----"
 
@@ -66,28 +88,39 @@ goto() {
 }
 
 # Shortcuts
-if [[ ${action} = "DEPLOY" ]]; then
+if [[ "${action}" = "DEPLOY" ]]; then
     goto DEPLOY_ANCHOR
-elif [[ ${action} = "TEST" ]]; then
+elif [[ "${action}" = "TEST" ]]; then
     goto TEST_ANCHOR
-elif [[ ${action} = "CLEAN" || ${action} = "DELETE" ]]; then
+elif [[ "${action}" = "CLEAN" || "${action}" = "DELETE" ]]; then
     goto CLEAN_UP_ANCHOR
 fi
 
 # >>>>>>> BUILD_ANCHOR:
 
 # Generate temporary operator image
-operator-sdk build \
-    --go-build-args "-ldflags -X=alibaba.com/virtual-env-operator/version.BuildTime=`date +%Y-%m-%d_%H:%M` -o build/_output/operator/virtual-env-operator" \
-    --image-build-args "--no-cache" ${ci_image}
-if [[ ${?} != 0 ]]; then
-    echo "Build failed !!!"
+make build-operator OPERATOR_IMAGE_AND_VERSION=${ci_operator_image}
+if [[ ${?} -ne 0 ]]; then
+    echo "Build operator failed !!!"
     exit -1
 fi
-docker push ${ci_image}
-if [[ ${?} != 0 ]]; then
-    echo "Image push failed !!!"
+docker push ${ci_operator_image}
+if [[ ${?} -ne 0 ]]; then
+    echo "Push operator image failed !!!"
     exit -1
+fi
+
+if [[ "${with_webhook}" = "Y" ]]; then
+    make build-webhook WEBHOOK_IMAGE_AND_VERSION=${ci_webhook_image}
+    if [[ ${?} -ne 0 ]]; then
+        echo "Build webhook failed !!!"
+        exit -1
+    fi
+    docker push ${ci_webhook_image}
+    if [[ ${?} -ne 0 ]]; then
+        echo "Push webhook image failed !!!"
+        exit -1
+    fi
 fi
 
 echo "---- Build OK ----"
@@ -97,7 +130,7 @@ echo "---- Build OK ----"
 # Create temporary namespace and put operator into it
 kubectl create namespace ${ns}
 for f in deploy/*.yaml; do
-    cat $f | sed "s#${default_image}:[^ ]*#${ci_image}#g" | kubectl apply -n ${ns} -f -
+    cat $f | sed "s#${default_operator_image}:[^ ]*#${ci_operator_image}#g" | kubectl apply -n ${ns} -f -
 done
 kubectl label namespaces ${ns} environment-tag-injection=enabled
 echo "---- Operator deployment ready ----"
@@ -170,7 +203,7 @@ echo "---- Functional check OK ----"
 # >>>>>>> CLEAN_UP_ANCHOR:
 
 # Clean up everything
-if [ "${skip_cleanup}" != "Y" ]; then
+if [[ "${skip_cleanup}" != "Y" ]]; then
     examples/deploy/app.sh delete ${ns}
     kubectl delete -n ${ns} deployment sleep
     for f in deploy/*.yaml; do kubectl delete -n ${ns} -f ${f}; done
