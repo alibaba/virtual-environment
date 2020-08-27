@@ -129,9 +129,13 @@ echo "---- Build OK ----"
 
 # Create temporary namespace and put operator into it
 kubectl create namespace ${ns}
+kubectl apply -f deploy/global/ktenv_crd.yaml
 for f in deploy/*.yaml; do
-    cat $f | sed "s#${default_operator_image}:[^ ]*#${ci_operator_image}#g" | kubectl apply -n ${ns} -f -
+    cat $f | sed "s#${default_operator_image}:.*#${ci_operator_image}#g" | kubectl apply -n ${ns} -f -
 done
+if [[ "${with_webhook}" = "Y" ]]; then
+    cat deploy/global/ktenv_webhook.yaml | sed "s#${default_webhook_image}:.*#${ci_webhook_image}#g" | kubectl apply -f -
+fi
 kubectl label namespaces ${ns} environment-tag-injection=enabled
 echo "---- Operator deployment ready ----"
 
