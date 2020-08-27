@@ -34,7 +34,7 @@ spec:
 | envLabel.splitter      | .             | 虚拟环境名中用于划分环境默认路由层级的字符（只能是单个字符） |
 | envLabel.defaultSubset |               | 请求未匹配到任何存在的虚拟环境时，进行兜底虚拟环境名（默认为随机路由） |
 
-其中`envHeader.aliases`配置主要用于需要从Header内容提取部分文本作为环境名的情况，例如[回调流量的染色](https://github.com/alibaba/virtual-environment/issues/14)。此功能会显著增加生成的Istio规则量，如非必须，请勿使用。
+其中`envHeader.aliases`配置主要用于需要从Header内容提取部分文本作为环境名的情况，例如[回调流量的染色](https://github.com/alibaba/virtual-environment/issues/14)。此功能会显著增加生成的Istio规则量，但通常不会造成性能问题。
 
 具体参数作用如下：
 

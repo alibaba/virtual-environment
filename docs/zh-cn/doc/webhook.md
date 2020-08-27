@@ -2,17 +2,29 @@
 
 KtEnv产品中包含一个全局的Admission Webhook组件，他的主要作用是将Pod上的`环境标`信息通过环境变量注入到Sidecar容器里，便于Sidecar为出口流量的Header添加恰当的环境标。倘若集群中无需使用流量自动染色功能（即创建VirtualEnvironment资源时，`envHeader.autoInject`值始终为`false`），则可以无需部署此组件。
 
-Webhook的配置位于发布包的`webhooks`子目录内，名称是`virtualenvironment_tag_injector_webhook.yaml`，其中包含两项可配置内容。
+## 配置参数
 
-## envLabel变量
+Webhook组件的配置参数位于KtEnv发布包`webhooks`子目录内`virtualenvironment_tag_injector_webhook.yaml`文件的`Deployment`对象内，包含两项可配置变量。
 
-在配置文件的`Deployment`资源内，有一个名为`envLabel`环境变量，它的值需要与集群中存在的VirtualEnvironment资源的`envLabel.name`值匹配。倘若集群中含有多种不同`envLabel.name`取值的VirtualEnvironment资源，则应该将这些值全部列出来，用逗号“,”分隔。例如：
+**envLabel环境变量**
+
+参数`envLabel`的值需要与集群中存在的VirtualEnvironment资源的`envLabel.name`值匹配。倘若集群中含有多种不同`envLabel.name`取值的VirtualEnvironment资源，则应该将这些值全部列出来，用逗号“,”分隔。例如：
 
 ```yaml
 env:
   - name: envLabel
     value: virtual-env,custom-virtual-env
 ```
+
+**logLevel环境变量**
+
+参数`logLevel`通常不需要修改，他会影响Webhook输出日志的密集程度，可选值如下：
+
+- ERROR: 只记录错误信息，输出的日志量最少
+- INFO: 输出异常错误和正常情况下的自动加标记录（默认值）
+- ERROR: 输出包括访问记录在内的所有日志，通常只在排查问题的时候使用
+
+可以直接修改`virtualenvironment_tag_injector_webhook.yaml`文件并通过`kubectl apply`使之生效；或直接通过`kubectl edit`命令修改`kt-virtual-environment`Namespace中名为`webhook-server`的Deployment对象完成配置的修改。
 
 ## TLS证书和秘钥
 
@@ -52,4 +64,10 @@ cd webhooks
 sed -i "s/tls.crt: .*/tls.crt: ${tls_crt_b64}/" virtualenvironment_tag_injector_webhook.yaml
 sed -i "s/tls.key: .*/tls.key: ${tls_key_b64}/" virtualenvironment_tag_injector_webhook.yaml
 sed -i "s/caBundle: .*/caBundle: ${ca_pem_b64}/" virtualenvironment_tag_injector_webhook.yaml
+```
+
+部署或重新部署Webhook组件使修改生效：
+
+```bash
+kubectl apply -f virtualenvironment_tag_injector_webhook.yaml
 ```
