@@ -20,8 +20,8 @@ cd v0.3.2/
 将目录中的CRD和Webhook组件添加到Kubernetes（其中Webhook组件携带了默认的自签名秘钥，可参考[Webhook配置文档](zh-cn/doc/webhook.md)替换）。
 
 ```bash
-kubectl apply -f crds/env.alibaba.com_virtualenvironments_crd.yaml
-kubectl apply -f webhooks/virtualenvironment_tag_injector_webhook.yaml
+kubectl apply -f global/ktenv_crd.yaml
+kubectl apply -f global/ktenv_webhook.yaml
 ```
 
 ## 检查部署结果
@@ -72,16 +72,14 @@ Operator是由CRD组件定义的虚拟环境管理器实例，需要在**每个*
 以使用`default` Namespace为例，通过以下命令完成部署。
 
 ```bash
-kubectl apply -n default -f operator.yaml
+kubectl apply -n default -f ktenv_operator.yaml
 kubectl label namespace default environment-tag-injection=enabled
 ```
 
 如果集群开启了RBAC，还需要部署相应的Role和ServiceAccount。
 
 ```bash
-kubectl apply -n default -f service_account.yaml
-kubectl apply -n default -f role.yaml
-kubectl apply -n default -f role_binding.yaml
+kubectl apply -n default -f ktenv_service_account.yaml
 ```
 
 现在，Kubernetes集群就已经具备使用虚拟环境能力了。

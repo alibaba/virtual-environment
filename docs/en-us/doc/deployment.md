@@ -17,8 +17,8 @@ Download latest ZIP archive from [release page](https://github.com/alibaba/virtu
 wget https://github.com/alibaba/virtual-environment/releases/download/v0.3.2/kt-virtual-environment-v0.3.2.zip
 unzip kt-virtual-environment-v0.3.2.zip
 cd v0.3.2/
-kubectl apply -f crds/env.alibaba.com_virtualenvironments_crd.yaml
-kubectl apply -f webhooks/virtualenvironment_tag_injector_webhook.yaml
+kubectl apply -f global/ktenv_crd.yaml
+kubectl apply -f global/ktenv_webhook.yaml
 ```
 
 ## Check deployment result
@@ -71,16 +71,14 @@ Put the operator into *ALL* namespaces which require virtual environment, and pu
 Here we use `default` namespace as an example.
 
 ```bash
-kubectl apply -n default -f operator.yaml
+kubectl apply -n default -f ktenv_operator.yaml
 kubectl label namespace default environment-tag-injection=enabled
 ```
 
 If the cluster has RBAC enabled, please also apply Role and ServiceAccount
 
 ```bash
-kubectl apply -n default -f service_account.yaml
-kubectl apply -n default -f role.yaml
-kubectl apply -n default -f role_binding.yaml
+kubectl apply -n default -f ktenv_service_account.yaml
 ```
 
 Now, the Kubernetes cluster already has capability to empower virtual environment.

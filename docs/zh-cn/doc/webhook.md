@@ -4,7 +4,7 @@ KtEnv产品中包含一个全局的Admission Webhook组件，他的主要作用�
 
 ## 配置参数
 
-Webhook组件的配置参数位于KtEnv发布包`webhooks`子目录内`virtualenvironment_tag_injector_webhook.yaml`文件的`Deployment`对象内，包含两项可配置变量。
+Webhook组件的配置参数位于KtEnv发布包`global`子目录内`ktenv_webhook.yaml`文件的`Deployment`对象内，包含两项可配置变量。
 
 **envLabel环境变量**
 
@@ -24,7 +24,7 @@ env:
 - INFO: 输出异常错误和正常情况下的自动加标记录（默认值）
 - ERROR: 输出包括访问记录在内的所有日志，通常只在排查问题的时候使用
 
-可以直接修改`virtualenvironment_tag_injector_webhook.yaml`文件并通过`kubectl apply`使之生效；或直接通过`kubectl edit`命令修改`kt-virtual-environment`Namespace中名为`webhook-server`的Deployment对象完成配置的修改。
+可以直接修改`ktenv_webhook.yaml`文件并通过`kubectl apply`使之生效；或直接通过`kubectl edit`命令修改`kt-virtual-environment`Namespace中名为`webhook-server`的Deployment对象完成配置的修改。
 
 ## TLS证书和秘钥
 
@@ -57,17 +57,17 @@ tls_key_b64="$(openssl base64 -A < webhook-server-tls.key)"
 ca_pem_b64="$(openssl base64 -A < ca.crt)"
 ```
 
-进入部署包中的`webhooks`目录（见[部署文档](zh-cn/doc/deployment.md)），然后使用以下命令替换配置文件中的相应属性值。
+进入部署包中的`global`目录（见[部署文档](zh-cn/doc/deployment.md)），然后使用以下命令替换配置文件中的相应属性值。
 
 ```bash
-cd webhooks
-sed -i "s/tls.crt: .*/tls.crt: ${tls_crt_b64}/" virtualenvironment_tag_injector_webhook.yaml
-sed -i "s/tls.key: .*/tls.key: ${tls_key_b64}/" virtualenvironment_tag_injector_webhook.yaml
-sed -i "s/caBundle: .*/caBundle: ${ca_pem_b64}/" virtualenvironment_tag_injector_webhook.yaml
+cd global
+sed -i "s/tls.crt: .*/tls.crt: ${tls_crt_b64}/" ktenv_webhook.yaml
+sed -i "s/tls.key: .*/tls.key: ${tls_key_b64}/" ktenv_webhook.yaml
+sed -i "s/caBundle: .*/caBundle: ${ca_pem_b64}/" ktenv_webhook.yaml
 ```
 
 部署或重新部署Webhook组件使修改生效：
 
 ```bash
-kubectl apply -f virtualenvironment_tag_injector_webhook.yaml
+kubectl apply -f ktenv_webhook.yaml
 ```
