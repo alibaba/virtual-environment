@@ -74,7 +74,7 @@ func (r *ReconcileStatefulSet) Reconcile(request reconcile.Request) (reconcile.R
 			reqLogger.Info("Removing StatefulSet")
 			delete(shared.AvailableLabels, util.LabelMark("StatefulSet", request.Name))
 			shared.Lock.RUnlock()
-			shared.ReconcileVirtualEnv(request.Namespace, reqLogger)
+			shared.TriggerReconcile("[-StatefulSet]" + request.Name)
 			return reconcile.Result{}, nil
 		}
 		shared.Lock.RUnlock()
@@ -86,6 +86,6 @@ func (r *ReconcileStatefulSet) Reconcile(request reconcile.Request) (reconcile.R
 
 	shared.Lock.RUnlock()
 
-	shared.ReconcileVirtualEnv(request.Namespace, reqLogger)
+	shared.TriggerReconcile("[+StatefulSet]" + request.Name)
 	return reconcile.Result{}, nil
 }

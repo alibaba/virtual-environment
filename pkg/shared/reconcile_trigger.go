@@ -1,12 +1,14 @@
 package shared
 
 import (
-	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"time"
 )
+
+var log = logf.Log.WithName("reconcile-trigger")
 
 // guaranteed time interval between virtual environment reconcile
 const reconcileCoolOffSeconds = 5
@@ -21,7 +23,8 @@ var ShouldDelayRefresh = AtomBool{}
 var VirtualEnvController = new(controller.Controller)
 
 // trigger virtual environment reconcile
-func ReconcileVirtualEnv(namespace string, logger logr.Logger) {
+func TriggerReconcile(resourceName string) {
+	logger := log.WithValues("Ref", resourceName)
 	// only the first changed resource would trigger a reconcile
 	if ReconcileTriggerLock.TryLock() {
 		logger.Info("trigger reconcile VirtualEnvironment")
@@ -34,7 +37,7 @@ func ReconcileVirtualEnv(namespace string, logger logr.Logger) {
 			}
 			if VirtualEnvIns != "" {
 				_, err := (*VirtualEnvController).Reconcile(reconcile.Request{
-					NamespacedName: types.NamespacedName{Name: VirtualEnvIns, Namespace: namespace},
+					NamespacedName: types.NamespacedName{Name: VirtualEnvIns, Namespace: ""},
 				})
 				if err != nil {
 					logger.Error(err, "failed to reconcile VirtualEnvironment")

@@ -88,6 +88,7 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 			// delete related virtual service and destination rule
 			_ = router.GetDefaultRoute().CleanupRoute(r.client, request.Namespace, request.Name)
 			shared.Lock.RUnlock()
+			shared.TriggerReconcile("[-Service]" + request.Name)
 			return reconcile.Result{}, nil
 		}
 		shared.Lock.RUnlock()
@@ -120,6 +121,6 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 
 	shared.Lock.RUnlock()
 
-	shared.ReconcileVirtualEnv(request.Namespace, reqLogger)
+	shared.TriggerReconcile("[+Service]" + request.Name)
 	return reconcile.Result{}, nil
 }

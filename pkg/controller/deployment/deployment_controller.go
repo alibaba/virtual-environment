@@ -74,7 +74,7 @@ func (r *ReconcileDeploymentListener) Reconcile(request reconcile.Request) (reco
 			reqLogger.Info("Removing Deployment")
 			delete(shared.AvailableLabels, util.LabelMark("Deployment", request.Name))
 			shared.Lock.RUnlock()
-			shared.ReconcileVirtualEnv(request.Namespace, reqLogger)
+			shared.TriggerReconcile("[-Deployment]" + request.Name)
 			return reconcile.Result{}, nil
 		}
 		shared.Lock.RUnlock()
@@ -86,6 +86,6 @@ func (r *ReconcileDeploymentListener) Reconcile(request reconcile.Request) (reco
 
 	shared.Lock.RUnlock()
 
-	shared.ReconcileVirtualEnv(request.Namespace, reqLogger)
+	shared.TriggerReconcile("[+Deployment]" + request.Name)
 	return reconcile.Result{}, nil
 }
