@@ -78,11 +78,17 @@ type ReconcileVirtualEnv struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Ref", request.Namespace+":"+request.Name)
+	logger := log.WithValues("Ref", "[VirtualEnv]"+request.Name)
+
+	// if not invoked by reconcile signal, just send a trigger
+	if request.Namespace != shared.ExecuteReconcileSignal {
+		shared.TriggerReconcile("[VirtualEnv]" + request.Name)
+		return reconcile.Result{}, nil
+	}
 
 	shared.Lock.Lock()
 
-	virtualEnv, err := r.fetchVirtualEnvIns(request, reqLogger)
+	virtualEnv, err := r.fetchVirtualEnvIns(request, logger)
 	if err != nil && !shared.IsVirtualEnvChanged(err) {
 		shared.Lock.Unlock()
 		if errors.IsNotFound(err) {
@@ -92,8 +98,8 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 		}
 	}
 
-	reqLogger.Info("Reconciling VirtualEnvironment")
-	err = r.checkTagAppender(virtualEnv, request, shared.IsVirtualEnvChanged(err), reqLogger)
+	logger.Info("Reconciling VirtualEnvironment")
+	err = r.checkTagAppender(virtualEnv, request, shared.IsVirtualEnvChanged(err))
 	for svc, service := range shared.AvailableServices {
 		selector := service.Selectors
 		availableLabels := parser.FindAllVirtualEnvLabelValues(shared.AvailableLabels, virtualEnv.Spec.EnvLabel.Name)
@@ -110,8 +116,8 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 }
 
 // create or delete tag appender according to virtual environment configure
-func (r *ReconcileVirtualEnv) checkTagAppender(virtualEnv *envv1alpha2.VirtualEnvironment,
-	request reconcile.Request, isVirtualEnvChanged bool, logger logr.Logger) error {
+func (r *ReconcileVirtualEnv) checkTagAppender(virtualEnv *envv1alpha2.VirtualEnvironment, request reconcile.Request,
+	isVirtualEnvChanged bool) error {
 	tagAppenderStatus := router.GetDefaultRoute().CheckTagAppender(r.client, virtualEnv, request.Namespace, request.Name)
 	if virtualEnv.Spec.EnvHeader.AutoInject {
 		if isVirtualEnvChanged || common.IsTagAppenderNeedUpdate(tagAppenderStatus) {
@@ -127,7 +133,8 @@ func (r *ReconcileVirtualEnv) checkTagAppender(virtualEnv *envv1alpha2.VirtualEn
 }
 
 // fetch the VirtualEnv instance from request
-func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request, logger logr.Logger) (*envv1alpha2.VirtualEnvironment, error) {
+func (r *ReconcileVirtualEnv) fetchVirtualEnvIns(request reconcile.Request,
+	logger logr.Logger) (*envv1alpha2.VirtualEnvironment, error) {
 	virtualEnv := &envv1alpha2.VirtualEnvironment{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, virtualEnv)
 	if err != nil {

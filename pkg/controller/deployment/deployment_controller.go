@@ -63,7 +63,7 @@ type ReconcileDeploymentListener struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileDeploymentListener) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Ref", request.Namespace+":"+request.Name)
+	logger := log.WithValues("Ref", "[Deployment]"+request.Name)
 
 	shared.Lock.RLock()
 
@@ -71,7 +71,7 @@ func (r *ReconcileDeploymentListener) Reconcile(request reconcile.Request) (reco
 	err := r.client.Get(context.TODO(), request.NamespacedName, deployment)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			reqLogger.Info("Removing Deployment")
+			logger.Info("Removing Deployment")
 			delete(shared.AvailableLabels, util.LabelMark("Deployment", request.Name))
 			shared.Lock.RUnlock()
 			shared.TriggerReconcile("[-Deployment]" + request.Name)
@@ -81,7 +81,7 @@ func (r *ReconcileDeploymentListener) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	reqLogger.Info("Adding Deployment")
+	logger.Info("Adding Deployment")
 	shared.AvailableLabels[util.LabelMark("Deployment", request.Name)] = deployment.Spec.Template.Labels
 
 	shared.Lock.RUnlock()

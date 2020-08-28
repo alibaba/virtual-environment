@@ -70,7 +70,7 @@ type ReconcileServiceListener struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Ref", request.Namespace+":"+request.Name)
+	logger := log.WithValues("Ref", "[Service]"+request.Name)
 
 	if request.Name == "kubernetes" {
 		// Ignore kubernetes service
@@ -83,7 +83,7 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 	err := r.client.Get(context.TODO(), request.NamespacedName, service)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			reqLogger.Info("Removing Service")
+			logger.Info("Removing Service")
 			delete(shared.AvailableServices, request.Name)
 			// delete related virtual service and destination rule
 			_ = router.GetDefaultRoute().CleanupRoute(r.client, request.Namespace, request.Name)
@@ -95,7 +95,7 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 		return reconcile.Result{}, err
 	}
 
-	reqLogger.Info("Adding Service")
+	logger.Info("Adding Service")
 	serviceInfo := shared.ServiceInfo{}
 	if value, ok := shared.AvailableServices[request.Name]; ok {
 		serviceInfo = value

@@ -63,7 +63,7 @@ type ReconcileStatefulSet struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileStatefulSet) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Ref", request.Namespace+":"+request.Name)
+	logger := log.WithValues("Ref", "[StatefulSet]"+request.Name)
 
 	shared.Lock.RLock()
 
@@ -71,7 +71,7 @@ func (r *ReconcileStatefulSet) Reconcile(request reconcile.Request) (reconcile.R
 	err := r.client.Get(context.TODO(), request.NamespacedName, statefulset)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			reqLogger.Info("Removing StatefulSet")
+			logger.Info("Removing StatefulSet")
 			delete(shared.AvailableLabels, util.LabelMark("StatefulSet", request.Name))
 			shared.Lock.RUnlock()
 			shared.TriggerReconcile("[-StatefulSet]" + request.Name)
@@ -81,7 +81,7 @@ func (r *ReconcileStatefulSet) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
-	reqLogger.Info("Adding StatefulSet")
+	logger.Info("Adding StatefulSet")
 	shared.AvailableLabels[util.LabelMark("StatefulSet", request.Name)] = statefulset.Spec.Template.Labels
 
 	shared.Lock.RUnlock()

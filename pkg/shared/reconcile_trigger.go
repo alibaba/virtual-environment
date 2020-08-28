@@ -10,21 +10,25 @@ import (
 
 var log = logf.Log.WithName("reconcile-trigger")
 
-// guaranteed time interval between virtual environment reconcile
-const reconcileCoolOffSeconds = 5
+const (
+	// guaranteed time interval between virtual environment reconcile
+	reconcileCoolOffSeconds = 5
+	// a special namespace name means to execute reconcile
+	ExecuteReconcileSignal = "VIRTUAL_ENVIRONMENT_RECONCILE_SIGNAL"
+)
 
-// mutex to make sure there is only one reconcile trigger candidate
-var ReconcileTriggerLock = TriableMutex{}
-
-// mechanism to reduce virtual env reconcile frequency
-var ShouldDelayRefresh = AtomBool{}
-
-// virtual env controller
-var VirtualEnvController = new(controller.Controller)
+var (
+	// mutex to make sure there is only one reconcile trigger candidate
+	ReconcileTriggerLock = TriableMutex{}
+	// mechanism to reduce virtual env reconcile frequency
+	ShouldDelayRefresh = AtomBool{}
+	// virtual env controller
+	VirtualEnvController = new(controller.Controller)
+)
 
 // trigger virtual environment reconcile
-func TriggerReconcile(resourceName string) {
-	logger := log.WithValues("Ref", resourceName)
+func TriggerReconcile(referenceName string) {
+	logger := log.WithValues("Ref", referenceName)
 	// only the first changed resource would trigger a reconcile
 	if ReconcileTriggerLock.TryLock() {
 		logger.Info("trigger reconcile VirtualEnvironment")
@@ -37,7 +41,7 @@ func TriggerReconcile(resourceName string) {
 			}
 			if VirtualEnvIns != "" {
 				_, err := (*VirtualEnvController).Reconcile(reconcile.Request{
-					NamespacedName: types.NamespacedName{Name: VirtualEnvIns, Namespace: ""},
+					NamespacedName: types.NamespacedName{Name: VirtualEnvIns, Namespace: ExecuteReconcileSignal},
 				})
 				if err != nil {
 					logger.Error(err, "failed to reconcile VirtualEnvironment")
