@@ -21,9 +21,9 @@ Usage: ci.sh [flags] [tag] [<name-of-ci-namespace>] [<name-of-operator-image>] [
     --include-webhook   also build and deploy webhook component
     --help              show this message
   supported tags:
-    DEPLOY            run from deploy step
-    TEST              run from test step
-    CLEAN or DELETE   run from clean up step
+    @DEPLOY             run from deploy step
+    @TEST               run from test step
+    @CLEAN or @DELETE   run from clean up step
   default config:
     ci namespace: ${default_ci_namespace}
     operator image: ${default_operator_image}:${ci_tag}
@@ -48,11 +48,11 @@ for p in ${@}; do
         fi
         shift
     fi
+    if [[ "${1}" =~ ^@[A-Z]{1,}$ ]]; then
+        action="${1#*@}"
+        shift
+    fi
 done
-if [[ "${1}" =~ ^[A-Z]{1,}$ ]]; then
-    action="${1}"
-    shift
-fi
 ns="${1}"
 if [[ "${ns}" = "" || "${ns}" = "_" ]]; then
     ns="${default_ci_namespace}"
