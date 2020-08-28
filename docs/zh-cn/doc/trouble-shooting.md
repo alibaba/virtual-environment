@@ -6,33 +6,38 @@
 
 ## 路由规则不符合预期
 
-首先检查目标Namespace中是否正确创建了VirtualEnvironment实例
+首先检查目标Namespace中是否正确创建了VirtualEnvironment实例：
 
 ```bash
 kubectl -n $NS get VirtualEnvironment
 ```
 
-如果存在，可以查看VirtualEnvironment的运行日志
+然后检查是否生成了预期的Istio资源：
 
 ```bash
-kubectl logs -n $NS $(kubectl get pod -l name=virtual-env-operator -o jsonpath='{.items[0].metadata.name}' -n $NS) virtual-env-operator --tail 10 --follow
-```
-
-若没有明显错误信息，继续检查是否生成了预期的Istio资源
-
-```bash
+# 先查看Service的实例数
+kubectl -n $NS get Service
+# 对于每个Service都应该生成一个同名的VirtualService和一个同名的DestinationRule实例
 kubectl -n $NS get VirtualService
 kubectl -n $NS get DestinationRule
-kubectl -n $NS get EnvoyFilter
 ```
 
-最后检查这些资源的内容是否正确
+如果实例数目不正常，可检查VirtualEnvironment的实例配置和运行日志，通常是配置不正确或生成Istio资源时候出错了：
 
 ```bash
-kubectl -n $NS get VirtualService <实例名称> -o yaml
+# 先看VirtualEnvironment实例的日志，留意其中的错误信息，Ctrl+C结束
+kubectl logs -n $NS $(kubectl get pod -l name=virtual-env-operator -o jsonpath='{.items[0].metadata.name}' -n $NS) virtual-env-operator --tail 50 --follow
+# 若没有在日志中发现可以信息，请认真检查VirtualEnvironment配置是否符合实际情况
+kubectl -n $NS get VirtualEnvironment -o yaml
 ```
 
-路由的可靠性由Istio保障，若生成的Istio资源配置无误，则需结合Istio本身功能进一步排查原因。
+如果Istio资源数目正常，说明路由规则已生成（可以用`kubectl -n $NS get VirtualService <服务名> -o yaml`查看具体规则，这里通常不会有问题），接下来可检查Pod的Envoy Sidecar日志：
+
+```bash
+kubectl -n $NS logs <任意一个Pod名字> istio-proxy --tail 100
+```
+
+若路由配置正常，Sidecar运行也无任何错误，则需结合Istio本身功能进一步排查原因。
 
 以下是几种比较常见的错误原因：
 
