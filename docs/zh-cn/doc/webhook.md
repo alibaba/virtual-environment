@@ -57,7 +57,7 @@ tls_key_b64="$(openssl base64 -A < webhook-server-tls.key)"
 ca_pem_b64="$(openssl base64 -A < ca.crt)"
 ```
 
-进入部署包中的`global`目录（见[部署文档](zh-cn/doc/deployment.md)），然后使用以下命令替换配置文件中的相应属性值。
+进入部署包中的`global`目录（见[部署文档](zh-cn/doc/deployment.md?id=部署KtEnv组件)），然后使用以下命令替换配置文件中的相应属性值。
 
 ```bash
 cd global
