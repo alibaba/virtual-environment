@@ -31,7 +31,7 @@ func TriggerReconcile(referenceName string) {
 	logger := log.WithValues("Ref", referenceName)
 	// only the first changed resource would trigger a reconcile
 	if ReconcileTriggerLock.TryLock() {
-		logger.Info("trigger reconcile VirtualEnvironment")
+		logger.Info("Trigger reconcile VirtualEnvironment")
 		go func() {
 			ShouldDelayRefresh.Set(true)
 			// reconcile triggered only after the cooling time of the last resource change event ends
@@ -39,9 +39,10 @@ func TriggerReconcile(referenceName string) {
 				ShouldDelayRefresh.Set(false)
 				time.Sleep(reconcileCoolOffSeconds * time.Second)
 			}
-			if VirtualEnvIns != "" {
+			if VirtualEnvIns != nil {
+				logger.Info("Send reconcile signal")
 				_, err := (*VirtualEnvController).Reconcile(reconcile.Request{
-					NamespacedName: types.NamespacedName{Name: VirtualEnvIns, Namespace: ExecuteReconcileSignal},
+					NamespacedName: types.NamespacedName{Name: VirtualEnvIns.Name, Namespace: ExecuteReconcileSignal},
 				})
 				if err != nil {
 					logger.Error(err, "failed to reconcile VirtualEnvironment")

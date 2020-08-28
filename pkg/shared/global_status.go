@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"k8s.io/apimachinery/pkg/types"
 	"sync"
 )
 
@@ -16,7 +17,7 @@ type ServiceInfo struct {
 var Lock = sync.RWMutex{}
 
 // virtual env instance name
-var VirtualEnvIns = ""
+var VirtualEnvIns *types.NamespacedName = nil
 
 // service name -> service info
 var AvailableServices = make(map[string]ServiceInfo)
