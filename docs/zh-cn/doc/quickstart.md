@@ -38,7 +38,7 @@ deploy/app.sh apply default
 
 ```bash
 # 进入集群中的容器
-kubectl exec -n default -it $(kubectl get -n default pod -l app=sleep -o jsonpath='{.items[0].metadata.name}') /bin/sh
+kubectl exec -n default -it $(kubectl get -n default pod -l app=sleep -o jsonpath='{.items[0].metadata.name}') -- /bin/sh
 ```
 
 分别在请求头加上不同的虚拟环境名称，使用`curl`工具调用`app-js`服务。注意该示例创建的VirtualEnvironment实例配置使用`-`作为环境层级分隔符，同时配置了传递标签Header的键名为`ali-env-mark`。

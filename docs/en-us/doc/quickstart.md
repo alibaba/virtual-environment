@@ -36,7 +36,7 @@ Enter any pod in the same Namespace, e.g. the `sleep` pod created in previous st
 
 ```bash
 # Enter pod in cluster
-kubectl exec -n default -it $(kubectl get -n default pod -l app=sleep -o jsonpath='{.items[0].metadata.name}') /bin/sh
+kubectl exec -n default -it $(kubectl get -n default pod -l app=sleep -o jsonpath='{.items[0].metadata.name}') -- /bin/sh
 ```
 
 Use `curl` tool call `app-js` service with different virtual-environment name in Header. Please notice that in this example, symbol `-` is used as the environment level splitter, and the virtual-environment Header key is configured as `ali-env-mark`.
