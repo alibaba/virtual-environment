@@ -2,6 +2,7 @@ package statefulset
 
 import (
 	"alibaba.com/virtual-env-operator/pkg/controller/util"
+	"alibaba.com/virtual-env-operator/pkg/controller/virtualenv"
 	"alibaba.com/virtual-env-operator/pkg/shared"
 	"context"
 	appsv1 "k8s.io/api/apps/v1"
@@ -74,7 +75,7 @@ func (r *ReconcileStatefulSet) Reconcile(request reconcile.Request) (reconcile.R
 			logger.Info("Removing StatefulSet")
 			delete(shared.AvailableLabels, util.LabelMark("StatefulSet", request.Name))
 			shared.Lock.RUnlock()
-			shared.TriggerReconcile("[-StatefulSet]" + request.Name)
+			virtualenv.TriggerReconcile()
 			return reconcile.Result{}, nil
 		}
 		shared.Lock.RUnlock()
@@ -86,6 +87,6 @@ func (r *ReconcileStatefulSet) Reconcile(request reconcile.Request) (reconcile.R
 
 	shared.Lock.RUnlock()
 
-	shared.TriggerReconcile("[+StatefulSet]" + request.Name)
+	virtualenv.TriggerReconcile()
 	return reconcile.Result{}, nil
 }

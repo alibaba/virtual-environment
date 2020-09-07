@@ -2,6 +2,7 @@ package deployment
 
 import (
 	"alibaba.com/virtual-env-operator/pkg/controller/util"
+	"alibaba.com/virtual-env-operator/pkg/controller/virtualenv"
 	"alibaba.com/virtual-env-operator/pkg/shared"
 	"context"
 	appsv1 "k8s.io/api/apps/v1"
@@ -74,7 +75,7 @@ func (r *ReconcileDeploymentListener) Reconcile(request reconcile.Request) (reco
 			logger.Info("Removing Deployment")
 			delete(shared.AvailableLabels, util.LabelMark("Deployment", request.Name))
 			shared.Lock.RUnlock()
-			shared.TriggerReconcile("[-Deployment]" + request.Name)
+			virtualenv.TriggerReconcile()
 			return reconcile.Result{}, nil
 		}
 		shared.Lock.RUnlock()
@@ -86,6 +87,6 @@ func (r *ReconcileDeploymentListener) Reconcile(request reconcile.Request) (reco
 
 	shared.Lock.RUnlock()
 
-	shared.TriggerReconcile("[+Deployment]" + request.Name)
+	virtualenv.TriggerReconcile()
 	return reconcile.Result{}, nil
 }

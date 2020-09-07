@@ -47,7 +47,6 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	shared.VirtualEnvController = &c
 	return nil
 }
 
@@ -70,14 +69,17 @@ type ReconcileVirtualEnv struct {
 func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithValues("Ref", "[VirtualEnv]"+request.Name)
 
-	// if not invoked by reconcile signal, just send a trigger
+	// trigger first reconcile immediately
 	if shared.VirtualEnvIns == nil {
-		ReconcileVirtualEnvironment(r.client, r.scheme, request.NamespacedName, logger)
-	} else if request.Namespace == shared.ExecuteReconcileSignal {
-		ReconcileVirtualEnvironment(r.client, r.scheme, *shared.VirtualEnvIns, logger)
+		globalVirtualEnvironment = r
+		_, err := reconcileVirtualEnvironment(&request.NamespacedName)
+		if err != nil {
+			logger.Error(err, "failed to initialize VirtualEnvironment")
+		}
+	} else {
+		logger.Info("Push reconcile request to trigger")
+		TriggerReconcile()
 	}
 
-	logger.Info("Push reconcile request to trigger")
-	shared.TriggerReconcile("[VirtualEnv]" + request.Name)
 	return reconcile.Result{}, nil
 }

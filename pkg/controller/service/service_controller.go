@@ -2,6 +2,7 @@ package service
 
 import (
 	"alibaba.com/virtual-env-operator/pkg/component/router"
+	"alibaba.com/virtual-env-operator/pkg/controller/virtualenv"
 	"alibaba.com/virtual-env-operator/pkg/shared"
 	"context"
 	corev1 "k8s.io/api/core/v1"
@@ -88,7 +89,7 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 			// delete related virtual service and destination rule
 			_ = router.GetDefaultRoute().CleanupRoute(r.client, request.Namespace, request.Name)
 			shared.Lock.RUnlock()
-			shared.TriggerReconcile("[-Service]" + request.Name)
+			virtualenv.TriggerReconcile()
 			return reconcile.Result{}, nil
 		}
 		shared.Lock.RUnlock()
@@ -121,6 +122,6 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 
 	shared.Lock.RUnlock()
 
-	shared.TriggerReconcile("[+Service]" + request.Name)
+	virtualenv.TriggerReconcile()
 	return reconcile.Result{}, nil
 }
