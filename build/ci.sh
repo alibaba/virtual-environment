@@ -18,6 +18,7 @@ usage() {
 Usage: ci.sh [flags] [tag] [<name-of-ci-namespace>] [<name-of-operator-image>] [<name-of-webhook-image>]
   supported flags:
     --no-cleanup        keep test pod running after all case finish
+    --keep-namespace    keep namespace after cleanup resource
     --include-webhook   also build and deploy webhook component
     --help              show this message
   supported tags:
@@ -34,6 +35,7 @@ EOF
 # Configure
 skip_cleanup="N"
 with_webhook="N"
+keep_namespace="N"
 
 # Parameters
 for p in ${@}; do
@@ -42,6 +44,8 @@ for p in ${@}; do
             skip_cleanup="Y"
         elif [[ "${p}" = "--include-webhook" ]]; then
             with_webhook="Y"
+        elif [[ "${p}" = "--keep-namespace" ]]; then
+            keep_namespace="Y"
         elif [[ "${p}" = "--help" ]]; then
             usage
             exit 0
@@ -211,6 +215,9 @@ if [[ "${skip_cleanup}" != "Y" ]]; then
     examples/deploy/app.sh delete ${ns}
     kubectl delete -n ${ns} deployment sleep
     for f in deploy/*.yaml; do kubectl delete -n ${ns} -f ${f}; done
-    kubectl delete namespace ${ns}
+    kubectl label namespaces ${ns} environment-tag-injection-
+    if [[ "${keep_namespace}" != "Y" ]]; then
+        kubectl delete namespace ${ns}
+    fi
     echo "---- Clean up OK ----"
 fi
