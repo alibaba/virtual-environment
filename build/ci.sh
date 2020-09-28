@@ -144,7 +144,7 @@ kubectl label namespaces ${ns} environment-tag-injection=enabled
 echo "---- Operator deployment ready ----"
 
 # Deploy demo apps
-kubectl create -n ${ns} deployment sleep --image=virtualenvironment/sleep --dry-run -o yaml \
+kubectl create -n ${ns} deployment sleep --image=virtualenvironment/sleep --dry-run=client -o yaml \
         | istioctl kube-inject -f - | kubectl apply -n ${ns} -f -
 examples/deploy/app.sh apply ${ns}
 
