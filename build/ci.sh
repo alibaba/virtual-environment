@@ -20,6 +20,7 @@ Usage: ci.sh [flags] [tag] [<name-of-ci-namespace>] [<name-of-operator-image>] [
     --no-cleanup        keep test pod running after all case finish
     --keep-namespace    keep namespace after cleanup resource
     --include-webhook   also build and deploy webhook component
+    --no-interactive    execute test without interactive parameter confirm
     --help              show this message
   supported tags:
     @DEPLOY             run from deploy step
@@ -36,6 +37,7 @@ EOF
 skip_cleanup="N"
 with_webhook="N"
 keep_namespace="N"
+skip_parameter_confirm="N"
 
 # Parameters
 for p in ${@}; do
@@ -46,6 +48,8 @@ for p in ${@}; do
             with_webhook="Y"
         elif [[ "${p}" = "--keep-namespace" ]]; then
             keep_namespace="Y"
+        elif [[ "${p}" = "--no-interactive" ]]; then
+            skip_parameter_confirm="Y"
         elif [[ "${p}" = "--help" ]]; then
             usage
             exit 0
@@ -72,9 +76,19 @@ fi
 
 # Print context
 echo "> Using namespace ${ns}"
-echo "> Using operator image ${ci_operator_image}"
+echo "> Operator image ${ci_operator_image}"
 if [[ "${with_webhook}" = "Y" ]]; then
-    echo "> Using webhook image ${ci_webhook_image}"
+    echo "> Webhook image ${ci_webhook_image}"
+fi
+if [[ "${skip_parameter_confirm}" = "N" ]]; then
+    echo "> Action anchor: ${action:-NULL}"
+    echo "> Skip cleanup: ${skip_cleanup}"
+    echo "> Keep namespace: ${keep_namespace}"
+    read -p "Are you sure (N/Y)? " -n 1 -r
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 0
+    fi
+    echo
 fi
 
 echo "---- Begin CI Task ----"
@@ -88,7 +102,7 @@ goto() {
     label=$1
     cmd=$(${sed_cmd} -n "/^# >\+ $label:/{:a;n;p;ba};" $0 | grep -v ':$')
     eval "$cmd"
-    exit
+    exit 0
 }
 
 # Shortcuts
@@ -98,6 +112,9 @@ elif [[ "${action}" = "TEST" ]]; then
     goto TEST_ANCHOR
 elif [[ "${action}" = "CLEAN" || "${action}" = "DELETE" ]]; then
     goto CLEAN_UP_ANCHOR
+elif [[ "${action}" != "" ]]; then
+    echo "ERROR: Invalid action: ${action} !!!"
+    exit -1
 fi
 
 # >>>>>>> BUILD_ANCHOR:
@@ -105,24 +122,24 @@ fi
 # Generate temporary operator image
 make build-operator OPERATOR_IMAGE_AND_VERSION=${ci_operator_image}
 if [[ ${?} -ne 0 ]]; then
-    echo "Build operator failed !!!"
+    echo "ERROR: Build operator failed !!!"
     exit -1
 fi
 docker push ${ci_operator_image}
 if [[ ${?} -ne 0 ]]; then
-    echo "Push operator image failed !!!"
+    echo "ERROR: Push operator image failed !!!"
     exit -1
 fi
 
 if [[ "${with_webhook}" = "Y" ]]; then
     make build-webhook WEBHOOK_IMAGE_AND_VERSION=${ci_webhook_image}
     if [[ ${?} -ne 0 ]]; then
-        echo "Build webhook failed !!!"
+        echo "ERROR: Build webhook failed !!!"
         exit -1
     fi
     docker push ${ci_webhook_image}
     if [[ ${?} -ne 0 ]]; then
-        echo "Push webhook image failed !!!"
+        echo "ERROR: Push webhook image failed !!!"
         exit -1
     fi
 fi
@@ -159,7 +176,7 @@ for i in `seq 50`; do
     sleep 10s
 done
 if [[ ${count} -ne ${expect_count} ]]; then
-    echo "Apps deployment failed !!!"
+    echo "ERROR: Apps deployment failed !!!"
     exit -1
 fi
 echo "---- Apps deployment ready ----"
@@ -178,7 +195,7 @@ check_result() {
     real="${1}"
     expect="${2}"
     if [[ "${real}" != "${expect}" ]]; then
-        echo "Test failed !!!"
+        echo "ERROR: Test failed !!!"
         echo "Namespace: ${ns}"
         echo "Real response: ${real}"
         echo "Expectation  : ${expect}"
