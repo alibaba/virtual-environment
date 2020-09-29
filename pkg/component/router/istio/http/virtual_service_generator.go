@@ -65,7 +65,7 @@ func VirtualService(namespace string, svcName string, availableLabels []string, 
 				}
 			}
 		}
-		route := defaultRoute(svcName, port, toSubsetName(defaultSubset), len(serviceInfo.Ports))
+		route := defaultRoute(svcName, port, toSubsetName(defaultSubset))
 		mergedRoute, err := mergeRoute(httpRoute, &route)
 		if mergedRoute != nil {
 			virtualSvc.Spec.HTTP = append(virtualSvc.Spec.HTTP, *mergedRoute)
@@ -169,16 +169,13 @@ func getPossibleRoutes(relatedDeployments []string, labelVal string, splitter st
 }
 
 // generate default http route instance
-func defaultRoute(name string, port uint32, defaultSubset string, totalPortCount int) networkingv1alpha3.HTTPRoute {
-	route := networkingv1alpha3.HTTPRoute{
+func defaultRoute(name string, port uint32, defaultSubset string) networkingv1alpha3.HTTPRoute {
+	return networkingv1alpha3.HTTPRoute{
+		Match: []networkingv1alpha3.HTTPMatchRequest{{
+			Port: port,
+		}},
 		Route: generateHttpRoute(name, port, defaultSubset),
 	}
-	if totalPortCount > 1 {
-		route.Match = []networkingv1alpha3.HTTPMatchRequest{{
-			Port: port,
-		}}
-	}
-	return route
 }
 
 // generate istio virtual service http route instance with regex match
