@@ -53,7 +53,7 @@ func VirtualService(namespace string, svcName string, availableLabels []string, 
 	for _, port := range serviceInfo.Ports {
 		for _, label := range availableLabels {
 			matchRoutes, ok := virtualServiceMatchRoute(svcName, relatedDeployments, label, envHeaderName,
-				envHeaderAliases, envSplitter, port, toSubsetName(defaultSubset), len(serviceInfo.Ports))
+				envHeaderAliases, envSplitter, port, toSubsetName(defaultSubset))
 			if ok {
 				for _, matchRoute := range matchRoutes {
 					mergedRoute, err := mergeRoute(httpRoute, &matchRoute)
@@ -131,22 +131,22 @@ func isDestinationEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv
 // calculate and generate http route instance
 func virtualServiceMatchRoute(serviceName string, relatedDeployments []string, labelVal string,
 	headerKeyName string, headerKeyAlias []envv1alpha2.EnvHeaderAliasSpec, splitter string, port uint32,
-	defaultSubset string, totalPortCount int) ([]networkingv1alpha3.HTTPRoute, bool) {
+	defaultSubset string) ([]networkingv1alpha3.HTTPRoute, bool) {
 	possibleRoutes := getPossibleRoutes(relatedDeployments, labelVal, splitter)
 	if len(possibleRoutes) > 0 {
 		var subsetName = toSubsetName(findLongestString(possibleRoutes))
 		if defaultSubset != subsetName {
 			var routes = []networkingv1alpha3.HTTPRoute{
-				matchRouteExact(serviceName, headerKeyName, labelVal, port, subsetName, totalPortCount),
+				matchRouteExact(serviceName, headerKeyName, labelVal, port, subsetName),
 			}
 			if headerKeyAlias != nil {
 				for _, alias := range headerKeyAlias {
 					var route networkingv1alpha3.HTTPRoute
 					if alias.Pattern != "" && alias.Placeholder != "" {
 						regexLabelVal := strings.ReplaceAll(alias.Pattern, alias.Placeholder, labelVal)
-						route = matchRouteRegex(serviceName, alias.Name, regexLabelVal, port, subsetName, totalPortCount)
+						route = matchRouteRegex(serviceName, alias.Name, regexLabelVal, port, subsetName)
 					} else {
-						route = matchRouteExact(serviceName, alias.Name, labelVal, port, subsetName, totalPortCount)
+						route = matchRouteExact(serviceName, alias.Name, labelVal, port, subsetName)
 					}
 					routes = append(routes, route)
 				}
@@ -183,30 +183,28 @@ func defaultRoute(name string, port uint32, defaultSubset string, totalPortCount
 
 // generate istio virtual service http route instance with regex match
 func matchRouteRegex(serviceName string, headerKey string, labelVal string, port uint32,
-	subsetName string, totalPortCount int) networkingv1alpha3.HTTPRoute {
-	route := matchRoute(serviceName, port, subsetName, totalPortCount)
+	subsetName string) networkingv1alpha3.HTTPRoute {
+	route := matchRoute(serviceName, port, subsetName)
 	route.Match[0].Headers[headerKey] = v1alpha1.StringMatch{Regex: labelVal}
 	return route
 }
 
 // generate istio virtual service http route instance with exact match
 func matchRouteExact(serviceName string, headerKey string, labelVal string, port uint32,
-	subsetName string, totalPortCount int) networkingv1alpha3.HTTPRoute {
-	route := matchRoute(serviceName, port, subsetName, totalPortCount)
+	subsetName string) networkingv1alpha3.HTTPRoute {
+	route := matchRoute(serviceName, port, subsetName)
 	route.Match[0].Headers[headerKey] = v1alpha1.StringMatch{Exact: labelVal}
 	return route
 }
 
 // generate istio virtual service http route instance
-func matchRoute(serviceName string, port uint32, subsetName string, totalPortCount int) networkingv1alpha3.HTTPRoute {
+func matchRoute(serviceName string, port uint32, subsetName string) networkingv1alpha3.HTTPRoute {
 	route := networkingv1alpha3.HTTPRoute{
 		Route: generateHttpRoute(serviceName, port, subsetName),
 		Match: []networkingv1alpha3.HTTPMatchRequest{{
 			Headers: map[string]v1alpha1.StringMatch{},
+			Port:    port,
 		}},
-	}
-	if totalPortCount > 1 {
-		route.Match[0].Port = port
 	}
 	return route
 }
