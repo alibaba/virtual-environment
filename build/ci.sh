@@ -75,10 +75,10 @@ if [[ "${ci_webhook_image}" = "" ]]; then
 fi
 
 # Print context
-echo "> Using namespace ${ns}"
-echo "> Operator image ${ci_operator_image}"
+echo "> Using namespace: ${ns}"
+echo "> Operator image: ${ci_operator_image}"
 if [[ "${with_webhook}" = "Y" ]]; then
-    echo "> Webhook image ${ci_webhook_image}"
+    echo "> Webhook image: ${ci_webhook_image}"
 fi
 if [[ "${skip_parameter_confirm}" = "N" ]]; then
     echo "> Action anchor: ${action:-NULL}"
@@ -179,6 +179,11 @@ if [[ ${count} -ne ${expect_count} ]]; then
     echo "ERROR: Apps deployment failed !!!"
     exit -1
 fi
+
+virtual_env_pod=$(kubectl get pod -l name=virtual-env-operator -o jsonpath='{.items[0].metadata.name}' -n ${ns})
+printf "> Using KtEnv: "
+kubectl exec -n ${ns} ${virtual_env_pod} -c virtual-env-operator -- curl -s http://localhost:8000/version
+
 echo "---- Apps deployment ready ----"
 
 # >>>>>>> TEST_ANCHOR:
