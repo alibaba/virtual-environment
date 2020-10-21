@@ -12,17 +12,30 @@
 kubectl -n $NS get VirtualEnvironment
 ```
 
-然后检查是否生成了预期的Istio资源：
+然后检查是否生成了预期的Istio资源。对于每一个选中包含路由标签Pod的Service实例，应该生成一个同名的VirtualService实例和一个同名的DestinationRule实例。虽然没有命令能够快速找出这些Service，但通过标签筛选可以找到所有符合要求的Pod：
 
 ```bash
-# 先查看Service的实例数
-kubectl -n $NS get Service
-# 对于每个Service都应该生成一个同名的VirtualService和一个同名的DestinationRule实例
+# 假设路由标签名是virtual-env（这个名称是在创建VirtualEnvironment实例时候候配置的）
+kubectl -n $NS get Pod -l virtual-env
+```
+
+通过这些Pod试着列举一下有哪些应该参与路由隔离的Service，然后与Namespace里的Istio资源进行比较：
+
+```bash
+# 这两种资源的数目应该相同，且与参与路由隔离的Service逐一同名对应
 kubectl -n $NS get VirtualService
 kubectl -n $NS get DestinationRule
 ```
 
-如果实例数目不正常，可检查VirtualEnvironment的实例配置和运行日志，通常是配置不正确或生成Istio资源时候出错了：
+若数目不正确，请检查目标Service对象的端口命名：
+
+```bash
+kubectl -n $NS get Service <要路由的目标服务名> -o jsonpath='{.spec.ports}'
+```
+
+端口名称必须依据[Istio文档](https://istio.io/latest/docs/ops/configuration/traffic-management/protocol-selection/)要求采用`<协议>[-<后缀>]`结构。由于当前Istio仅支持对HTTP协议的消息进行精细路由控制，所以在`v0.4.1`版本以后，KtEnv将仅处理名称以`http`开头的端口。
+
+如果端口命名没有问题，但实例数目依然不正常，可检查VirtualEnvironment的实例配置和运行日志，通常是配置不正确或生成Istio资源时候出错了：
 
 ```bash
 # 先看VirtualEnvironment实例的日志，留意其中的错误信息，Ctrl+C结束
@@ -41,7 +54,6 @@ kubectl -n $NS logs <任意一个Pod名字> istio-proxy --tail 100
 
 以下是几种比较常见的错误原因：
 
-- Service端口命名不规范。Istio要求服务端口名称只能是`<协议>[-<后缀>-]`格式，对于虚拟环境的场景，协议部分应为`http`
 - 同一个Pod被多个Service选中。当前Istio不支持一个Pod同时属于多个Service的情况
 - Istio规则生效有延迟（参考 [Istio文档](https://istio.io/latest/zh/docs/ops/common-problems/network-issues/#route-rules-don't-seem-to-affect-traffic-flow) ）
 
