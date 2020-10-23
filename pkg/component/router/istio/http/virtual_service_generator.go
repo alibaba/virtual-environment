@@ -45,7 +45,7 @@ func VirtualService(namespace string, svcName string, availableLabels []string, 
 		// knative sdk and istio sdk has different 'uri' field naming
 		customRule := strings.ReplaceAll(serviceInfo.CustomRule, "\"Uri\"", "\"URI\"")
 		if err := json.Unmarshal([]byte(customRule), &httpRoute); err == nil {
-			logger.Info("Unmarshal route rule successful: " + httpRoute.Rewrite.URI)
+			logger.Info("Unmarshal route rule successful")
 		} else {
 			logger.Error(err, "Failed to unmarshal route rule annotation")
 		}
