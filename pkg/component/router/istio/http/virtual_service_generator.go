@@ -50,7 +50,11 @@ func VirtualService(namespace string, svcName string, availableLabels []string, 
 			logger.Error(err, "Failed to unmarshal route rule annotation")
 		}
 	}
-	for _, port := range serviceInfo.Ports {
+	for name, port := range serviceInfo.Ports {
+		if !strings.HasPrefix(name, "http") {
+			// skip non-http ports
+			continue
+		}
 		for _, label := range availableLabels {
 			matchRoutes, ok := virtualServiceMatchRoute(svcName, relatedDeployments, label, envHeaderName,
 				envHeaderAliases, envSplitter, port, toSubsetName(defaultSubset))

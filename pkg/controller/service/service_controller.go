@@ -104,9 +104,9 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 	// save service selectors
 	serviceInfo.Selectors = service.Spec.Selector
 	// save service ports
-	serviceInfo.Ports = []uint32{}
+	serviceInfo.Ports = map[string]uint32{}
 	for _, port := range service.Spec.Ports {
-		serviceInfo.Ports = append(serviceInfo.Ports, uint32(port.Port))
+		serviceInfo.Ports[port.Name] = uint32(port.Port)
 	}
 	// fetch service gateways and hosts from annotation
 	if value, ok := service.Annotations[annotationGateways]; ok {

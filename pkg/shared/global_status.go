@@ -7,7 +7,7 @@ import (
 
 type ServiceInfo struct {
 	Selectors  map[string]string
-	Ports      []uint32
+	Ports      map[string]uint32
 	Gateways   []string
 	Hosts      []string
 	CustomRule string

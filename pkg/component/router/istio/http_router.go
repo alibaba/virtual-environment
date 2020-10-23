@@ -123,6 +123,10 @@ func (r *HttpRouter) DeleteTagAppender(client client.Client, namespace string, n
 func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
 	namespace string, svcName string, availableLabels []string, relatedDeployments []string) error {
 	virtualSvc := http.VirtualService(namespace, svcName, availableLabels, relatedDeployments, virtualEnv.Spec)
+	if len(virtualSvc.Spec.HTTP) == 0 {
+		// no http port available, no virtual service instance would generate
+		return nil
+	}
 	foundVirtualSvc := &networkingv1alpha3.VirtualService{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: svcName, Namespace: namespace}, foundVirtualSvc)
 	if err != nil {
