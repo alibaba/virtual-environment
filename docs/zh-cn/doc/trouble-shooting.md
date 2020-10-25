@@ -33,7 +33,7 @@ kubectl -n $NS get DestinationRule
 kubectl -n $NS get Service <要路由的目标服务名> -o jsonpath='{.spec.ports}'
 ```
 
-端口名称必须依据[Istio文档](https://istio.io/latest/docs/ops/configuration/traffic-management/protocol-selection/)要求采用`<协议>[-<后缀>]`结构。由于当前Istio仅支持对HTTP协议的消息进行精细路由控制，所以在`v0.4.1`版本以后，KtEnv将仅处理名称以`http`开头的端口。
+端口名称必须依据[Istio文档](https://istio.io/latest/docs/ops/configuration/traffic-management/protocol-selection/)要求采用`<协议>[-<后缀>]`结构。由于当前Istio仅支持对`HTTP`协议的消息进行精细路由控制，因此KtEnv仅会处理名称以`http`开头的端口。
 
 如果端口命名没有问题，但实例数目依然不正常，可检查VirtualEnvironment的实例配置和运行日志，通常是配置不正确或生成Istio资源时候出错了：
 
