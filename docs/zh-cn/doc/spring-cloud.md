@@ -18,4 +18,10 @@ eureka.instance.hostname = app-js
 spring.cloud.consul.host = app-js
 ```
 
+若使用Nacos作为服务注册中心，则配置为：
+
+```properties
+spring.cloud.nacos.discovery.ip = app-js
+```
+
 为测试环境中的所有服务采用如上配置后，即可正常使用KtEnv的环境隔离功能了。
