@@ -40,7 +40,7 @@ kubectl -n $NS get Service <要路由的目标服务名> -o jsonpath='{.spec.por
 ```bash
 # 先看VirtualEnvironment实例的日志，留意其中的错误信息，Ctrl+C结束
 kubectl logs -n $NS $(kubectl get pod -l name=virtual-env-operator -o jsonpath='{.items[0].metadata.name}' -n $NS) virtual-env-operator --tail 50 --follow
-# 若没有在日志中发现可以信息，请认真检查VirtualEnvironment配置是否符合实际情况
+# 若没有在日志中发现可疑信息，请认真检查VirtualEnvironment配置是否符合实际情况
 kubectl -n $NS get VirtualEnvironment -o yaml
 ```
 
@@ -50,7 +50,7 @@ kubectl -n $NS get VirtualEnvironment -o yaml
 kubectl -n $NS logs <任意一个Pod名字> istio-proxy --tail 100
 ```
 
-若路由配置正常，Sidecar运行也无任何错误，则需结合Istio本身功能进一步排查原因。
+若路由配置正常，Sidecar运行也无任何错误，则比较可能是Istio自身问题，请结合[Istioctl Describe](https://istio.io/latest/zh/docs/ops/diagnostic-tools/istioctl-describe/)功能进一步排查原因。
 
 以下是几种比较常见的错误原因：
 
