@@ -15,7 +15,7 @@ build-operator: build-operator-binary build-operator-image
 .PHONY: build-operator-binary
 build-operator-binary:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a \
-		-ldflags "-X=alibaba.com/virtual-env-operator/version.BuildTime=`date +%Y-%m-%d_%H:%M`" \
+		-ldflags "-s -w -X=alibaba.com/virtual-env-operator/version.BuildTime=`date +%Y-%m-%d_%H:%M`" \
 		-o "build/_output/operator/virtual-env-operator" ./cmd/operator
 
 .PHONY: build-operator-image
@@ -27,12 +27,18 @@ build-webhook: build-webhook-binary build-webhook-image
 
 .PHONY: build-webhook-binary
 build-webhook-binary: $(shell find cmd/webhook -name '*.go')
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X=main.buildTime=`date +%Y-%m-%d_%H:%M`" \
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a \
+		-ldflags="-s -w -X=main.buildTime=`date +%Y-%m-%d_%H:%M`" \
 		-o "build/_output/webhook/webhook-server" ./cmd/webhook
 
 .PHONY: build-webhook-image
 build-webhook-image:
 	docker build --no-cache -t $(WEBHOOK_IMAGE_AND_VERSION) -f build/Dockerfile_webhook build/_output/webhook/
+
+.PHONY: push
+push:
+	docker push $(OPERATOR_IMAGE_AND_VERSION)
+	docker push $(WEBHOOK_IMAGE_AND_VERSION)
 
 .PHONY: clean
 clean:
