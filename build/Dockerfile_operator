@@ -1,7 +1,8 @@
 FROM virtualenvironment/distroless-static:nonroot
 
-WORKDIR /
-COPY ./virtual-env-operator /
+WORKDIR /kt
+COPY ./virtual-env-operator /bin/
+ENV PATH=/bin
 USER nonroot:nonroot
 
-ENTRYPOINT ["/virtual-env-operator"]
+ENTRYPOINT ["/bin/virtual-env-operator"]

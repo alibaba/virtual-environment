@@ -181,8 +181,8 @@ if [[ ${count} -ne ${expect_count} ]]; then
 fi
 
 virtual_env_pod=$(kubectl get pod -l name=virtual-env-operator -o jsonpath='{.items[0].metadata.name}' -n ${ns})
-printf "> Using KtEnv: "
-kubectl exec -n ${ns} ${virtual_env_pod} -c virtual-env-operator -- curl -s http://localhost:8000/version
+# printf "> Using KtEnv: "
+# kubectl exec -n ${ns} ${virtual_env_pod} -c virtual-env-operator -- curl -s http://localhost:8000/version
 
 echo "---- Apps deployment ready ----"
 
@@ -238,6 +238,9 @@ if [[ "${skip_cleanup}" != "Y" ]]; then
     kubectl delete -n ${ns} deployment sleep
     for f in deploy/*.yaml; do kubectl delete -n ${ns} -f ${f}; done
     kubectl label namespaces ${ns} environment-tag-injection-
+    if [[ "${with_webhook}" = "Y" ]]; then
+        kubectl delete -f deploy/global/ktenv_webhook.yaml
+    fi
     if [[ "${keep_namespace}" != "Y" ]]; then
         kubectl delete namespace ${ns}
     fi

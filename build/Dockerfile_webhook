@@ -1,7 +1,8 @@
 FROM virtualenvironment/distroless-static:nonroot
 
-WORKDIR /
-COPY ./webhook-server /
+WORKDIR /kt
+COPY ./webhook-server /bin/
+ENV PATH=/bin
 USER nonroot:nonroot
 
-ENTRYPOINT ["/webhook-server"]
+ENTRYPOINT ["/bin/webhook-server"]

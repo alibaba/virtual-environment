@@ -2,6 +2,7 @@ package main
 
 import (
 	"alibaba.com/virtual-env-operator/pkg/component/router/istio/envoy"
+	"alibaba.com/virtual-env-operator/version"
 	"context"
 	"flag"
 	"fmt"
@@ -46,6 +47,8 @@ func printVersion() {
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
 	log.Info(fmt.Sprintf("Version of operator-sdk: %v", sdkVersion.Version))
+	log.Info(fmt.Sprintf("Image version: %v", version.Version))
+	log.Info(fmt.Sprintf("Image build time: %v", version.BuildTime))
 }
 
 func main() {
