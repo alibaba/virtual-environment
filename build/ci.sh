@@ -181,8 +181,8 @@ if [[ ${count} -ne ${expect_count} ]]; then
 fi
 
 virtual_env_pod=$(kubectl get pod -l name=virtual-env-operator -o jsonpath='{.items[0].metadata.name}' -n ${ns})
-# printf "> Using KtEnv: "
-# kubectl exec -n ${ns} ${virtual_env_pod} -c virtual-env-operator -- curl -s http://localhost:8000/version
+printf "> Using KtEnv: "
+kubectl exec -n ${ns} ${virtual_env_pod} -c virtual-env-operator -- /bin/inspector version
 
 echo "---- Apps deployment ready ----"
 

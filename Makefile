@@ -9,8 +9,10 @@ WEBHOOK_IMAGE_AND_VERSION ?= $(WEBHOOK_IMAGE):$(VERSION)
 help:
 	@echo 'use "make build-operator" or "make build-webhook" to build images'
 
-.PHONY: build-operator
-build-operator: build-operator-binary build-operator-image
+.PHONY: build-inspector-binary
+build-inspector-binary:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags "-s -w" \
+		-o "build/_output/operator/inspector" ./cmd/inspector
 
 .PHONY: build-operator-binary
 build-operator-binary:
@@ -22,8 +24,8 @@ build-operator-binary:
 build-operator-image:
 	docker build --no-cache -t $(OPERATOR_IMAGE_AND_VERSION) -f build/Dockerfile_operator build/_output/operator/
 
-.PHONY: build-webhook
-build-webhook: build-webhook-binary build-webhook-image
+.PHONY: build-operator
+build-operator: build-operator-binary build-inspector-binary build-operator-image
 
 .PHONY: build-webhook-binary
 build-webhook-binary: $(shell find cmd/webhook -name '*.go')
@@ -34,6 +36,9 @@ build-webhook-binary: $(shell find cmd/webhook -name '*.go')
 .PHONY: build-webhook-image
 build-webhook-image:
 	docker build --no-cache -t $(WEBHOOK_IMAGE_AND_VERSION) -f build/Dockerfile_webhook build/_output/webhook/
+
+.PHONY: build-webhook
+build-webhook: build-webhook-binary build-webhook-image
 
 .PHONY: push
 push:

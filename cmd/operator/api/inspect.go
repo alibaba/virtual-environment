@@ -16,7 +16,7 @@ func Start(inspectHost string, inspectPort int) {
 	e := echo.New()
 
 	// Routes
-	e.GET("/inspect", inspectGlobalVariable)
+	e.GET("/status", inspectGlobalVariable)
 	e.GET("/version", inspectBuildVersion)
 
 	// Start server
