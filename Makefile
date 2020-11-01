@@ -10,16 +10,29 @@ help:
 	@echo 'use "make build-operator" or "make build-webhook" to build images'
 
 .PHONY: build-operator
-build-operator:
-	operator-sdk build \
-		--go-build-args "-ldflags -X=alibaba.com/virtual-env-operator/version.BuildTime=`date +%Y-%m-%d_%H:%M` -o build/_output/operator/virtual-env-operator" \
-		--image-build-args "--no-cache" $(OPERATOR_IMAGE_AND_VERSION)
+build-operator: build-operator-binary build-operator-image
+
+.PHONY: build-operator-binary
+build-operator-binary:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a \
+		-ldflags "-X=alibaba.com/virtual-env-operator/version.BuildTime=`date +%Y-%m-%d_%H:%M`" \
+		-o "build/_output/operator/virtual-env-operator" ./cmd/operator
+
+.PHONY: build-operator-image
+build-operator-image:
+	docker build --no-cache -t $(OPERATOR_IMAGE_AND_VERSION) -f build/Dockerfile_operator build/_output/operator/
 
 .PHONY: build-webhook
-build-webhook: $(shell find cmd/webhook -name '*.go')
-	CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w -X=main.buildTime=`date +%Y-%m-%d_%H:%M`" \
+build-webhook: build-webhook-binary build-webhook-image
+
+.PHONY: build-webhook-binary
+build-webhook-binary: $(shell find cmd/webhook -name '*.go')
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X=main.buildTime=`date +%Y-%m-%d_%H:%M`" \
 		-o "build/_output/webhook/webhook-server" ./cmd/webhook
-	docker build -t $(WEBHOOK_IMAGE_AND_VERSION) -f build/Dockerfile_webhook build/_output/webhook/
+
+.PHONY: build-webhook-image
+build-webhook-image:
+	docker build --no-cache -t $(WEBHOOK_IMAGE_AND_VERSION) -f build/Dockerfile_webhook build/_output/webhook/
 
 .PHONY: clean
 clean:

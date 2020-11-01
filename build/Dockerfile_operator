@@ -1,7 +1,7 @@
 FROM virtualenvironment/distroless-static:nonroot
 
 WORKDIR /
-COPY ./webhook-server /
+COPY ./virtual-env-operator /
 USER nonroot:nonroot
 
-ENTRYPOINT ["/webhook-server"]
+ENTRYPOINT ["/virtual-env-operator"]

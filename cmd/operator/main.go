@@ -12,7 +12,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 
-	"alibaba.com/virtual-env-operator/cmd/manager/api"
+	"alibaba.com/virtual-env-operator/cmd/operator/api"
 	"alibaba.com/virtual-env-operator/pkg/apis"
 	"alibaba.com/virtual-env-operator/pkg/controller"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
