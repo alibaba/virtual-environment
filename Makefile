@@ -48,5 +48,8 @@ push:
 .PHONY: clean
 clean:
 	rm -fr build/_output/
+	rm -f examples/go/main
+	rm -fr examples/springboot/target/
+	rm -fr sdk/java/*/target
 	for i in `docker images | grep $(OPERATOR_IMAGE) | awk '{print $$3}'`; do docker rmi -f $$i; done
 	for i in `docker images | grep $(WEBHOOK_IMAGE) | awk '{print $$3}'`; do docker rmi -f $$i; done
