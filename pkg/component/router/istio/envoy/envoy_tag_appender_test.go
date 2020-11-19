@@ -6,7 +6,7 @@ import (
 )
 
 func TestTagAppenderFilter(t *testing.T) {
-	patchStruct := buildPatchStruct("envHeader")
+	patchStruct, _ := buildPatchStruct("envHeader")
 	if len(patchStruct.Fields) != 2 {
 		t.Fatalf("patch fields count should not be " + strconv.Itoa(len(patchStruct.Fields)))
 	}

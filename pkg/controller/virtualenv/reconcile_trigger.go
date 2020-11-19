@@ -5,6 +5,7 @@ import (
 	"alibaba.com/virtual-env-operator/pkg/component/parser"
 	"alibaba.com/virtual-env-operator/pkg/component/router"
 	"alibaba.com/virtual-env-operator/pkg/component/router/common"
+	"alibaba.com/virtual-env-operator/pkg/event"
 	"alibaba.com/virtual-env-operator/pkg/shared"
 	"context"
 	"github.com/go-logr/logr"
@@ -69,7 +70,7 @@ func reconcileVirtualEnvironment(nn *types.NamespacedName) (reconcile.Result, er
 	s := globalVirtualEnvironment.scheme
 
 	virtualEnv, err := fetchVirtualEnvIns(*nn)
-	if err != nil && !shared.IsVirtualEnvChanged(err) {
+	if err != nil && !event.IsVirtualEnvChanged(err) {
 		shared.Lock.Unlock()
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -79,7 +80,7 @@ func reconcileVirtualEnvironment(nn *types.NamespacedName) (reconcile.Result, er
 	}
 
 	logger.Info("Receive reconcile request with name: " + nn.Name)
-	err = checkTagAppender(virtualEnv, *nn, shared.IsVirtualEnvChanged(err))
+	err = checkTagAppender(virtualEnv, *nn, event.IsVirtualEnvChanged(err))
 	for svc, service := range shared.AvailableServices {
 		selector := service.Selectors
 		availableLabels := parser.FindAllVirtualEnvLabelValues(shared.AvailableLabels, virtualEnv.Spec.EnvLabel.Name)
@@ -140,7 +141,7 @@ func fetchVirtualEnvIns(nn types.NamespacedName) (*envv1alpha2.VirtualEnvironmen
 		}
 		shared.VirtualEnvIns = &types.NamespacedName{Namespace: nn.Namespace, Name: nn.Name}
 		logger.Info("VirtualEnv added", "Spec", virtualEnv.Spec)
-		return virtualEnv, shared.VirtualEnvChangeDetected{}
+		return virtualEnv, event.VirtualEnvChangeDetected{}
 	}
 	return virtualEnv, nil
 }

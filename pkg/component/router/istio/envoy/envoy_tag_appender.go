@@ -28,7 +28,12 @@ func IsDifferentTagAppender(tagAppender *networkingv1alpha3api.EnvoyFilter, envL
 }
 
 // generate EnvoyFilter to auto append env tag into HTTP header
-func TagAppenderFilter(namespace string, name string, envLabel string, envHeader string) *networkingv1alpha3api.EnvoyFilter {
+func TagAppenderFilter(namespace string, name string, envLabel string, envHeader string) (*networkingv1alpha3api.EnvoyFilter, error) {
+	patch, err := buildPatchStruct(envHeader)
+	if patch == nil || patch.Fields == nil || err != nil {
+		// unmarshal failed
+		return nil, err
+	}
 	return &networkingv1alpha3api.EnvoyFilter{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -55,14 +60,14 @@ func TagAppenderFilter(namespace string, name string, envLabel string, envHeader
 				},
 				Patch: &networkingv1alpha3.EnvoyFilter_Patch{
 					Operation: networkingv1alpha3.EnvoyFilter_Patch_INSERT_BEFORE,
-					Value:     buildPatchStruct(envHeader),
+					Value:     patch,
 				},
 			}},
 		},
-	}
+	}, nil
 }
 
-func buildPatchStruct(envHeader string) *pbtypes.Struct {
+func buildPatchStruct(envHeader string) (*pbtypes.Struct, error) {
 	config := `{
         "name": "virtual.environment.lua",
         "typed_config": {
@@ -70,9 +75,9 @@ func buildPatchStruct(envHeader string) *pbtypes.Struct {
             "inline_code": "` + toOneLine(luaScript(envHeader)) + `"
         }
     }`
-	val := &pbtypes.Struct{}
-	_ = jsonpb.Unmarshal(strings.NewReader(config), val)
-	return val
+	unmarshalledConfig := &pbtypes.Struct{}
+	err := jsonpb.Unmarshal(strings.NewReader(config), unmarshalledConfig)
+	return unmarshalledConfig, err
 }
 
 func toOneLine(text string) string {

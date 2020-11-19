@@ -5,6 +5,7 @@ import (
 	"alibaba.com/virtual-env-operator/pkg/component/router/common"
 	"alibaba.com/virtual-env-operator/pkg/component/router/istio/envoy"
 	"alibaba.com/virtual-env-operator/pkg/component/router/istio/http"
+	"alibaba.com/virtual-env-operator/pkg/event"
 	"context"
 	networkingv1alpha3api "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -96,9 +97,16 @@ func (r *HttpRouter) CheckTagAppender(client client.Client, virtualEnv *envv1alp
 // create envoy filter to automatically append tag to service
 func (r *HttpRouter) CreateTagAppender(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
 	namespace string, name string) error {
-	tagAppender := envoy.TagAppenderFilter(namespace, name, virtualEnv.Spec.EnvLabel.Name, virtualEnv.Spec.EnvHeader.Name)
+	tagAppender, err := envoy.TagAppenderFilter(namespace, name, virtualEnv.Spec.EnvLabel.Name, virtualEnv.Spec.EnvHeader.Name)
+	if tagAppender == nil {
+		if err == nil {
+			err = event.TagAppenderInitFailed{}
+		}
+		logger.Error(err, "Failed to initialize TagAppender instance "+namespace+":"+name)
+		return err
+	}
 	// set VirtualEnv instance as the owner and controller
-	err := controllerutil.SetControllerReference(virtualEnv, tagAppender, scheme)
+	err = controllerutil.SetControllerReference(virtualEnv, tagAppender, scheme)
 	if err == nil {
 		err = client.Create(context.TODO(), tagAppender)
 	}
