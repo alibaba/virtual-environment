@@ -90,10 +90,6 @@ func luaScript(envHeader string) string {
 	return strings.Trim(`
 local curEnv = os.getenv("VIRTUAL_ENVIRONMENT_TAG")
 function envoy_on_request(req)
-  local env = req:headers():get("`+envHeader+`")
-  if env == nil and curEnv ~= nil then
-    req:headers():add("`+envHeader+`", curEnv)
-  end
   local diagnose = req:headers():get("KT-ENV-DIAGNOSE")
   if diagnose ~= nil then
     if diagnose == "DEBUG" then
@@ -111,6 +107,10 @@ function envoy_on_request(req)
         req:logWarn("Env mark '`+envHeader+`' not found and current env unknown")
       end
     end
+  end
+  local env = req:headers():get("`+envHeader+`")
+  if env == nil and curEnv ~= nil then
+    req:headers():add("`+envHeader+`", curEnv)
   end
 end`, " \n")
 }
