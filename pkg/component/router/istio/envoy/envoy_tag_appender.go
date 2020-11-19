@@ -80,13 +80,32 @@ func toOneLine(text string) string {
 }
 
 // generate lua script to auto inject env tag from label to header
+// Note: istio-proxy start with "--proxyLogLevel warning", only logWarn or logError will print
 func luaScript(envHeader string) string {
 	return strings.Trim(`
 local curEnv = os.getenv("VIRTUAL_ENVIRONMENT_TAG")
-function envoy_on_request(request_handle)
-  local env = request_handle:headers()["`+envHeader+`"]
+function envoy_on_request(req)
+  local env = req:headers():get("`+envHeader+`")
   if env == nil and curEnv ~= nil then
-    request_handle:headers():add("`+envHeader+`", curEnv)
+    req:headers():add("`+envHeader+`", curEnv)
+  end
+  local diagnose = req:headers():get("KT-ENV-DIAGNOSE")
+  if diagnose ~= nil then
+    if diagnose == "DEBUG" then
+      req:logWarn("--- REQUEST HEADERS ---")
+      for key, value in pairs(req:headers()) do
+        req:logWarn(key .. " : " .. value)
+      end
+      req:logWarn("--- END OF DIAGNOSE ---")
+    else
+      if env ~= nil then
+        req:logWarn("Env mark '`+envHeader+`' found as '" .. env .. "'")
+      elseif curEnv ~= nil then
+        req:logWarn("Env mark '`+envHeader+`' not found, added as '" .. curEnv .. "'")
+      else
+        req:logWarn("Env mark '`+envHeader+`' not found and current env unknown")
+      end
+    end
   end
 end`, " \n")
 }

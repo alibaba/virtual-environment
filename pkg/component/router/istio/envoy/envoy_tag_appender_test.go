@@ -11,7 +11,8 @@ func TestTagAppenderFilter(t *testing.T) {
 		t.Fatalf("patch fields count should not be " + strconv.Itoa(len(patchStruct.Fields)))
 	}
 	code := patchStruct.Fields["typed_config"].GetStructValue().Fields["inline_code"].GetStringValue()
-	if len(code) != 248 {
+	//println(code)
+	if len(code) != 855 {
 		t.Fatalf("code len should not be " + strconv.Itoa(len(code)))
 	}
 
