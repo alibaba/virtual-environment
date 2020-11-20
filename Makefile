@@ -17,7 +17,7 @@ build-inspector-binary:
 .PHONY: build-operator-binary
 build-operator-binary:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a \
-		-ldflags "-s -w -X=alibaba.com/virtual-env-operator/version.BuildTime=`date +%Y-%m-%d_%H:%M`" \
+		-ldflags "-s -w -X=alibaba.com/virtual-env-operator/version.BuildTime=`date +%Y-%m-%d_%H:%M` -X=alibaba.com/virtual-env-operator/version.Version=$(VERSION)" \
 		-o "build/_output/operator/virtual-env-operator" ./cmd/operator
 
 .PHONY: build-operator-image
@@ -30,7 +30,7 @@ build-operator: build-operator-binary build-inspector-binary build-operator-imag
 .PHONY: build-webhook-binary
 build-webhook-binary: $(shell find cmd/webhook -name '*.go')
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a \
-		-ldflags="-s -w -X=main.buildTime=`date +%Y-%m-%d_%H:%M`" \
+		-ldflags="-s -w -X=main.buildTime=`date +%Y-%m-%d_%H:%M` -X=main.version=$(VERSION)" \
 		-o "build/_output/webhook/webhook-server" ./cmd/webhook
 
 .PHONY: build-webhook-image

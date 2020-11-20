@@ -1,6 +1,6 @@
 package version
 
 var (
-	Version   = "v0.4.2"
+	Version   string
 	BuildTime string
 )

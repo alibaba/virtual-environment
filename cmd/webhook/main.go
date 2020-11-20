@@ -21,6 +21,7 @@ const (
 
 var (
 	podResource = metav1.GroupVersionResource{Version: "v1", Resource: "pods"}
+	version     string
 	buildTime   string
 )
 
@@ -114,7 +115,8 @@ func main() {
 
 	initLogger()
 	logInfo("sidecar environment tag injector starting")
-	logInfo("build version: " + buildTime)
+	logInfo("version: " + version)
+	logInfo("build time: " + buildTime)
 	logInfo("environment labels: " + os.Getenv(CONF_ENV_LABEL))
 	logInfo("log level: " + os.Getenv(CONF_LOG_LEVEL))
 
