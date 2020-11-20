@@ -4,6 +4,7 @@ import (
 	"alibaba.com/virtual-env-operator/pkg/component/router"
 	"alibaba.com/virtual-env-operator/pkg/controller/virtualenv"
 	"alibaba.com/virtual-env-operator/pkg/shared"
+	"alibaba.com/virtual-env-operator/pkg/shared/logger"
 	"context"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -11,7 +12,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -23,8 +23,6 @@ const (
 	annotationHosts    = "kt-virtual-environment/hosts"
 	annotationRule     = "kt-virtual-environment/rule"
 )
-
-var log = logf.Log.WithName("service-listener")
 
 // Add creates a new ServiceListener Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -71,8 +69,6 @@ type ReconcileServiceListener struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	logger := log.WithValues("Ref", "[Service]"+request.Name)
-
 	if request.Name == "kubernetes" {
 		// Ignore kubernetes service
 		return reconcile.Result{}, nil

@@ -3,17 +3,15 @@ package http
 import (
 	envv1alpha2 "alibaba.com/virtual-env-operator/pkg/apis/env/v1alpha2"
 	"alibaba.com/virtual-env-operator/pkg/shared"
+	"alibaba.com/virtual-env-operator/pkg/shared/logger"
 	"encoding/json"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis/istio/common/v1alpha1"
 	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"strings"
 )
-
-var logger = logf.Log.WithName("istio_virtual_service")
 
 // generate istio virtual service instance
 func VirtualService(namespace string, svcName string, availableLabels []string, relatedDeployments []string,

@@ -7,8 +7,8 @@ import (
 	"alibaba.com/virtual-env-operator/pkg/component/router/common"
 	"alibaba.com/virtual-env-operator/pkg/event"
 	"alibaba.com/virtual-env-operator/pkg/shared"
+	"alibaba.com/virtual-env-operator/pkg/shared/logger"
 	"context"
-	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -26,8 +26,6 @@ const (
 )
 
 var (
-	// logger
-	logger logr.Logger = log.WithName("reconcile")
 	// global virtual environment object
 	globalVirtualEnvironment *ReconcileVirtualEnv
 	// mutex to make sure there is only one reconcile trigger candidate

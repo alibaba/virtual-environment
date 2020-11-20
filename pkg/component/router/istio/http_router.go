@@ -6,6 +6,7 @@ import (
 	"alibaba.com/virtual-env-operator/pkg/component/router/istio/envoy"
 	"alibaba.com/virtual-env-operator/pkg/component/router/istio/http"
 	"alibaba.com/virtual-env-operator/pkg/event"
+	"alibaba.com/virtual-env-operator/pkg/shared/logger"
 	"context"
 	networkingv1alpha3api "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -16,11 +17,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
-
-var logger = logf.Log.WithName("istio_http_router")
 
 type HttpRouter struct {
 }
