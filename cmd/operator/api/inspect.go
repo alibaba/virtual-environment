@@ -25,7 +25,7 @@ func Start(inspectHost string, inspectPort int) {
 		logger.Info("Starting inspect api", "addr", inspectAddr)
 		err := e.Start(inspectAddr)
 		if err != nil {
-			logger.Error(err, "Inspect api cannot listen to "+inspectAddr)
+			logger.Error(err, "Inspect api cannot listen to ", inspectAddr)
 		}
 	}()
 }

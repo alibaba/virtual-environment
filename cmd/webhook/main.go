@@ -1,6 +1,7 @@
 package main
 
 import (
+	"alibaba.com/virtual-env-operator/pkg/shared/logger"
 	"fmt"
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -28,13 +29,13 @@ var (
 // injectEnvironmentTag read the environment tag from pod label, and save to the sidecar container as an environment
 // variable named `VIRTUAL_ENVIRONMENT_TAG`
 func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, error) {
-	logDebug("handling admission request for", req.Name)
+	logger.Debug("handling admission request for", req.Name)
 
 	// This handler should only get called on Pod objects as per the MutatingWebhookConfiguration in the YAML file.
 	// However, if (for whatever reason) this gets invoked on an object of a different kind, issue a log message but
 	// let the object request pass through otherwise.
 	if req.Resource != podResource {
-		logError("expect resource to be", podResource)
+		logger.Warn("expect resource to be", podResource)
 		return nil, nil
 	}
 
@@ -48,7 +49,7 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, erro
 	// Retrieve the environment label name from pod label
 	envLabels := os.Getenv(CONF_ENV_LABEL)
 	if envLabels == "" {
-		logFatal("cannot determine env label !!")
+		logger.Fatal("cannot determine env label !!")
 	}
 	// Retrieve the environment tag from pod label
 	envLabelList := strings.Split(envLabels, ",")
@@ -60,7 +61,7 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, erro
 		}
 	}
 	if envTag == "" {
-		logError("no environment tag found on pod", getPodName(pod))
+		logger.Warn("no environment tag found on pod", getPodName(pod))
 		return nil, nil
 	}
 
@@ -71,7 +72,7 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, erro
 		}
 	}
 	if sidecarContainerIndex < 0 {
-		logError("no sidecar container found on pod", getPodName(pod))
+		logger.Warn("no sidecar container found on pod", getPodName(pod))
 		return nil, nil
 	}
 
@@ -98,7 +99,7 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, erro
 		})
 	}
 
-	logInfo("marked", getPodName(pod), "as", envTag)
+	logger.Info("marked", getPodName(pod), "as", envTag)
 	return patches, nil
 }
 
@@ -113,12 +114,12 @@ func main() {
 	certPath := filepath.Join(tlsDir, tlsCertFile)
 	keyPath := filepath.Join(tlsDir, tlsKeyFile)
 
-	initLogger()
-	logInfo("sidecar environment tag injector starting")
-	logInfo("version: " + version)
-	logInfo("build time: " + buildTime)
-	logInfo("environment labels: " + os.Getenv(CONF_ENV_LABEL))
-	logInfo("log level: " + os.Getenv(CONF_LOG_LEVEL))
+	logger.SetLevel(os.Getenv(CONF_LOG_LEVEL))
+	logger.Info("sidecar environment tag injector starting")
+	logger.Info("version: " + version)
+	logger.Info("build time: " + buildTime)
+	logger.Info("environment labels: " + os.Getenv(CONF_ENV_LABEL))
+	logger.Info("log level: " + os.Getenv(CONF_LOG_LEVEL))
 
 	mux := http.NewServeMux()
 	mux.Handle("/inject", admitFuncHandler(injectEnvironmentTag))
@@ -128,5 +129,5 @@ func main() {
 		Addr:    ":8443",
 		Handler: mux,
 	}
-	logFatal(server.ListenAndServeTLS(certPath, keyPath))
+	logger.Fatal(server.ListenAndServeTLS(certPath, keyPath))
 }
