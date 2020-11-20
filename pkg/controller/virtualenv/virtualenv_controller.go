@@ -70,10 +70,10 @@ func (r *ReconcileVirtualEnv) Reconcile(request reconcile.Request) (reconcile.Re
 		globalVirtualEnvironment = r
 		_, err := reconcileVirtualEnvironment(&request.NamespacedName)
 		if err != nil {
-			logger.Error(err, "failed to initialize VirtualEnvironment")
+			logger.Error(err, "Failed to initialize VirtualEnvironment", request.Name)
 		}
 	} else {
-		logger.Info("Push reconcile request to trigger")
+		logger.Info("Push reconcile request to trigger", request.Name)
 		TriggerReconcile()
 	}
 

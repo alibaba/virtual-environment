@@ -46,6 +46,7 @@ func printVersion() {
 }
 
 func main() {
+	logger.SetLevel(logger.INFO)
 	printVersion()
 
 	namespace, err := k8sutil.GetWatchNamespace()
@@ -57,7 +58,7 @@ func main() {
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
 	if err != nil {
-		logger.Error(err, "")
+		logger.Error(err, "Failed to get configure")
 		os.Exit(1)
 	}
 
@@ -65,7 +66,7 @@ func main() {
 	// Become the leader before proceeding
 	err = leader.Become(ctx, "virtual-env-operator-lock")
 	if err != nil {
-		logger.Error(err, "")
+		logger.Error(err, "Failed to become leader")
 		os.Exit(1)
 	}
 
@@ -76,7 +77,7 @@ func main() {
 		MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
 	})
 	if err != nil {
-		logger.Error(err, "")
+		logger.Error(err, "Failed to bind to", metricsHost, ":", metricsPort)
 		os.Exit(1)
 	}
 
@@ -87,25 +88,25 @@ func main() {
 
 	// Setup Scheme for istio networking resource
 	if err := networkingv1alpha3.AddToScheme(mgr.GetScheme()); err != nil {
-		logger.Error(err, "failed to init istio networking scheme")
+		logger.Error(err, "Failed to init istio networking scheme")
 		os.Exit(1)
 	}
 
 	// Setup Scheme for istio envoy filter resource
 	if err := envoy.AddToScheme(mgr.GetScheme()); err != nil {
-		logger.Error(err, "failed to init istio envoy filter scheme")
+		logger.Error(err, "Failed to init istio envoy filter scheme")
 		os.Exit(1)
 	}
 
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		logger.Error(err, "failed to init k8s scheme")
+		logger.Error(err, "Failed to init k8s scheme")
 		os.Exit(1)
 	}
 
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
-		logger.Error(err, "failed to setup virtual test environment controller")
+		logger.Error(err, "Failed to setup virtual test environment controller")
 		os.Exit(1)
 	}
 

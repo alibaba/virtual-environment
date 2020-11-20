@@ -29,13 +29,13 @@ var (
 // injectEnvironmentTag read the environment tag from pod label, and save to the sidecar container as an environment
 // variable named `VIRTUAL_ENVIRONMENT_TAG`
 func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, error) {
-	logger.Debug("handling admission request for", req.Name)
+	logger.Debug("Handling admission request for", req.Name)
 
 	// This handler should only get called on Pod objects as per the MutatingWebhookConfiguration in the YAML file.
 	// However, if (for whatever reason) this gets invoked on an object of a different kind, issue a log message but
 	// let the object request pass through otherwise.
 	if req.Resource != podResource {
-		logger.Warn("expect resource to be", podResource)
+		logger.Warn("Expect resource to be", podResource)
 		return nil, nil
 	}
 
@@ -49,7 +49,7 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, erro
 	// Retrieve the environment label name from pod label
 	envLabels := os.Getenv(CONF_ENV_LABEL)
 	if envLabels == "" {
-		logger.Fatal("cannot determine env label !!")
+		logger.Fatal("Cannot determine env label !!")
 	}
 	// Retrieve the environment tag from pod label
 	envLabelList := strings.Split(envLabels, ",")
@@ -61,7 +61,7 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, erro
 		}
 	}
 	if envTag == "" {
-		logger.Warn("no environment tag found on pod", getPodName(pod))
+		logger.Warn("No environment tag found on pod", getPodName(pod))
 		return nil, nil
 	}
 
@@ -72,7 +72,7 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, erro
 		}
 	}
 	if sidecarContainerIndex < 0 {
-		logger.Warn("no sidecar container found on pod", getPodName(pod))
+		logger.Warn("No sidecar container found on pod", getPodName(pod))
 		return nil, nil
 	}
 
@@ -99,7 +99,7 @@ func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, erro
 		})
 	}
 
-	logger.Info("marked", getPodName(pod), "as", envTag)
+	logger.Info("Marked", getPodName(pod), "as", envTag)
 	return patches, nil
 }
 
@@ -115,11 +115,11 @@ func main() {
 	keyPath := filepath.Join(tlsDir, tlsKeyFile)
 
 	logger.SetLevel(os.Getenv(CONF_LOG_LEVEL))
-	logger.Info("sidecar environment tag injector starting")
-	logger.Info("version: " + version)
-	logger.Info("build time: " + buildTime)
-	logger.Info("environment labels: " + os.Getenv(CONF_ENV_LABEL))
-	logger.Info("log level: " + os.Getenv(CONF_LOG_LEVEL))
+	logger.Info("Sidecar environment tag injector starting")
+	logger.Info("Version: " + version)
+	logger.Info("Build time: " + buildTime)
+	logger.Info("Environment labels: " + os.Getenv(CONF_ENV_LABEL))
+	logger.Info("Log level: " + os.Getenv(CONF_LOG_LEVEL))
 
 	mux := http.NewServeMux()
 	mux.Handle("/inject", admitFuncHandler(injectEnvironmentTag))

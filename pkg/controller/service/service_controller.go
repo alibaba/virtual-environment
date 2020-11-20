@@ -80,7 +80,7 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 	err := r.client.Get(context.TODO(), request.NamespacedName, service)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			logger.Info("Removing Service")
+			logger.Info("Removing Service", request.Name)
 			delete(shared.AvailableServices, request.Name)
 			// delete related virtual service and destination rule
 			_ = router.GetDefaultRoute().CleanupRoute(r.client, request.Namespace, request.Name)
@@ -92,7 +92,7 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 		return reconcile.Result{}, err
 	}
 
-	logger.Info("Adding Service")
+	logger.Info("Adding Service", request.Name)
 	serviceInfo := shared.ServiceInfo{}
 	if value, ok := shared.AvailableServices[request.Name]; ok {
 		serviceInfo = value

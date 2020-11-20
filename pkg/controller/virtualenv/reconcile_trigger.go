@@ -50,7 +50,7 @@ func TriggerReconcile() {
 				logger.Info("Send reconcile signal")
 				_, err := reconcileVirtualEnvironment(shared.VirtualEnvIns)
 				if err != nil {
-					logger.Error(err, "failed to reconcile VirtualEnvironment")
+					logger.Error(err, "Failed to reconcile VirtualEnvironment")
 				}
 			}
 			ReconcileTriggerLock.Unlock()
@@ -148,9 +148,9 @@ func fetchVirtualEnvIns(nn types.NamespacedName) (*envv1alpha2.VirtualEnvironmen
 func deleteVirtualEnv(namespace string, name string) {
 	err := shared.DeleteIns(globalVirtualEnvironment.client, namespace, name, &envv1alpha2.VirtualEnvironment{})
 	if err != nil {
-		logger.Error(err, "Failed to remove VirtualEnv instance "+name)
+		logger.Error(err, "Failed to remove VirtualEnv instance", name)
 	} else {
-		logger.Info("VirtualEnv deleted")
+		logger.Info("VirtualEnv", name, "deleted")
 	}
 }
 

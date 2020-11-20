@@ -135,7 +135,7 @@ func serveAdmitFunc(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 	// Begin handling webhook request
 	var writeErr error
 	if bytes, err := doServeAdmitFunc(w, r, admit); err != nil {
-		logger.Error(err, "error handling webhook request")
+		logger.Error(err, "Error handling webhook request")
 		w.WriteHeader(http.StatusInternalServerError)
 		_, writeErr = w.Write([]byte(err.Error()))
 	} else {
@@ -144,14 +144,14 @@ func serveAdmitFunc(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 	}
 
 	if writeErr != nil {
-		logger.Error(writeErr, "could not write response")
+		logger.Error(writeErr, "Could not write response")
 	}
 }
 
 // admitFuncHandler takes an admitFunc and wraps it into a http.Handler by means of calling serveAdmitFunc.
 func admitFuncHandler(admit admitFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		logger.Debug("receive request from", r.Host)
+		logger.Debug("Receive request from", r.Host)
 		serveAdmitFunc(w, r, admit)
 	})
 }

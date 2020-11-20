@@ -1,7 +1,8 @@
 package logger
 
 import (
-	"log"
+	"fmt"
+	"os"
 	"time"
 )
 
@@ -22,29 +23,30 @@ func SetLevel(level string) {
 }
 
 func Fatal(msg ...interface{}) {
-	log.Fatal("[Fatal] ", getTime(), msg)
+	fmt.Fprintf(os.Stderr, "[Fatal] %s %s", getTime(), fmt.Sprintln(msg...))
+	os.Exit(1)
 }
 
 func Error(err error, msg ...interface{}) {
-	log.Println("[Error] ", getTime(), msg, ": ", err.Error())
+	fmt.Fprintf(os.Stderr, "[Error] %s {%s} %s", getTime(), err.Error(), fmt.Sprintln(msg...))
 }
 
 func Warn(msg ...interface{}) {
-	log.Println("[Warn] ", getTime(), msg)
+	fmt.Fprintf(os.Stderr, "[Warn] %s %s", getTime(), fmt.Sprintln(msg...))
 }
 
 func Info(msg ...interface{}) {
 	if logLevel >= LEVEL_INFO {
-		log.Println("[Info] ", getTime(), msg)
+		fmt.Printf("[Info] %s %s", getTime(), fmt.Sprintln(msg...))
 	}
 }
 
 func Debug(msg ...interface{}) {
 	if logLevel >= LEVEL_DEBUG {
-		log.Println("[Debug] ", getTime(), msg)
+		fmt.Printf("[Debug] %s %s", getTime(), fmt.Sprintln(msg...))
 	}
 }
 
 func getTime() string {
-	return time.Now().Format("2006-01-02T15:04:05 ")
+	return time.Now().Format("2006-01-02 15:04:05")
 }

@@ -68,7 +68,7 @@ func (r *ReconcileDeploymentListener) Reconcile(request reconcile.Request) (reco
 	err := r.client.Get(context.TODO(), request.NamespacedName, deployment)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			logger.Info("Removing Deployment")
+			logger.Info("Removing Deployment", request.Name)
 			delete(shared.AvailableLabels, util.LabelMark("Deployment", request.Name))
 			shared.Lock.RUnlock()
 			virtualenv.TriggerReconcile()
@@ -78,7 +78,7 @@ func (r *ReconcileDeploymentListener) Reconcile(request reconcile.Request) (reco
 		return reconcile.Result{}, err
 	}
 
-	logger.Info("Adding Deployment")
+	logger.Info("Adding Deployment", request.Name)
 	shared.AvailableLabels[util.LabelMark("Deployment", request.Name)] = deployment.Spec.Template.Labels
 
 	shared.Lock.RUnlock()

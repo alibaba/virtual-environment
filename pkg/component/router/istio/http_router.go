@@ -37,13 +37,13 @@ func (r *HttpRouter) GenerateRoute(client client.Client, scheme *runtime.Scheme,
 func (r *HttpRouter) CleanupRoute(client client.Client, namespace string, svcName string) error {
 	err := http.DeleteVirtualService(client, namespace, svcName)
 	if err != nil {
-		logger.Error(err, "failed to remove VirtualService instance "+svcName)
+		logger.Error(err, "Failed to remove VirtualService instance "+svcName)
 	} else {
 		logger.Info("VirtualService deleted " + svcName)
 	}
 	err = http.DeleteDestinationRule(client, namespace, svcName)
 	if err != nil {
-		logger.Error(err, "failed to remove DestinationRule instance "+svcName)
+		logger.Error(err, "Failed to remove DestinationRule instance "+svcName)
 	} else {
 		logger.Info("DestinationRule deleted " + svcName)
 	}

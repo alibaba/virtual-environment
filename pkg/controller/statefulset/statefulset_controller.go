@@ -68,7 +68,7 @@ func (r *ReconcileStatefulSet) Reconcile(request reconcile.Request) (reconcile.R
 	err := r.client.Get(context.TODO(), request.NamespacedName, statefulset)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			logger.Info("Removing StatefulSet")
+			logger.Info("Removing StatefulSet", request.Name)
 			delete(shared.AvailableLabels, util.LabelMark("StatefulSet", request.Name))
 			shared.Lock.RUnlock()
 			virtualenv.TriggerReconcile()
@@ -78,7 +78,7 @@ func (r *ReconcileStatefulSet) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
-	logger.Info("Adding StatefulSet")
+	logger.Info("Adding StatefulSet", request.Name)
 	shared.AvailableLabels[util.LabelMark("StatefulSet", request.Name)] = statefulset.Spec.Template.Labels
 
 	shared.Lock.RUnlock()
