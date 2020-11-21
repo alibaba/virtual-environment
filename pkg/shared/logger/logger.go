@@ -28,7 +28,11 @@ func Fatal(msg ...interface{}) {
 }
 
 func Error(err error, msg ...interface{}) {
-	fmt.Fprintf(os.Stderr, "[Error] %s {%s} %s", getTime(), err.Error(), fmt.Sprintln(msg...))
+	if err == nil {
+		fmt.Fprintf(os.Stderr, "[Error] %s %s", getTime(), fmt.Sprintln(msg...))
+	} else {
+		fmt.Fprintf(os.Stderr, "[Error] %s {%s} %s", getTime(), err.Error(), fmt.Sprintln(msg...))
+	}
 }
 
 func Warn(msg ...interface{}) {

@@ -5,7 +5,6 @@ import (
 	"alibaba.com/virtual-env-operator/pkg/component/router/common"
 	"alibaba.com/virtual-env-operator/pkg/component/router/istio/envoy"
 	"alibaba.com/virtual-env-operator/pkg/component/router/istio/http"
-	"alibaba.com/virtual-env-operator/pkg/event"
 	"alibaba.com/virtual-env-operator/pkg/shared/logger"
 	"context"
 	networkingv1alpha3api "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -97,10 +96,7 @@ func (r *HttpRouter) CreateTagAppender(client client.Client, scheme *runtime.Sch
 	namespace string, name string) error {
 	tagAppender, err := envoy.TagAppenderFilter(namespace, name, virtualEnv.Spec.EnvLabel.Name, virtualEnv.Spec.EnvHeader.Name)
 	if tagAppender == nil {
-		if err == nil {
-			err = event.TagAppenderInitFailed{}
-		}
-		logger.Error(err, "Failed to initialize TagAppender instance "+namespace+":"+name)
+		logger.Error(err, "Failed to initialize TagAppender instance", namespace+":"+name)
 		return err
 	}
 	// set VirtualEnv instance as the owner and controller
