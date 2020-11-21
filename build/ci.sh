@@ -196,38 +196,43 @@ invoke_api() {
 }
 
 # Check response with expectation
+declare -i failed_case_count=0
 check_result() {
-    real="${1}"
-    expect="${2}"
-    if [[ "${real}" != "${expect}" ]]; then
-        echo "ERROR: Test failed !!!"
-        echo "Namespace: ${ns}"
-        echo "Real response: ${real}"
-        echo "Expectation  : ${expect}"
-        exit -1
+    case="${1}"
+    real="${2}"
+    expect="${3}"
+    if [[ "${real}" = "${expect}" ]]; then
+        echo "${case} passed"
+    else
+        echo "${case} failed"
+        echo "> real response: ${real}"
+        echo "> expectation  : ${expect}"
+        failed_case_count=${failed_case_count}+1
     fi
 }
 
 # Do functional check
 res=$(invoke_api dev.proj1)
-check_result "$res" "[springboot @ dev.proj1] <-dev.proj1, [go @ dev] <-dev.proj1, [node @ dev.proj1] <-dev.proj1"
-echo "passed: case 1"
+check_result "case 1" "$res" "[springboot @ dev.proj1] <-dev.proj1, [go @ dev] <-dev.proj1, [node @ dev.proj1] <-dev.proj1"
 
 res=$(invoke_api dev.proj1.feature1)
-check_result "$res" "[springboot @ dev.proj1.feature1] <-dev.proj1.feature1, [go @ dev] <-dev.proj1.feature1, [node @ dev.proj1] <-dev.proj1.feature1"
-echo "passed: case 2"
+check_result "case 2" "$res" "[springboot @ dev.proj1.feature1] <-dev.proj1.feature1, [go @ dev] <-dev.proj1.feature1, [node @ dev.proj1] <-dev.proj1.feature1"
 
 res=$(invoke_api dev.proj2)
-check_result "$res" "[springboot @ dev] <-dev.proj2, [go @ dev.proj2] <-dev.proj2, [node @ dev] <-dev.proj2"
-echo "passed: case 3"
+check_result "case 3" "$res" "[springboot @ dev] <-dev.proj2, [go @ dev.proj2] <-dev.proj2, [node @ dev] <-dev.proj2"
 
 res=$(invoke_api dev)
-check_result "$res" "[springboot @ dev] <-dev, [go @ dev] <-dev, [node @ dev] <-dev"
-echo "passed: case 4"
+check_result "case 4" "$res" "[springboot @ dev] <-dev, [go @ dev] <-dev, [node @ dev] <-dev"
 
 res=$(invoke_api)
-check_result "$res" "[springboot @ dev] <-dev, [go @ dev] <-dev, [node @ dev] <-empty"
-echo "passed: case 5"
+check_result "case 5" "$res" "[springboot @ dev] <-dev, [go @ dev] <-dev, [node @ dev] <-empty"
+
+if [ ${failed_case_count} -gt 0 ]; then
+    echo "ERROR: In total ${failed_case_count} tests failed !!!"
+    echo "Namespace: ${ns}"
+    exit -1
+fi
+
 echo "---- Functional check OK ----"
 
 # >>>>>>> CLEAN_UP_ANCHOR:
