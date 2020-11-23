@@ -143,7 +143,7 @@ func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runti
 			logger.Error(err, "Failed to get VirtualService")
 			return err
 		}
-	} else if http.IsDifferentVirtualService(&foundVirtualSvc.Spec, &virtualSvc.Spec, virtualEnv.Spec.EnvHeader.Name) {
+	} else if http.IsDifferentVirtualService(&foundVirtualSvc.Spec, &virtualSvc.Spec) {
 		// existing VirtualService changed
 		foundVirtualSvc.Spec = virtualSvc.Spec
 		err := client.Update(context.TODO(), foundVirtualSvc)

@@ -84,8 +84,8 @@ func DeleteVirtualService(client client.Client, namespace string, name string) e
 }
 
 // check whether VirtualService is different
-func IsDifferentVirtualService(spec1 *networkingv1alpha3.VirtualServiceSpec, spec2 *networkingv1alpha3.VirtualServiceSpec,
-	header string) bool {
+func IsDifferentVirtualService(spec1 *networkingv1alpha3.VirtualServiceSpec,
+	spec2 *networkingv1alpha3.VirtualServiceSpec) bool {
 	if !reflect.DeepEqual(spec1.Gateways, spec2.Gateways) {
 		return true
 	}
@@ -96,7 +96,7 @@ func IsDifferentVirtualService(spec1 *networkingv1alpha3.VirtualServiceSpec, spe
 		return true
 	}
 	for _, route1 := range spec1.HTTP {
-		if !findMatchRoute(spec2.HTTP, &route1, header) {
+		if !findMatchRoute(spec2.HTTP, &route1) {
 			return true
 		}
 	}
@@ -104,9 +104,9 @@ func IsDifferentVirtualService(spec1 *networkingv1alpha3.VirtualServiceSpec, spe
 }
 
 // check whether HTTPRoute exist in list
-func findMatchRoute(routes []networkingv1alpha3.HTTPRoute, target *networkingv1alpha3.HTTPRoute, header string) bool {
+func findMatchRoute(routes []networkingv1alpha3.HTTPRoute, target *networkingv1alpha3.HTTPRoute) bool {
 	for _, route := range routes {
-		if isRouteEqual(&route, target, header) {
+		if isRouteEqual(&route, target) {
 			return true
 		}
 	}
@@ -114,14 +114,31 @@ func findMatchRoute(routes []networkingv1alpha3.HTTPRoute, target *networkingv1a
 }
 
 // compare whether route rule is equal
-func isRouteEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv1alpha3.HTTPRoute, header string) bool {
+func isRouteEqual(route *networkingv1alpha3.HTTPRoute, target *networkingv1alpha3.HTTPRoute) bool {
 	if route.Match == nil || target.Match == nil {
 		return route.Match == nil && target.Match == nil && isDestinationEqual(route, target)
 	} else if len(route.Match) == 0 || len(target.Match) == 0 {
 		return len(route.Match) == 0 && len(target.Match) == 0 && isDestinationEqual(route, target)
 	} else {
-		return route.Match[0].Headers[header] == target.Match[0].Headers[header] && isDestinationEqual(route, target)
+		return isMatchHeadersEqual(route.Match[0].Headers, target.Match[0].Headers) && isDestinationEqual(route, target)
 	}
+}
+
+// compare whether header matcher is equal
+func isMatchHeadersEqual(headers map[string]v1alpha1.StringMatch, targetHeaders map[string]v1alpha1.StringMatch) bool {
+	for _, header := range headers {
+		found := false
+		for _, anotherHeader := range targetHeaders {
+			if reflect.DeepEqual(header, anotherHeader) {
+				found = true
+				break
+			}
+		}
+		if found != true {
+			return false
+		}
+	}
+	return true
 }
 
 // compare whether route destination is equal
