@@ -8,18 +8,19 @@ import (
 
 var logLevel = LEVEL_INFO
 
-func SetLevel(level string) {
+func SetLevel(level string) bool {
 	switch level {
 	case ERROR:
 		logLevel = LEVEL_ERROR
-		break
+		return true
 	case INFO:
 		logLevel = LEVEL_INFO
-		break
+		return true
 	case DEBUG:
 		logLevel = LEVEL_DEBUG
-		break
+		return true
 	}
+	return false
 }
 
 func Fatal(msg ...interface{}) {

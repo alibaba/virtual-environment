@@ -16,6 +16,7 @@ func Start(inspectHost string, inspectPort int) {
 	// Routes
 	e.GET("/status", inspectGlobalVariable)
 	e.GET("/version", inspectBuildVersion)
+	e.GET("/log", changeLogLevel)
 
 	// Start server
 	inspectAddr := inspectHost + ":" + strconv.Itoa(inspectPort)
@@ -43,4 +44,16 @@ func inspectBuildVersion(c echo.Context) error {
 		"Version":   version.Version,
 		"BuildTime": version.BuildTime,
 	})
+}
+
+func changeLogLevel(c echo.Context) error {
+	level := c.QueryParam("level")
+	if level == "" {
+		return c.String(http.StatusBadRequest, "parameter \"level\" missing.")
+	} else {
+		if !logger.SetLevel(level) {
+			return c.String(http.StatusBadRequest, "invalid level: "+level+" (should be ERROR, INFO or DEBUG)")
+		}
+		return c.String(http.StatusOK, "log level changed to "+level)
+	}
 }
