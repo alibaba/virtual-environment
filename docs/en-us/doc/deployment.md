@@ -14,9 +14,9 @@ The `CRD` component would listener to VirtualEnvironment resource instance creat
 Download latest ZIP archive from [release page](https://github.com/alibaba/virtual-environment/releases), use `kubectl apply` command to add operator CRD and webhook component into Kubernetes
 
 ```bash
-wget https://github.com/alibaba/virtual-environment/releases/download/v0.4.2/kt-virtual-environment-v0.4.2.zip
-unzip kt-virtual-environment-v0.4.2.zip
-cd v0.4.2/
+wget https://github.com/alibaba/virtual-environment/releases/download/v0.5.0/kt-virtual-environment-v0.5.0.zip
+unzip kt-virtual-environment-v0.5.0.zip
+cd v0.5.0/
 kubectl apply -f global/ktenv_crd.yaml
 kubectl apply -f global/ktenv_webhook.yaml
 ```
