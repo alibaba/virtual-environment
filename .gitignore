@@ -1,8 +1,3 @@
-# Temporary Build Files
-build/_output
-build/_test
-target/
-note/
 # Created by https://www.gitignore.io/api/go,vim,emacs,visualstudiocode
 ### Emacs ###
 # -*- mode: gitignore; -*-
@@ -80,3 +75,12 @@ tags
 ### Idea ###
 .idea/
 *.iml
+*.ipr
+### Temporary Build Files ###
+build/_output
+build/_test
+target/
+note/
+### OS ###
+.DS_Store
+Thumbs.db
