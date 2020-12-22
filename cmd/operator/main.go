@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	networkingv1alpha3 "knative.dev/pkg/apis/istio/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 )
@@ -46,6 +47,7 @@ func printVersion() {
 }
 
 func main() {
+	logf.SetLogger(&ktLogger{})
 	logger.SetLevel(logger.INFO)
 	printVersion()
 
