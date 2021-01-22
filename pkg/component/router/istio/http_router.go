@@ -25,11 +25,11 @@ type HttpRouter struct {
 // generate virtual services and destination rules
 func (r *HttpRouter) GenerateRoute(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
 	namespace string, svcName string, availableLabels []string, relatedDeployments []string) error {
-	err := r.reconcileVirtualService(client, scheme, virtualEnv, namespace, svcName, availableLabels, relatedDeployments)
+	shouldBeDeleted, err := r.reconcileVirtualService(client, scheme, virtualEnv, namespace, svcName, availableLabels, relatedDeployments)
 	if err != nil {
 		return err
 	}
-	return r.reconcileDestinationRule(client, scheme, virtualEnv, namespace, svcName, relatedDeployments)
+	return r.reconcileDestinationRule(client, scheme, virtualEnv, namespace, svcName, relatedDeployments, shouldBeDeleted)
 }
 
 // clean up virtual services and destination rules
@@ -123,25 +123,32 @@ func (r *HttpRouter) DeleteTagAppender(client client.Client, namespace string, n
 
 // reconcile virtual service according to related pod-resources and available labels
 func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
-	namespace string, svcName string, availableLabels []string, relatedDeployments []string) error {
+	namespace string, svcName string, availableLabels []string, relatedDeployments []string) (bool, error) {
 	virtualSvc := http.VirtualService(namespace, svcName, availableLabels, relatedDeployments, virtualEnv.Spec)
-	if len(virtualSvc.Spec.HTTP) == 0 {
-		// no http port available, no virtual service instance would generate
-		return nil
-	}
+	// when no http port or less than 2 destination available, no virtual service instance should exist
+	shouldBeDeleted := len(virtualSvc.Spec.HTTP) < 2
 	foundVirtualSvc := &networkingv1alpha3.VirtualService{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: svcName, Namespace: namespace}, foundVirtualSvc)
 	if err != nil {
 		// VirtualService not exist, create one
-		if errors.IsNotFound(err) {
+		if shouldBeDeleted {
+			return shouldBeDeleted, nil
+		} else if errors.IsNotFound(err) {
 			err = r.createVirtualService(client, scheme, virtualEnv, virtualSvc)
 			if err != nil {
 				logger.Error(err, "Failed to create new VirtualService")
-				return err
+				return shouldBeDeleted, err
 			}
 		} else {
 			logger.Error(err, "Failed to get VirtualService")
-			return err
+			return shouldBeDeleted, err
+		}
+	} else if shouldBeDeleted {
+		// VirtualService should be remove
+		err := client.Delete(context.TODO(), foundVirtualSvc)
+		if err != nil {
+			logger.Error(err, "Failed to delete VirtualService instance")
+			return shouldBeDeleted, err
 		}
 	} else if http.IsDifferentVirtualService(&foundVirtualSvc.Spec, &virtualSvc.Spec) {
 		// existing VirtualService changed
@@ -149,22 +156,24 @@ func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runti
 		err := client.Update(context.TODO(), foundVirtualSvc)
 		if err != nil {
 			logger.Error(err, "Failed to update VirtualService status")
-			return err
+			return shouldBeDeleted, err
 		}
 		logger.Info("VirtualService " + virtualSvc.Name + " changed")
 	}
-	return nil
+	return shouldBeDeleted, nil
 }
 
 // reconcile destination rule according to related pod-resources
 func (r *HttpRouter) reconcileDestinationRule(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
-	namespace string, svcName string, relatedDeployments []string) error {
+	namespace string, svcName string, relatedDeployments []string, shouldBeDeleted bool) error {
 	destRule := http.DestinationRule(namespace, svcName, relatedDeployments, virtualEnv.Spec.EnvLabel.Name)
 	foundDestRule := &networkingv1alpha3.DestinationRule{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: svcName, Namespace: namespace}, foundDestRule)
 	if err != nil {
 		// DestinationRule not exist, create one
-		if errors.IsNotFound(err) {
+		if shouldBeDeleted {
+			return nil
+		} else if errors.IsNotFound(err) {
 			err = r.createDestinationRule(client, scheme, virtualEnv, destRule)
 			if err != nil {
 				logger.Error(err, "Failed to create new DestinationRule")
@@ -172,6 +181,13 @@ func (r *HttpRouter) reconcileDestinationRule(client client.Client, scheme *runt
 			}
 		} else {
 			logger.Error(err, "Failed to get DestinationRule")
+			return err
+		}
+	} else if shouldBeDeleted {
+		// DestinationRule should be remove
+		err := client.Delete(context.TODO(), foundDestRule)
+		if err != nil {
+			logger.Error(err, "Failed to delete DestinationRule instance")
 			return err
 		}
 	} else if http.IsDifferentDestinationRule(&foundDestRule.Spec, &destRule.Spec, virtualEnv.Spec.EnvLabel.Name) {
