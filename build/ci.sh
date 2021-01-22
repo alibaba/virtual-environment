@@ -6,7 +6,7 @@
 # 3. VirtualEnvironment CRD has been installed to cluster (https://alibaba.github.io/virtual-environment/#/en-us/doc/deployment)
 
 # Constants
-ci_tag="ci"
+ci_tag="latest"
 operator_name="virtual-env-operator"
 webhook_name="virtual-env-admission-webhook"
 default_operator_image="virtualenvironment/${operator_name}"
