@@ -94,9 +94,6 @@ func (r *ReconcileServiceListener) Reconcile(request reconcile.Request) (reconci
 
 	logger.Info("Adding Service", request.Name)
 	serviceInfo := shared.ServiceInfo{}
-	if value, ok := shared.AvailableServices[request.Name]; ok {
-		serviceInfo = value
-	}
 	// save service selectors
 	serviceInfo.Selectors = service.Spec.Selector
 	// save service ports
