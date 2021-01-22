@@ -35,7 +35,7 @@ func VirtualService(namespace string, svcName string, availableLabels []string, 
 		virtualSvc.Spec.Gateways = serviceInfo.Gateways
 	}
 	if len(serviceInfo.Hosts) > 0 {
-		virtualSvc.Spec.Hosts = serviceInfo.Hosts
+		virtualSvc.Spec.Hosts = append(virtualSvc.Spec.Hosts, serviceInfo.Hosts...)
 	}
 	var httpRoute *networkingv1alpha3.HTTPRoute = nil
 	if serviceInfo.CustomRule != "" {
