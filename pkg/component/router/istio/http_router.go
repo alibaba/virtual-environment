@@ -127,7 +127,7 @@ func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runti
 	virtualSvc := http.VirtualService(namespace, svcName, availableLabels, relatedDeployments, virtualEnv.Spec)
 	// when no http port or less than 2 destination available, and no gateway configured,
 	// virtual service instance should be removed
-	shouldBeDeleted := len(virtualSvc.Spec.HTTP) < 2 && virtualSvc.Spec.Gateways != nil
+	shouldBeDeleted := len(virtualSvc.Spec.HTTP) < 2 && virtualSvc.Spec.Gateways == nil
 	foundVirtualSvc := &networkingv1alpha3.VirtualService{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: svcName, Namespace: namespace}, foundVirtualSvc)
 	if err != nil {
@@ -146,6 +146,7 @@ func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runti
 		}
 	} else if shouldBeDeleted {
 		// VirtualService should be remove
+		logger.Info("Deleting VirtualService instance " + virtualSvc.Name)
 		err := client.Delete(context.TODO(), foundVirtualSvc)
 		if err != nil {
 			logger.Error(err, "Failed to delete VirtualService instance")
@@ -186,6 +187,7 @@ func (r *HttpRouter) reconcileDestinationRule(client client.Client, scheme *runt
 		}
 	} else if shouldBeDeleted {
 		// DestinationRule should be remove
+		logger.Info("Deleting DestinationRule instance " + destRule.Name)
 		err := client.Delete(context.TODO(), foundDestRule)
 		if err != nil {
 			logger.Error(err, "Failed to delete DestinationRule instance")
