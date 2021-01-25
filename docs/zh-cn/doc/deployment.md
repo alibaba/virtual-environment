@@ -12,9 +12,9 @@ KtEnv系统包含Operator CRD和Admission Webhook两个组件。Webhook组件用
 从 [发布页面](https://github.com/alibaba/virtual-environment/releases) 下载最新的部署文件包，并解压。
 
 ```bash
-wget https://github.com/alibaba/virtual-environment/releases/download/v0.5.1/kt-virtual-environment-v0.5.1.zip
-unzip kt-virtual-environment-v0.5.1.zip
-cd v0.5.1/
+wget https://github.com/alibaba/virtual-environment/releases/download/v0.5.2/kt-virtual-environment-v0.5.2.zip
+unzip kt-virtual-environment-v0.5.2.zip
+cd v0.5.2/
 ```
 
 将目录中的CRD和Webhook组件添加到Kubernetes（其中Webhook组件携带了默认的自签名秘钥，可参考[Webhook配置文档](zh-cn/doc/webhook.md)替换）。
