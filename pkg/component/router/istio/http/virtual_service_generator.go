@@ -13,6 +13,10 @@ import (
 	"strings"
 )
 
+const (
+	defaultGateway = "mesh"
+)
+
 // generate istio virtual service instance
 func VirtualService(namespace string, svcName string, availableLabels []string, relatedDeployments []string,
 	spec envv1alpha2.VirtualEnvironmentSpec) *networkingv1alpha3.VirtualService {
@@ -26,13 +30,14 @@ func VirtualService(namespace string, svcName string, availableLabels []string, 
 			Namespace: namespace,
 		},
 		Spec: networkingv1alpha3.VirtualServiceSpec{
-			Hosts: []string{svcName},
-			HTTP:  []networkingv1alpha3.HTTPRoute{},
+			Gateways: []string{defaultGateway},
+			Hosts:    []string{svcName},
+			HTTP:     []networkingv1alpha3.HTTPRoute{},
 		},
 	}
 	serviceInfo := shared.AvailableServices[svcName]
 	if len(serviceInfo.Gateways) > 0 {
-		virtualSvc.Spec.Gateways = serviceInfo.Gateways
+		virtualSvc.Spec.Gateways = append(virtualSvc.Spec.Gateways, serviceInfo.Gateways...)
 	}
 	if len(serviceInfo.Hosts) > 0 {
 		virtualSvc.Spec.Hosts = append(virtualSvc.Spec.Hosts, serviceInfo.Hosts...)

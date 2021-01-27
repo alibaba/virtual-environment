@@ -125,9 +125,9 @@ func (r *HttpRouter) DeleteTagAppender(client client.Client, namespace string, n
 func (r *HttpRouter) reconcileVirtualService(client client.Client, scheme *runtime.Scheme, virtualEnv *envv1alpha2.VirtualEnvironment,
 	namespace string, svcName string, availableLabels []string, relatedDeployments []string) (bool, error) {
 	virtualSvc := http.VirtualService(namespace, svcName, availableLabels, relatedDeployments, virtualEnv.Spec)
-	// when no http port or less than 2 destination available, and no gateway configured,
+	// when no http port or less than 2 destination available, and no custom gateway configured,
 	// virtual service instance should be removed
-	shouldBeDeleted := len(virtualSvc.Spec.HTTP) < 2 && virtualSvc.Spec.Gateways == nil
+	shouldBeDeleted := len(virtualSvc.Spec.HTTP) < 2 && len(virtualSvc.Spec.Gateways) < 2
 	foundVirtualSvc := &networkingv1alpha3.VirtualService{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: svcName, Namespace: namespace}, foundVirtualSvc)
 	if err != nil {
