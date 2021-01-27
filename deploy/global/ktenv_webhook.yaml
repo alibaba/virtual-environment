@@ -70,7 +70,7 @@ spec:
             secretName: webhook-server-tls
       containers:
         - name: server
-          image: virtualenvironment/virtual-env-admission-webhook:v0.5.2
+          image: virtualenvironment/virtual-env-admission-webhook:v0.5.3
           imagePullPolicy: Always
           ports:
             - containerPort: 8443
