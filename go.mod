@@ -1,10 +1,11 @@
 module alibaba.com/virtual-env-operator
 
 require (
+	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.17.2
-	github.com/gogo/protobuf v1.3.0
+	github.com/gogo/protobuf v1.3.2
 	github.com/labstack/echo/v4 v4.1.11
-	github.com/operator-framework/operator-sdk v0.11.1-0.20191024020519-c7f429f05808
+	github.com/operator-framework/operator-sdk v0.19.1
 	istio.io/api v0.0.0-20191109011911-e51134872853
 	istio.io/client-go v0.0.0-20191104174404-7b65e62d85b0
 	k8s.io/api v0.0.0-20191016110408-35e52d86657a
