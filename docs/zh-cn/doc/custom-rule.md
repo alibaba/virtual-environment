@@ -28,7 +28,7 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    kt-virtual-environment/rule: '{"Rewrite":{"Uri":"/"},"Match":[{"Uri":{"Prefix":"/prefix/"}}]}'
+    kt-virtual-environment/rule: '{"Rewrite":{"Uri":"/prefix"},"Match":[{"Uri":{"Prefix":"/prefix"}}]}'
 ```
 
 则生成的VirtualService对象会包含以下额外规则：
