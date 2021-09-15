@@ -6,7 +6,7 @@ KtEnv（原名KtVirtualEnvironment）是一种基于ServiceMesh的微服务环�
 
 阅读[这里](https://yq.aliyun.com/articles/700766)了解更多故事。
 
-![isolation](https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/diagram-zh-cn.jpg)
+![diagram-zh-cn.jpg](https://img.alicdn.com/imgextra/i2/O1CN01BtTOFT1iLsCzEkPku_!!6000000004397-0-tps-2160-884.jpg)
 
 在[原理与概念](zh-cn/doc/concept.md)小节将对这种路由规则进行更详细的介绍。
 
@@ -21,4 +21,4 @@ KtEnv（原名KtVirtualEnvironment）是一种基于ServiceMesh的微服务环�
 
 请加入`kt-dev`钉钉群：
 
-<img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/dingtalk-group-zh-cn.jpg" width="40%"></img>
+<img src="https://img.alicdn.com/imgextra/i4/O1CN01L66kP81TdXFEyK8db_!!6000000002405-0-tps-491-589.jpg" alt="dingtalk-group-zh-cn.jpg" width="40%"></img>

@@ -19,7 +19,7 @@
 
 此时若为集群中的服务实例全部赋予环境标`dev`，就形成了一个隔离域，如下图蓝色部分所示。结合虚拟环境的实践，我们称这个隔离域为“公共基础环境”（也称默认环境）。
 
-<img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/concept-1.jpg" height="200px"/>
+<img src="https://img.alicdn.com/imgextra/i1/O1CN01A2nZK71j6abhsJLmI_!!6000000004499-0-tps-548-644.jpg" alt="concept-1.jpg" height="200px"/>
 
 当进行特定项目开发的时候，开发者不需要重新部署整套微服务系统，而是单独部署需要修改的部分服务（如服务C和服务D），为它们赋予一个子级环境标，比如`dev.proj`，然后加入到测试环境中。
 
@@ -27,21 +27,21 @@
 
 因此`dev.proj`环境标所形成的隔离域边界下图红色区域所示，这便是`dev.proj`虚拟环境的服务实例集合。
 
-<img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/concept-2.jpg" height="230px"/>
+<img src="https://img.alicdn.com/imgextra/i3/O1CN01DQGCCp1qa5QOy0sYp_!!6000000005511-0-tps-830-770.jpg" alt="concept-2.jpg" height="230px"/>
 
 不难看出，`dev.proj`虚拟环境复用了部分公共基础环境的资源（服务A和服务B）。这样做的好处是，第一不会占用大量的计算资源；第二，不会影响公共基础环境的稳定性。
 
 开发者还可以将本地开发机加入虚拟环境。比如小明在本地启动了一个服务C的实例，他给这个服务实例打上环境标`dev.proj.local`，基于前面介绍的路由规则，带环境标的服务发出的请求会优先寻找带相同环境标的服务实例，如果找不到则会逐级寻找带有上一级环境标的实例。于是环境标为`dev.proj.local`的服务C、环境标为`dev.proj`服务D和公共基础环境`dev`中的服务A、服务B就组成了一个新的的虚拟环境，如下图红色部分所示。
 
-<img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/concept-3.jpg" height="230px"/>
+<img src="https://img.alicdn.com/imgextra/i4/O1CN01utkpwx1bvs1k9I2Un_!!6000000003528-0-tps-1252-764.jpg" alt="concept-3.jpg" height="230px"/>
 
 这时小明的同事在本地启动了一个服务A，如果他没有对这个服务打环境标，则他的所有调用请求会默认使用“公共基础环境”进行测试。因此小明在自己的虚拟环境中的任何调试都不会影响到他的同事，反之亦然。如下图所示。
 
-<img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/concept-4.jpg" height="230px"/>
+<img src="https://img.alicdn.com/imgextra/i2/O1CN015T8H9D1gwqxAbHAP3_!!6000000004207-0-tps-1656-744.jpg" alt="concept-4.jpg" height="230px"/>
 
 若小明的同事加入了小明所在的项目，他们之间需要进行“联调”。这时，他只需将本地的服务打上一个和小明相同的环境标即可，如下图红色部分所示。
 
-<img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/concept-5.jpg" height="230px"/>
+<img src="https://img.alicdn.com/imgextra/i2/O1CN01EZ7VHu1pdv7fqmJ3B_!!6000000005384-0-tps-1640-762.jpg" alt="concept-5.jpg" height="230px"/>
 
 总结而言，虚拟环境是通过在服务实例（以及从这些实例发出的请求）上携带约定标签，将个别需要调试或测试的特定版本服务实例与其他公共服务实例组成临时虚拟集群的一种环境管理实践。
 

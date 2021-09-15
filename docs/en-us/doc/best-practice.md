@@ -10,7 +10,7 @@ Service instances on Developer's local machine can also be added to the isolated
 
 Above practice will finally form a three-tier virtual environment pattern, as shown in the figure below.
 
-![best-practice](https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/best-practice-en-us.jpg)
+![best-practice-en-us.jpg](https://img.alicdn.com/imgextra/i1/O1CN01VgbFUv1X7iBfS3iUb_!!6000000002877-0-tps-2308-1324.jpg)
 
 - **Shared environment**: Contains all required services, as final route targets, should use stable service version
 - **Project environment**: Contains service instances used by certain project, usually for cooperative development and debugging, use service version specified by project

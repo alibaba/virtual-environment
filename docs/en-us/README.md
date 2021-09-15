@@ -10,7 +10,7 @@ For microservices developers, having a clean, dedicated and full-filled testing 
 
 However, considering both economic costs and management costs, in any medium and large teams, maintaining a dedicated test clusters of all services for each developer is not a realistic idea. Therefore, Alibaba's R&D team has adopted a "virtual environment" approach based on route isolation.
 
-![isolation](https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/diagram-en-us.jpg)
+![diagram-en-us.jpg](https://img.alicdn.com/imgextra/i1/O1CN01NNA5Cm1XV4NwiFqJ2_!!6000000002928-0-tps-2160-884.jpg)
 
 According to the specified "virtual environment name" header on the request, this mechanism will form isolated traffic groups which composed of several specific service instances with other shared service instances, into full-filled testing environments from each developer's perspective.
 
@@ -27,4 +27,4 @@ This practice was also mentioned at [this](https://medium.com/hackernoon/lower-c
 
 Please join `kt-dev` DingTalk group：
 
-<img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/dingtalk-group-en-us.jpg" width="40%"></img>
+<img src="https://img.alicdn.com/imgextra/i3/O1CN011RIbQv27OUrviRv4C_!!6000000007787-0-tps-496-583.jpg" alt="dingtalk-group-en-us.jpg" width="40%"></img>

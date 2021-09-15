@@ -10,7 +10,7 @@
 
 最终形成使用三层隔离链路的测试环境模式，如下图所示。
 
-![best-practice](https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/best-practice-zh-cn.jpg)
+![best-practice-zh-cn.jpg](https://img.alicdn.com/imgextra/i3/O1CN0102do1U1UjJrJ7LiSI_!!6000000002553-0-tps-2322-1320.jpg)
 
 - **公共环境**：包含完整服务链路，作为依赖兜底，部署相对稳定的服务版本
 - **项目环境**：包含某个子项目涉及的服务，用于协作联调，部署项目调试所需的特定服务版本

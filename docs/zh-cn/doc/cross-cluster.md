@@ -4,4 +4,4 @@
 
 当请求从一个Pod发送到另一个Namespace甚至另一个Kubernetes集群的Pod中，如果目标Pod所在的集群部署有VirtualEnvironment CRD，且所在的Namespace具有相同配置的VirtualEnvironment实例，则该请求依然会在目标Pod所在的Namespace内遵循相同隔离规则进行路由。
 
-![cross-cluster](https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/cross-cluster.jpg)
+![cross-cluster.jpg](https://img.alicdn.com/imgextra/i3/O1CN01DV8hTa1EdKpgmETa8_!!6000000000374-0-tps-2154-932.jpg)

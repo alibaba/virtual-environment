@@ -3,7 +3,7 @@ KtEnv (Virtual Environment Operator)
 
 Isolate kubernetes pod communication into virtual groups according to pod label, with route fallback support.
 
-![isolation](https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/diagram-en-us.jpg)
+![diagram-en-us.jpg](https://img.alicdn.com/imgextra/i1/O1CN01NNA5Cm1XV4NwiFqJ2_!!6000000002928-0-tps-2160-884.jpg)
 
 Check ☞[document](https://alibaba.github.io/virtual-environment/#/en-us/)☜ for more information.
 
@@ -35,4 +35,4 @@ it should firstly fallback to hit `ServiceB` in the ParentEnv, and finally turn 
 
 Contact us with DingTalk:
 
-<img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/dingtalk-group-en-us.jpg" width="50%"></img>
+<img src="https://img.alicdn.com/imgextra/i3/O1CN011RIbQv27OUrviRv4C_!!6000000007787-0-tps-496-583.jpg" alt="dingtalk-group-en-us.jpg" width="50%"></img>
