@@ -13,4 +13,4 @@ KtEnv (Virtual Environment Operator)
 
 请加入`kt-dev`钉钉群：
 
-<img src="https://img.alicdn.com/imgextra/i4/O1CN01L66kP81TdXFEyK8db_!!6000000002405-0-tps-491-589.jpg" alt="dingtalk-group-zh-cn.jpg" width="50%"></img>
+<img src="https://img.alicdn.com/imgextra/i1/O1CN01fLj1a622YVRnxTNyt_!!6000000007132-0-tps-573-657.jpg" alt="dingtalk-group-zh-cn.jpg" width="50%"></img>

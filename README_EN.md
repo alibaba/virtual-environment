@@ -35,4 +35,4 @@ it should firstly fallback to hit `ServiceB` in the ParentEnv, and finally turn 
 
 Contact us with DingTalk:
 
-<img src="https://img.alicdn.com/imgextra/i3/O1CN011RIbQv27OUrviRv4C_!!6000000007787-0-tps-496-583.jpg" alt="dingtalk-group-en-us.jpg" width="50%"></img>
+<img src="https://img.alicdn.com/imgextra/i4/O1CN01sTW3D61NzAFgUCNqz_!!6000000001640-0-tps-573-657.jpg" alt="dingtalk-group-en-us.jpg" width="50%"></img>
