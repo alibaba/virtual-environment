@@ -25,12 +25,14 @@ spec:
     - port: 443
       targetPort: webhook-api
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   name: virtual-environment-webhook
 webhooks:
   - name: webhook-server.kt-virtual-environment.svc
+    admissionReviewVersions: [ "v1" ]
+    sideEffects: "None"
     failurePolicy: Fail
     clientConfig:
       service:

@@ -1,4 +1,4 @@
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: virtualenvironments.env.alibaba.com
@@ -10,82 +10,79 @@ spec:
     plural: virtualenvironments
     singular: virtualenvironment
   scope: Namespaced
-  subresources:
-    status: {}
-  validation:
-    openAPIV3Schema:
-      description: VirtualEnvironment is the Schema for the virtualenvironments API
-      properties:
-        apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
-          type: string
-        kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
-          type: string
-        metadata:
-          type: object
-        spec:
-          description: VirtualEnvironmentSpec defines the desired state of VirtualEnvironment
-          properties:
-            envHeader:
-              description: Header to keep env name in trace
-              properties:
-                aliases:
-                  description: Other Names which also can be used for match env
-                  items:
-                    properties:
-                      name:
-                        description: Alias name of the header
-                        minLength: 1
-                        type: string
-                      pattern:
-                        description: Regular expression to extract env tag from header
-                          value
-                        type: string
-                      placeholder:
-                        description: Env tag placeholder in pattern text
-                        type: string
-                    required:
-                    - name
-                    - pattern
-                    type: object
-                  type: array
-                autoInject:
-                  description: Whether auto inject env header via sidecar
-                  type: boolean
-                name:
-                  description: Name of the header
-                  minLength: 1
-                  type: string
-              type: object
-            envLabel:
-              description: Pod label to mark virtual environment name
-              properties:
-                defaultSubset:
-                  description: Default subset to route when env header matches nothing
-                  minLength: 1
-                  type: string
-                name:
-                  description: Name of the label
-                  minLength: 1
-                  type: string
-                splitter:
-                  description: Symbol to split virtual env levels
-                  maxLength: 1
-                  minLength: 1
-                  type: string
-              type: object
-          type: object
-        status:
-          description: VirtualEnvironmentStatus defines the observed state of VirtualEnvironment
-          type: object
-      type: object
-  version: v1alpha2
   versions:
   - name: v1alpha2
     served: true
     storage: true
+    schema:
+      openAPIV3Schema:
+        description: VirtualEnvironment is the Schema for the virtualenvironments API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: VirtualEnvironmentSpec defines the desired state of VirtualEnvironment
+            properties:
+              envHeader:
+                description: Header to keep env name in trace
+                properties:
+                  aliases:
+                    description: Other Names which also can be used for match env
+                    items:
+                      properties:
+                        name:
+                          description: Alias name of the header
+                          minLength: 1
+                          type: string
+                        pattern:
+                          description: Regular expression to extract env tag from header
+                            value
+                          type: string
+                        placeholder:
+                          description: Env tag placeholder in pattern text
+                          type: string
+                      required:
+                        - name
+                        - pattern
+                      type: object
+                    type: array
+                  autoInject:
+                    description: Whether auto inject env header via sidecar
+                    type: boolean
+                  name:
+                    description: Name of the header
+                    minLength: 1
+                    type: string
+                type: object
+              envLabel:
+                description: Pod label to mark virtual environment name
+                properties:
+                  defaultSubset:
+                    description: Default subset to route when env header matches nothing
+                    minLength: 1
+                    type: string
+                  name:
+                    description: Name of the label
+                    minLength: 1
+                    type: string
+                  splitter:
+                    description: Symbol to split virtual env levels
+                    maxLength: 1
+                    minLength: 1
+                    type: string
+                type: object
+            type: object
+          status:
+            description: VirtualEnvironmentStatus defines the observed state of VirtualEnvironment
+            type: object
+        type: object
