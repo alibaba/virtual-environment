@@ -37,6 +37,16 @@ mkdir keys
 cd keys
 ```
 
+在此目录下创建一个配置文件`ssl.conf`，内容如下：
+
+```text
+[req_ext]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = webhook-server.kt-virtual-environment.svc
+```
+
 使用OpenSSL命令行生成新的根证书和一组自签名秘钥文件。
 
 ```bash
@@ -46,7 +56,7 @@ openssl req -nodes -new -x509 -days 3650 -keyout ca.key -out ca.crt -subj "/CN=V
 openssl genrsa -out webhook-server-tls.key 2048
 # Generate a Certificate Signing Request (CSR) for the private key, and sign it with the private key of the CA.
 openssl req -new -key webhook-server-tls.key -subj "/CN=webhook-server.kt-virtual-environment.svc" \
-    | openssl x509 -req -days 3650 -CA ca.crt -CAkey ca.key -CAcreateserial -out webhook-server-tls.crt
+    | openssl x509 -req -days 3650 -CA ca.crt -CAkey ca.key -CAcreateserial -out webhook-server-tls.crt -extensions req_ext -extfile ssl.conf
 ```
 
 将证书和秘钥的内容经过bash64编码后保存到环境变量中待用。
