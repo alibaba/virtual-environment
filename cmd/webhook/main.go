@@ -3,7 +3,7 @@ package main
 import (
 	"alibaba.com/virtual-env-operator/pkg/shared/logger"
 	"fmt"
-	"k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
@@ -28,7 +28,7 @@ var (
 
 // injectEnvironmentTag read the environment tag from pod label, and save to the sidecar container as an environment
 // variable named `VIRTUAL_ENVIRONMENT_TAG`
-func injectEnvironmentTag(req *v1beta1.AdmissionRequest) ([]PatchOperation, error) {
+func injectEnvironmentTag(req *admissionv1.AdmissionRequest) ([]PatchOperation, error) {
 	logger.Debug("Handling admission request for", req.Name)
 
 	// This handler should only get called on Pod objects as per the MutatingWebhookConfiguration in the YAML file.
