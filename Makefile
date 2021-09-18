@@ -1,4 +1,4 @@
-VERSION ?= v0.5.4
+VERSION ?= v0.6.0
 OPERATOR_IMAGE = virtualenvironment/virtual-env-operator
 WEBHOOK_IMAGE = virtualenvironment/virtual-env-admission-webhook
 OPERATOR_IMAGE_AND_VERSION ?= $(OPERATOR_IMAGE):$(VERSION)

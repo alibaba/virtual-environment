@@ -15,7 +15,7 @@ spec:
       serviceAccountName: virtual-env-operator
       containers:
         - name: virtual-env-operator
-          image: virtualenvironment/virtual-env-operator:v0.5.4
+          image: virtualenvironment/virtual-env-operator:v0.6.0
           command:
           - virtual-env-operator
           imagePullPolicy: Always
