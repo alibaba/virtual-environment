@@ -71,8 +71,8 @@ func buildPatchStruct(envHeader string) (*pbtypes.Struct, error) {
 	config := `{
         "name": "virtual.environment.lua",
         "typed_config": {
-            "@type": "type.googleapis.com/envoy.config.filter.http.lua.v2.Lua",
-            "inline_code": "` + toOneLine(luaScript(envHeader)) + `"
+            "@type": "type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua",
+            "inlineCode": "` + toOneLine(luaScript(envHeader)) + `"
         }
     }`
 	unmarshalledConfig := &pbtypes.Struct{}
