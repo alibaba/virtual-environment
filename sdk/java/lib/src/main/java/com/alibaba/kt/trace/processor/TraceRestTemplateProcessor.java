@@ -1,5 +1,6 @@
 package com.alibaba.kt.trace.processor;
 
+import com.alibaba.kt.trace.util.InterceptorGlobal;
 import com.alibaba.kt.trace.util.InterceptorUtil;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -18,6 +19,9 @@ public class TraceRestTemplateProcessor implements BeanPostProcessor {
 
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        // Init virtual environment interceptors
+        // 初始化虚拟环境透传拦截器
+        InterceptorGlobal.setupInterceptors();
         // When find RestTemplate bean, add injection to it
         // 若存在RestTemplate类型的Bean，自动为其增加透传环境标签Header能力
         if (bean instanceof RestTemplate) {

@@ -1,13 +1,12 @@
 package com.alibaba.demo.controller;
 
-import com.alibaba.demo.util.EnvUtil;
+import static com.alibaba.demo.util.EnvUtil.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-
 import javax.servlet.http.HttpServletRequest;
 
 @RestController
@@ -20,22 +19,22 @@ public class DemoController {
 
     @GetMapping("/a")
     String callA(HttpServletRequest request) {
-        logger.info("accessing service a at " + EnvUtil.getCurrentEnv());
-        return "a-[" + EnvUtil.getCurrentEnv() + "] received " + EnvUtil.getRequestEnv(request) + "\n" +
-            restTemplate.getForEntity("http://service-b:9000/b", String.class);
+        logger.info("accessing service a at " + getCurrentEnv());
+        return "a-[" + getCurrentEnv() + "] received " + getRequestEnv(request) + "\n" +
+            restTemplate.getForObject("http://127.0.0.1:9002/b", String.class);
     }
 
     @GetMapping("/b")
     String callB(HttpServletRequest request) {
-        logger.info("accessing service b at " + EnvUtil.getCurrentEnv());
-        return "b-[" + EnvUtil.getCurrentEnv() + "] received " + EnvUtil.getRequestEnv(request) + "\n" +
-            restTemplate.getForEntity("http://service-c:9000/c", String.class);
+        logger.info("accessing service b at " + getCurrentEnv());
+        return "b-[" + getCurrentEnv() + "] received " + getRequestEnv(request) + "\n" +
+            restTemplate.getForObject("http://127.0.0.1:9003/c", String.class);
     }
 
     @GetMapping("/c")
     String callC(HttpServletRequest request) {
-        logger.info("accessing service c at " + EnvUtil.getCurrentEnv());
-        return "c-[" + EnvUtil.getCurrentEnv() + "] received " + EnvUtil.getRequestEnv(request) + "\n";
+        logger.info("accessing service c at " + getCurrentEnv());
+        return "c-[" + getCurrentEnv() + "] received " + getRequestEnv(request) + "\n";
     }
 
 }

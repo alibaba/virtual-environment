@@ -32,7 +32,10 @@ public class OutgoingInterceptor implements ClientHttpRequestInterceptor {
         } else if (InterceptorGlobal.tagEnvVar != null && InterceptorGlobal.tagEnvVar.length() > 0) {
             // When allow fetching environment tag from environment variable, try it
             // 如果启用了从环境变量读取，则尝试将环境变量中的标签设置到请求中
-            headers.add(InterceptorGlobal.tagHeader, System.getenv(InterceptorGlobal.tagEnvVar));
+            envTag = System.getenv(InterceptorGlobal.tagEnvVar);
+            if (envTag != null && envTag.length() > 0) {
+                headers.add(InterceptorGlobal.tagHeader, envTag);
+            }
         }
         return execution.execute(request, body);
     }

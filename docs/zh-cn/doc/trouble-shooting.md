@@ -57,11 +57,11 @@ kubectl -n $NS logs <任意一个Pod名字> istio-proxy --tail 100
 - 同一个Pod被多个Service选中。当前Istio不支持一个Pod同时属于多个Service的情况
 - Istio规则生效有延迟（参考 [Istio文档](https://istio.io/latest/zh/docs/ops/common-problems/network-issues/#route-rules-don't-seem-to-affect-traffic-flow) ）
 
-## 流量未自动加环境标
+## 流量未自动加环境标签
 
-流量自动加标的过程分为两步，首先在Pod创建时通过全局Webhook组件将记录在Pod label上的环境名称写入其Sidecar容器的`VIRTUAL_ENVIRONMENT_TAG`环境变量，然后在流量出口处通过Envoy Sidecar读取上下文环境变量的内容，将环境标最终写到HTTP请求的Header里。
+流量自动加标的过程分为两步，首先在Pod创建时通过全局Webhook组件将记录在Pod label上的环境名称写入其Sidecar容器的`VIRTUAL_ENVIRONMENT_TAG`环境变量，然后在流量出口处通过Envoy Sidecar读取上下文环境变量的内容，将环境标签最终写到HTTP请求的Header里。
 
-首先检查Webhook是否成功的将环境标写入Pod环境变量：
+首先检查Webhook是否成功的将环境标签写入Pod环境变量：
 
 ```bash
 kubectl -n $NS get pod <任意一个Pod名字> -o yaml -o yaml | grep -A 1 'VIRTUAL_ENVIRONMENT_TAG'
@@ -69,7 +69,7 @@ kubectl -n $NS get pod <任意一个Pod名字> -o yaml -o yaml | grep -A 1 'VIRT
 
 如果没有输出任何内容，说明环境变量未注入，请检查Admission Webhook组件是否正确部署。
 
-若有输出Pod所处的环境标名称，则问题出在Envoy Sidecar上。
+若有输出Pod所处的环境标签名称，则问题出在Envoy Sidecar上。
 
 接下来查看Envoy容器日志，若是注入脚本出错，这里会看到报错信息：
 

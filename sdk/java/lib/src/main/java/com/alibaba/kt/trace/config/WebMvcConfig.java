@@ -23,7 +23,7 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // For all request
-        // 拦截所有HTTP请求
+        // 对所有HTTP请求生效
         registry.addInterceptor(getTraceInterceptor()).addPathPatterns("/**");
     }
 
