@@ -7,7 +7,7 @@
 
 ## 部署KtEnv组件
 
-KtEnv系统包含Operator CRD和Admission Webhook两个组件。Webhook组件用于将Pod的虚拟环境标写入到其Sidecar容器的运行时环境变量内；CRD组件用于创建监听集群服务变化并动态生成路由规则的VirtualEnvironment资源实例。
+KtEnv系统包含Operator CRD和Admission Webhook两个组件。Webhook组件用于将Pod的虚拟环境标签写入到其Sidecar容器的运行时环境变量内；CRD组件用于创建监听集群服务变化并动态生成路由规则的VirtualEnvironment资源实例。
 
 从 [发布页面](https://github.com/alibaba/virtual-environment/releases) 下载最新的部署文件包，并解压。
 

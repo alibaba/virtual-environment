@@ -1,6 +1,6 @@
 # 配置Webhook组件
 
-KtEnv产品中包含一个全局的Admission Webhook组件，他的主要作用是将Pod上的`环境标`信息通过环境变量注入到Sidecar容器里，便于Sidecar为出口流量的Header添加恰当的环境标。倘若集群中无需使用流量自动染色功能（即创建VirtualEnvironment资源时，`envHeader.autoInject`值始终为`false`），则可以无需部署此组件。
+KtEnv产品中包含一个全局的Admission Webhook组件，他的主要作用是将Pod上的"环境标签"信息通过环境变量注入到Sidecar容器里，便于Sidecar为出口流量的Header添加恰当的环境标签。倘若集群中无需使用流量自动染色功能（即创建VirtualEnvironment资源时，`envHeader.autoInject`值始终为`false`），则可以无需部署此组件。
 
 ## 配置参数
 
