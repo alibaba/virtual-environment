@@ -5,7 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 public class EnvUtil {
 
     static public String getCurrentEnv() {
-        String env = System.getenv("APP_ENV");
+        String env = System.getenv("APP_VIRTUAL_ENV");
         return (env != null) ? env : "UNKNOWN";
     }
 
