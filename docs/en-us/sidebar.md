@@ -14,3 +14,5 @@
   - [Using SDK](en-us/doc/use-sdk.md)
   - [Principle](en-us/doc/principle.md)
   - [Build source code](en-us/doc/development.md)
+  - [Release note](https://github.com/alibaba/virtual-environment/releases)
+  

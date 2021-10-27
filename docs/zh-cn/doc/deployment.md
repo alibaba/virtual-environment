@@ -24,6 +24,8 @@ kubectl apply -f global/ktenv_crd.yaml
 kubectl apply -f global/ktenv_webhook.yaml
 ```
 
+> 默认的KtEnv组件镜像托管在Docker Hub公共仓库，为了让部署更有保障，建议先将组件镜像推至您自己的私有仓库，具体参见[使用私库部署](zh-cn/doc/private-repo.md)。
+
 ## 检查部署结果
 
 Webhook组件默认被部署到名为`kt-virtual-environment`的Namespace中，包含一个Service和一个Deployment对象，以及它们创建的子资源对象，可用以下命令查看：

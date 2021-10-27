@@ -8,7 +8,7 @@ read -p "Next version should be: " NEXT
 for f in Makefile; do
     sed -i '' "s/= ${VERSION}/= ${NEXT}/" $f
 done
-for f in deploy/global/ktenv_webhook.yaml deploy/ktenv_operator.yaml; do
+for f in deploy/global/ktenv_webhook.yaml deploy/ktenv_operator.yaml docs/zh-cn/doc/private-repo.md; do
     sed -i '' "s/:${VERSION}/:${NEXT}/" $f
 done
 for f in docs/zh-cn/doc/deployment.md docs/en-us/doc/deployment.md; do

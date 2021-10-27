@@ -4,6 +4,7 @@
   - [快速开始](zh-cn/doc/quickstart.md)
   - [配置虚拟环境](zh-cn/doc/configuration.md)
   - [配置Webhook](zh-cn/doc/webhook.md)
+  - [使用私库部署](zh-cn/doc/private-repo.md)
   - [卸载](zh-cn/doc/uninstall.md)
 
 - 实践参考
@@ -20,3 +21,5 @@
   - [适配SpringCloud](zh-cn/doc/spring-cloud.md)
   - [内部原理](zh-cn/doc/principle.md)
   - [源码构建](zh-cn/doc/development.md)
+  - [更新记录](https://github.com/alibaba/virtual-environment/releases)
+  
