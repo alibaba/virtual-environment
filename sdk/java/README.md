@@ -38,4 +38,42 @@ dependencies {
 
 ## 运行示例
 
-TBD
+`demo`实例应用中包含"/a"、"/b"、"/c"三个接口，每个接口都会返回当前实例的虚拟环境名（从环境变量读取）和收到的环境标签值（从Header读取），当调用"/a"接口时，可以形成 a -> b -> c 这样的调用链路。
+
+打开三个窗口，分别监听本地的`9001`、`9002`、`9003`端口，同时在后两个进程的运行时定义`APP_VIRTUAL_ENV`环境变量。
+
+窗口1：
+
+```bash
+$ java -jar demo/target/demo.jar --server.port=9001
+```
+
+窗口2：
+
+```bash
+$ APP_VIRTUAL_ENV=test2 java -jar demo/target/demo.jar --server.port=9002
+```
+
+窗口3：
+
+```bash
+$ APP_VIRTUAL_ENV=test3 java -jar demo/target/demo.jar --server.port=9003
+```
+
+然后访问`9001`端口的"/a"接口，若请求包含有"X-Virtual-Env" Header，可以看到整条链路的每个节点都自动传递了这个环境标签。
+
+```bash
+curl -H 'X-Virtual-Env=dev' 127.0.0.1:9001/a
+a-[UNKNOWN] received dev
+b-[test2] received dev
+c-[test3] received dev
+```
+
+若请求不包含"X-Virtual-Env" Header，当链路经过明确设置了虚拟环境名称的实例时，后续的请求也会带上它的环境标签（实例c收到的请求自动带上了实例b的环境标签）。
+
+```bash
+curl 127.0.0.1:9001/a
+a-[UNKNOWN] received UNKNOWN
+b-[test2] received UNKNOWN
+c-[test3] received test2
+```
