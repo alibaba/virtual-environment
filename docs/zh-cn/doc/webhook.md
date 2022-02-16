@@ -22,7 +22,7 @@ env:
 
 - ERROR: 只记录错误信息，输出的日志量最少
 - INFO: 输出异常错误和正常情况下的自动加标记录（默认值）
-- ERROR: 输出包括访问记录在内的所有日志，通常只在排查问题的时候使用
+- DEBUG: 输出包括访问记录在内的所有日志，通常只在排查问题的时候使用
 
 可以直接修改`ktenv_webhook.yaml`文件并通过`kubectl apply`使之生效；或直接通过`kubectl edit`命令修改`kt-virtual-environment`Namespace中名为`webhook-server`的Deployment对象完成配置的修改。
 
