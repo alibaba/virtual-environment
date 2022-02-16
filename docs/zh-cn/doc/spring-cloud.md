@@ -24,4 +24,12 @@ spring.cloud.consul.host = app-js
 spring.cloud.nacos.discovery.ip = app-js
 ```
 
-为测试环境中的所有服务采用如上配置后，即可正常使用KtEnv的环境隔离功能了。
+与此同时，由于Spring Cloud的`RibbonClient`组件在发送HTTP请求时默认不会携带Istio路由所需的`Host`请求头<sup>[1]</sup>，开发者还需要自行添加HTTP Client的拦截器来在请求发出前添加内容为`Host: <当前服务名>`的Header，使得请求能被Istio Sidecar处理。
+
+为测试环境中的所有服务采用如上修改后，即可正常使用KtEnv的环境隔离功能了。
+
+特别感谢：
+- @宋锦丰 对SpringCloud使用虚拟环境时缺失`Host`请求头问题的补充
+
+参考引用：
+- [1] https://github.com/IBM/spring-cloud-kubernetes-with-istio/blob/master/README.md#discovery-client-and-istio
