@@ -29,7 +29,7 @@ spring.cloud.nacos.discovery.ip = app-js
 为测试环境中的所有服务采用如上修改后，即可正常使用KtEnv的环境隔离功能了。
 
 特别感谢：
-- @宋锦丰 对SpringCloud使用虚拟环境时缺失`Host`请求头问题的补充
+- @[宋锦丰](https://github.com/SJFCS) 对SpringCloud使用虚拟环境时缺失`Host`请求头问题的补充（友情链接：[TA的博客](https://songjinfeng.com/)）
 
 参考引用：
 - [1] https://github.com/IBM/spring-cloud-kubernetes-with-istio/blob/master/README.md#discovery-client-and-istio

@@ -50,7 +50,7 @@ kubectl -n $NS get VirtualEnvironment -o yaml
 kubectl -n $NS logs <任意一个Pod名字> istio-proxy --tail 100
 ```
 
-若路由配置正常，Sidecar运行也无任何错误，则比较可能是Istio自身问题，请结合[Istioctl Describe](https://istio.io/latest/zh/docs/ops/diagnostic-tools/istioctl-describe/)功能进一步排查原因。
+若路由配置正常，Sidecar运行也无任何错误，则比较可能是Istio自身问题，请结合[Istioctl Describe功能](https://istio.io/latest/zh/docs/ops/diagnostic-tools/istioctl-describe/)或[获取Envoy访问日志](https://istio.io/latest/zh/docs/tasks/observability/logs/access-log/)进一步排查原因。
 
 以下是几种比较常见的错误原因：
 
