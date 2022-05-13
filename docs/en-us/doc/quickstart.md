@@ -85,7 +85,7 @@ kubectl label namespaces default istio-injection=enabled
 
 ```bash
 # Notice: the label parameter specified the virtual environment name to join
-sudo ktctl --label virtual-env=dev.proj2 --namespace default connect
+sudo ktctl connect --useShadowDeployment --withLabel virtual-env=dev.proj2 --namespace default
 ```
 
 Now, local shell can curl the `app-js` service inside the remote cluster directly.
@@ -108,7 +108,7 @@ envMark=local mvn spring-boot:run
 
 # the label parameter specified the virtual environment name to join
 # app-java-dev is the name of app-java Deployment in shared environment
-sudo ktctl --label virtual-env=dev.proj2 --namespace default mesh app-java-dev --expose 8080
+ktctl mesh app-java-dev --useShadowDeployment --mode manual --withLabel virtual-env=dev.proj2 --namespace default --expose 8080
 ```
 
 Now there is a `app-java` service instance from local in the `dev.proj2` virtual environment, so the new route targets should be:

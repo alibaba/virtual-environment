@@ -86,7 +86,7 @@ kubectl label namespaces default istio-injection=enabled
 
 ```bash
 # 注意label参数指定了加入的隔离域名称
-sudo ktctl --label virtual-env=dev.proj2 --namespace default connect
+sudo ktctl connect --useShadowDeployment --withLabel virtual-env=dev.proj2 --namespace default 
 ```
 
 现在无需进入集群中的容器，本地就可以直接访问`app-js`服务了
@@ -109,8 +109,7 @@ envMark=local mvn spring-boot:run
 
 # label参数指定本地服务加入的隔离域
 # app-java-dev是app-java服务在集群公共隔离域（即dev域）的Deployment实例名
-# 注意当前kt-connect仅支持Deployment对象，暂时无法将StatefulSet对象的流量导回本地
-sudo ktctl --label virtual-env=dev.proj2 --namespace default mesh app-java-dev --expose 8080
+ktctl mesh app-java-dev --useShadowDeployment --mode manual --withLabel virtual-env=dev.proj2 --namespace default --expose 8080
 ```
 
 此时本地`app-java`服务在`dev.proj2`隔离域，因而新的访问途径应当为：
