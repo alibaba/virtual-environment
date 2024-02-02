@@ -40,7 +40,7 @@
         <plugin.gpg.version>1.6</plugin.gpg.version>
         <plugin.staging.version>1.6.8</plugin.staging.version>
         <servlet.version>4.0.0</servlet.version>
-        <spring.version>5.3.18</spring.version>
+        <spring.version>5.3.19</spring.version>
         <ttl.version>2.12.1</ttl.version>
     </properties>
 
